@@ -16,8 +16,8 @@ services:
     ports:
       - "5000:5000"
     volumes:
-      - ./FocusBoard-backend:/usr/src/app
-      - /usr/src/app/node_modules
+      - ./FocusBoard-backend:/app
+      - /app/node_modules
     depends_on:
       - ml-service
       - mongo

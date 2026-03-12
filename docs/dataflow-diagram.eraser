@@ -1,0 +1,48 @@
+// FocusBoard - Activity Categorization Flow
+// Data Flow Diagram for eraser.io
+
+title Activity Capture & Categorization Flow
+
+// Actors & Systems
+DesktopAgent [icon: monitor, color: blue]
+ActivityAPI [icon: server, color: green]
+RuleEngine [icon: filter, color: orange]
+NSFWChecker [icon: shield, color: red]
+MLService [icon: brain, color: purple]
+Database [icon: database, color: green]
+AlertSystem [icon: bell, color: yellow]
+ParentEmail [icon: mail, color: red]
+
+// Main Flow
+DesktopAgent > ActivityAPI: 1. POST activity data\n(app, title, url) [label: "Every 5s"]
+ActivityAPI > RuleEngine: 2. Check tracking rules
+RuleEngine > Database: 3a. Pattern matched? [label: "Yes: Save with category"]
+RuleEngine > NSFWChecker: 3b. No match? [label: "Check NSFW first"]
+
+// NSFW Quick Check
+NSFWChecker > AlertSystem: 4a. Flagged? [label: "Yes: Alert parent"]
+AlertSystem > ParentEmail: 5. Send email notification
+NSFWChecker > Database: 4b. Not flagged? [label: "Save uncategorized"]
+
+// Background ML Processing
+Database > MLService: 6. Background job (30s delay)\n[label: "Uncategorized activities"]
+MLService > MLService: 7. Generate embedding\n8. Find similar category
+MLService > NSFWChecker: 9. Deep NSFW check
+MLService > Database: 10. Update with category
+NSFWChecker > AlertSystem: 11. If NSFW found [label: "Delayed alert"]
+
+// Manual Override Flow
+ActivityAPI > Database: 12. User corrects category [label: "Manual override"]
+Database > RuleEngine: 13. Suggest new rule [label: "Pattern detected"]
+RuleEngine > Database: 14. Create tracking rule [label: "Auto-learn"]
+
+// Decision Points
+decision "Rule Match?" as D1 [position: after RuleEngine]
+decision "NSFW Flagged?" as D2 [position: after NSFWChecker]
+decision "User Override?" as D3 [position: after Database]
+
+// Annotations
+note "Tier 1: Rule-Based\nInstant categorization\n95%+ accuracy" as N1 [position: right of RuleEngine]
+note "Tier 2: ML Embeddings\nBackground processing\n85%+ accuracy" as N2 [position: right of MLService]
+note "Tier 3: Manual Override\nLearning system\nImproves over time" as N3 [position: right of D3]
+note "Real-time protection\nDomain + keyword check" as N4 [position: right of NSFWChecker]

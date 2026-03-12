@@ -35,15 +35,36 @@ jobs:
         working-directory: FocusBoard
         run: npm run build
 
+      - name: Start Backend + ML + Mongo (Docker Compose)
+        run: |
+          docker compose -f docker-compose.yml up -d --build mongo ml-service backend
+
+      - name: Wait For Backend + ML
+        run: |
+          for i in {1..60}; do
+            if curl -sSf http://localhost:5000/api/activities > /dev/null && curl -sSf http://localhost:5001/health > /dev/null; then
+              echo "Backend and ML are up";
+              exit 0;
+            fi
+            sleep 2
+          done
+          echo "Backend/ML did not start in time";
+          docker compose -f docker-compose.yml logs --tail=200 backend ml-service
+          exit 1
+
+      - name: Seed Student Demo Data
+        run: |
+          MONGO_URI=mongodb://localhost:27017/focusboard node FocusBoard-backend/scripts/seedStudentDay.js
+
       - name: Start Frontend Dev Server
         working-directory: FocusBoard
         run: |
-          nohup npm run dev -- --host 0.0.0.0 --port 5173 > /tmp/vite.log 2>&1 &
+          nohup npm run dev -- --host 0.0.0.0 --port 1420 > /tmp/vite.log 2>&1 &
 
       - name: Wait For Frontend
         run: |
           for i in {1..30}; do
-            if curl -sSf http://localhost:5173 > /dev/null; then
+            if curl -sSf http://localhost:1420 > /dev/null; then
               echo "Frontend is up";
               exit 0;
             fi
@@ -54,36 +75,20 @@ jobs:
 
       - name: Run Cypress E2E Tests
         working-directory: FocusBoard
-        run: npx cypress run --config baseUrl=http://localhost:5173
+        run: npx cypress run --config baseUrl=http://localhost:1420
 
       # Backend Checks (Stub for Future Unit Tests)
       - name: Run Backend Tests
         working-directory: FocusBoard-backend
-        run: npm test || echo "Backend test script not yet implemented"
+        run: npm test
 
-      # ML Service Environment & Checks
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Cache Hugging Face Models
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/huggingface
-          key: ${{ runner.os }}-huggingface-${{ hashFiles('ml-service/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-huggingface-
-          
-      - name: Install ML Service Dependencies
-        working-directory: ml-service
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          
+      # ML Service Tests (inside container)
       - name: Run ML Service Tests
-        working-directory: ml-service
-        run: pytest || echo "ML Service tests not yet implemented"
+        run: docker exec focus-ml-service-1 pytest
+
+      - name: Run Frontend Unit Tests
+        working-directory: FocusBoard
+        run: npm test
 
       # Tauri Build Step (Phase 10 Requirement)
       - name: Install Rust Stable

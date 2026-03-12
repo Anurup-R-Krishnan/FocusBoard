@@ -1,0 +1,101 @@
+// FocusBoard Architecture Diagram
+// Paste this into eraser.io
+
+title FocusBoard - 3-Tier Activity Tracking System
+
+// Client Layer
+TauriApp [icon: monitor, color: blue] {
+  ActivityMonitor [icon: eye]
+  Dashboard [icon: chart-bar]
+  CategoryMgmt [icon: tag]
+  GoalTracking [icon: target]
+  SupportTickets [icon: ticket]
+  ParentalControls [icon: shield]
+}
+
+// API Gateway
+ExpressAPI [icon: server, color: green] {
+  AuthMiddleware [icon: lock]
+  ActivityRoutes [icon: route]
+  CategoryRoutes [icon: route]
+  SupportRoutes [icon: route]
+  TrackingRuleRoutes [icon: route]
+}
+
+// Business Logic Layer
+BusinessLogic [icon: cog, color: orange] {
+  CategorizationService [icon: brain] {
+    RuleBasedMatcher [label: "Tier 1: Instant\n95%+ accuracy"]
+    MLEmbeddings [label: "Tier 2: Background\n85%+ accuracy"]
+    ManualOverride [label: "Tier 3: Learning"]
+  }
+  
+  NSFWDetection [icon: shield-alert] {
+    QuickCheck [label: "Real-time URL check"]
+    DeepAnalysis [label: "Background content scan"]
+  }
+  
+  AlertService [icon: bell]
+  BackgroundJobs [icon: clock]
+}
+
+// ML Microservice
+MLService [icon: cpu, color: purple] {
+  FlaskAPI [icon: python]
+  BERTModel [label: "all-MiniLM-L6-v2"]
+  EmbedEndpoint [label: "/embed"]
+  SimilarityEndpoint [label: "/find-similar"]
+  NSFWEndpoint [label: "/check-nsfw"]
+}
+
+// Database Layer
+MongoDB [icon: database, color: green] {
+  MasterCollections {
+    Users
+    Categories
+    TrackingRules
+    IssueTypes
+  }
+  
+  TransactionCollections {
+    Activities
+    ActivityMappings
+    Goals
+    CategoryGoals
+    SupportTickets
+    TicketResolutions
+    UserFeedback
+    Events
+  }
+}
+
+// Connections
+TauriApp > ExpressAPI: HTTPS REST API
+ExpressAPI > BusinessLogic: Process Requests
+BusinessLogic > MLService: Embedding & NSFW Check
+BusinessLogic > MongoDB: CRUD Operations
+MLService > MongoDB: Read Categories
+
+// Data Flows
+ActivityMonitor > ExpressAPI: POST /api/activities [label: "Every 5s"]
+ExpressAPI > RuleBasedMatcher: Pattern Match [label: "Instant"]
+RuleBasedMatcher > MongoDB: Save Categorized [label: "If matched"]
+ExpressAPI > QuickCheck: URL Check [label: "Real-time"]
+QuickCheck > AlertService: If Flagged [label: "Email parent"]
+ExpressAPI > BackgroundJobs: Queue Uncategorized [label: "30s delay"]
+BackgroundJobs > MLService: Generate Embedding
+MLService > MongoDB: Update Category
+BackgroundJobs > DeepAnalysis: Content Scan
+DeepAnalysis > AlertService: If NSFW
+
+// Manual Override Flow
+CategoryMgmt > ExpressAPI: PUT /api/activity-mappings
+ExpressAPI > ManualOverride: Save Override
+ManualOverride > MongoDB: Store Mapping
+ManualOverride > CategoryMgmt: Suggest Rule [label: "Auto-learn"]
+
+// Notes
+note "3-Tier Categorization System" as N1 [position: right of CategorizationService]
+note "NSFW Detection with Parental Alerts" as N2 [position: right of NSFWDetection]
+note "Background Processing with node-schedule" as N3 [position: right of BackgroundJobs]
+note "BERT-based Semantic Similarity" as N4 [position: right of MLService]
