@@ -1,321 +1,202 @@
-# FocusBoard
+# 🎯 FocusBoard
 
-FocusBoard is a production-grade, AI-powered productivity suite designed for individuals and teams to track, categorize, and optimize their digital activities. Leveraging a desktop monitor, a scalable Node.js backend, and a specialized ML service, FocusBoard provides real-time insights into time allocation, goal progress, and team collaboration.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js](https://img.shields.io/badge/Node.js-v18+-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
+[![Bun](https://img.shields.io/badge/Bun-v1.0+-000000?logo=bun&logoColor=white)](https://bun.sh/)
+[![React](https://img.shields.io/badge/React-v18-61DAFB?logo=react&logoColor=black)](https://reactjs.org/)
+[![Rust](https://img.shields.io/badge/Rust-Monitoring-white?logo=rust&logoColor=black)](https://www.rust-lang.org/)
+[![Python](https://img.shields.io/badge/Python-ML_Service-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-v0.95+-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 
----
-
-## Table of Contents
-
-- [1. Project Overview](#1-project-overview)
-- [2. Features](#2-features)
-- [3. System Architecture](#3-system-architecture)
-- [4. Repository Structure](#4-repository-structure)
-- [5. Technology Stack](#5-technology-stack)
-- [6. Installation](#6-installation)
-- [7. Running the System](#7-running-the-system)
-- [8. Environment Variables](#8-environment-variables)
-- [9. API Documentation](#9-api-documentation)
-- [10. Database Design](#10-database-design)
-- [11. Development Workflow](#11-development-workflow)
-- [12. Testing](#12-testing)
-- [13. Deployment](#13-deployment)
-- [14. Debugging Guide](#14-debugging-guide)
-- [15. Performance Considerations](#15-performance-considerations)
-- [16. Security Considerations](#16-security-considerations)
-- [17. Future Improvements](#17-future-improvements)
-- [18. Contributing](#18-contributing)
-- [19. License](#19-license)
+FocusBoard is a production-grade, AI-powered productivity environment engineered for deep-work analysis and team alignment. It integrates a native **Rust monitoring engine**, a **Node.js/Bun orchestration layer**, and a **Python NLP service** to transform raw digital activity into actionable performance metrics.
 
 ---
 
-## 1. Project Overview
+## 📑 Table of Contents
 
-FocusBoard solves the problem of "invisible time" by automatically capturing and analyzing digital activities. Unlike manual time trackers, FocusBoard uses a native desktop monitor to sense active window titles and URLs, then uses NLP-based machine learning to categorize these activities into meaningful groups like "Development," "Communication," or "Entertainment."
-
-The system is designed for:
-- **Individual Developers**: To understand deep-work patterns.
-- **Teams/Squads**: To visualize collective effort without manual logging.
-- **Project Managers**: To align daily activities with high-level goals and leads.
-
----
-
-## 2. Features
-
-### 🕵️ Automatic Activity Tracking
-- **Desktop Monitor**: A Tauri-powered desktop application (Rust) monitors system-level window changes and browser URLs.
-- **Privacy First**: Tracking is local, and users can set up exclusion rules to prevent sensitive data from being captured.
-
-### 🧠 AI-Powered Categorization
-- **Semantic Mapping**: Uses `sentence-transformers` (all-MiniLM-L6-v2) to map activities to user-defined categories.
-- **Background Jobs**: A scheduled task in the backend periodically processes uncategorized activities using the ML service.
-
-### 🛡️ NSFW & Safety Monitoring
-- **Real-time Detection**: The ML service checks URLs and window titles against known NSFW patterns and keyword lists.
-- **Alert System**: Automatically flags inappropriate content based on user age and preferences, sending alerts to administrators or parents if configured.
-
-### 📊 Advanced Analytics & Dashboards
-- **Time Distribution**: Visualizes time spent across different categories and projects.
-- **Goal Tracking**: Monitors progress against daily or project-based time goals.
-- **Drill-down Views**: Allows users to inspect specific sessions and activities in detail.
-
-### 👥 Team & Squad Collaboration
-- **Shared Visualization**: View team-wide productivity metrics and squad goals.
-- **Lead & Project Management**: Associate activities directly with client leads and project milestones.
-
-### 🎫 Support & Feedback
-- **Integrated Ticketing**: Built-in support ticket system for reporting issues or requesting features.
-- **User Feedback**: Direct channel for providing feedback on the platform.
+- [1. Technical Overview](#1-technical-overview)
+- [2. System Architecture](#2-system-architecture)
+- [3. Core Technical Modules](#3-core-technical-modules)
+  - [Native Monitoring Engine (Rust/Tauri)](#native-monitoring-engine-rusttauri)
+  - [ML Classification Pipeline (Python/FastAPI)](#ml-classification-pipeline-pythonfastapi)
+  - [Real-time Events (WebSockets)](#real-time-events-websockets)
+- [4. Repository & Module Structure](#4-repository--module-structure)
+- [5. Database Schema & Persistence](#5-database-schema--persistence)
+- [6. Security & Validation Posture](#6-security--validation-posture)
+- [7. Installation & Deployment](#7-installation--deployment)
+  - [Bare Metal (Bun/Node)](#bare-metal-bunnode)
+  - [Docker Orchestration](#docker-orchestration)
+- [8. API Specification](#8-api-specification)
+- [9. Testing Architecture](#9-testing-architecture)
+- [10. Troubleshooting & Performance](#10-troubleshooting--performance)
 
 ---
 
-## 3. System Architecture
+## 1. Technical Overview
 
-The FocusBoard architecture is designed for scalability and real-time responsiveness.
+FocusBoard addresses the complexity of modern productivity tracking by automating the data lifecycle from capture to categorization. 
+
+**Key Technical Differentiators:**
+- **Hybrid Capture**: Native OS window tracking (Rust) combined with browser-level focus polling.
+- **Semantic Engine**: Vector embedding-based activity mapping using `SentenceTransformers`.
+- **Offline-First Resilience**: Backend-level database status monitoring with 503 fallback and auto-reconnection logic.
+- **High-Granularity Backgrounding**: Sub-minute categorization jobs powered by `node-schedule`.
+
+---
+
+## 2. System Architecture
+
+The system utilizes a distributed architecture to separate heavy ML compute from the real-time API layer.
 
 ```mermaid
 graph TD
-    User((User))
-    Tauri[Desktop Client - Tauri/Rust]
-    WebApp[Web Frontend - React/Vite]
-    Backend[Backend API - Node.js/Express]
-    ML[ML Service - Python/FastAPI]
-    DB[(MongoDB)]
+    subgraph "Client Layer"
+        Native[Native Monitor - Rust/Tauri]
+        Web[Management UI - React/Vite]
+    end
 
-    User --> Tauri
-    User --> WebApp
-    Tauri -->|Activity Socket/REST| Backend
-    WebApp -->|REST/Socket| Backend
-    Backend -->|NLP Tasks| ML
-    Backend -->|Persistence| DB
-```
+    subgraph "Orchestration Layer (Node.js/Bun)"
+        API[Express API]
+        Job[Categorization Worker]
+        WS[Socket.io Server]
+    end
 
-- **Client Layer**: The Tauri desktop app handles native monitoring, while the React web app provides the management interface.
-- **API Layer**: Node.js backend acts as the orchestrator, managing authentication, business logic, and WebSocket communication.
-- **Intelligence Layer**: A standalone Python service provides vector embeddings and semantic classification.
-- **Data Layer**: MongoDB stores user profiles, activities, categories, and analytical reports.
+    subgraph "Intelligence Layer (Python)"
+        FastAPI[FastAPI Gateway]
+        NLP[SentenceTransformer Model]
+        NSFW[Safety Heuristics]
+    end
 
----
+    subgraph "Data Layer"
+        Mongo[(MongoDB Atlas)]
+    end
 
-## 4. Repository Structure
-
-```text
-.
-├── FocusBoard/                 # Frontend (React + Vite + Tauri)
-│   ├── src/                    # UI Components, Stores (Zustand), Services
-│   ├── src-tauri/              # Rust-based Desktop Monitoring Core
-│   └── public/                 # Static Assets
-├── FocusBoard-backend/         # Backend API (Node.js + Express)
-│   ├── controllers/            # Request handlers
-│   ├── models/                 # Mongoose schemas
-│   ├── routes/                 # API endpoint definitions
-│   ├── services/               # Business logic & background jobs
-│   └── utils/                  # Shared utilities (logger, etc.)
-├── ml-service/                 # ML Engine (Python + FastAPI)
-│   ├── main.py                 # API routes for embedding & NSFW detection
-│   └── core.py                 # NLP models and classification logic
-├── docs/                       # Architecture diagrams & documentation
-└── docker-compose.yml          # Infrastructure orchestration
+    Native -->|Activity Payload| API
+    Web -->|Management Hooks| API
+    API -->|Real-time Sync| WS
+    WS -->|Live Updates| Web
+    Job -->|Forward Vector Search| FastAPI
+    FastAPI --> NLP
+    API -->|JSON Document| Mongo
 ```
 
 ---
 
-## 5. Technology Stack
+## 3. Core Technical Modules
 
-- **Frontend**: [React](https://reactjs.org/), [Vite](https://vitejs.dev/), [MUI](https://mui.com/), [Framer Motion](https://www.framer.com/motion/).
-- **Desktop**: [Tauri](https://tauri.app/) (Rust-based native bridge).
-- **Backend**: [Node.js](https://nodejs.org/), [Express](https://expressjs.com/), [Bun](https://bun.sh/) (Runtime supported).
-- **ML Service**: [Python](https://www.python.org/), [FastAPI](https://fastapi.tiangolo.com/), [Sentence-Transformers](https://www.sbert.net/), [NumPy](https://numpy.org/).
-- **Database**: [MongoDB](https://www.mongodb.com/) (Atlas or local).
-- **Infratructure**: [Docker](https://www.docker.com/), [GitHub Actions](https://github.com/features/actions).
+### Native Monitoring Engine (Rust/Tauri)
+The `src-tauri` core interacts with OS-level APIs to capture window activity with minimal performance overhead.
+- **Event Dispatch**: Emits `activity-update` events to the frontend bridge when a window focus change or title update is detected.
+- **Payload Structure**: Captures `app_name`, `window_title`, `url` (via browser integration), and `idle_time`.
 
----
+### ML Classification Pipeline (Python/FastAPI)
+The `ml-service` provides the semantic "brain" of the project.
+- **Model**: `all-MiniLM-L6-v2` (SentenceTransformer).
+- **Classification**: Uses Cosine Similarity between activity text and category embeddings.
+- **NSFW Heuristics**: Multi-stage detection combining domain blacklists (`NSFW_DOMAINS`) and keyword regex patterns (`NSFW_KEYWORDS`).
+- **Optimization**: Numerical operations handled via `NumPy` for efficient batch cross-matching.
 
-## 6. Installation
-
-### Prerequisites
-- Node.js (>= 18.0.0) or Bun
-- Python (>= 3.9)
-- Docker & Docker Compose
-- Rust (for Tauri desktop builds)
-
-### Step-by-Step Setup
-
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/FocusBoard/FocusBoard.git
-   cd FocusBoard
-   ```
-
-2. **Backend Setup**:
-   ```bash
-   cd FocusBoard-backend
-   npm install
-   cp .env.example .env # Configure your MONGO_URI and secrets
-   ```
-
-3. **ML Service Setup**:
-   ```bash
-   cd ../ml-service
-   pip install -r requirements.txt
-   ```
-
-4. **Frontend Setup**:
-   ```bash
-   cd ../FocusBoard
-   npm install
-   ```
+### Real-time Events (WebSockets)
+- **Engine**: Socket.io integration across the stack.
+- **Flow**: When the `Categorization Worker` updates an activity, a broad-cast is triggered to the UI, allowing for zero-refresh dashboard updates.
 
 ---
 
-## 7. Running the System
+## 4. Repository & Module Structure
 
-### Docker Deployment (Recommended for Production)
+| Path | Purpose | Key Technologies |
+| --- | --- | --- |
+| `FocusBoard/` | Desktop/Web Client | React, TypeScript, Tauri, Zustand |
+| `FocusBoard-backend/` | Central API Orchestrator | Node.js, Mongoose, Zod, Socket.io |
+| `ml-service/` | NLP & Safety Engine | Python, FastAPI, Transformers |
+| `docs/` | System Diagrams | Mermaid, Eraser.io |
+
+---
+
+## 5. Database Schema & Persistence
+
+FocusBoard uses a high-performance Mongoose-based schema architecture.
+
+| Collection | Role | Key Indexes |
+| --- | --- | --- |
+| `activities` | Raw activity logs | `user_id`, `start_time` |
+| `categories` | User-defined buckets | `user_id`, `name` |
+| `activitymappings` | ML Linkage records | `activityId`, `categoryId` |
+| `trackingrules` | Pattern-based filters | `priority (desc)` |
+
+---
+
+## 6. Security & Validation Posture
+
+Security is implemented at multiple layers to ensure production reliability:
+- **Layer 1: Network Headers**: `Helmet` is used for CSP, XSS protection, and MIME sniffing prevention.
+- **Layer 2: Schema Validation**: Every API request is strictly validated via **Zod schemas** (`middleware/validation.js`).
+- **Layer 3: Authentication**: Stateless JWT implementation with custom `authMiddleware` and `requireAuth` logic.
+- **Layer 4: Rate Limiting**: `express-rate-limit` prevents brute-force on auth routes and DoS on telemetry ingest.
+
+---
+
+## 7. Installation & Deployment
+
+### Bare Metal (Bun/Node)
+
+**Backend Environment:**
 ```bash
-docker compose up --build
+cd FocusBoard-backend
+bun install # or npm install
+cp .env.example .env
+bun run server.js
 ```
-This starts the Backend (port 5000), ML Service (port 5001), and MongoDB (port 27017).
 
-### Local Development Mode
-
-1. **Start ML Service**:
-   ```bash
-   cd ml-service
-   uvicorn main:app --host 0.0.0.0 --port 5001
-   ```
-
-2. **Start Backend**:
-   ```bash
-   cd FocusBoard-backend
-   npm run dev # Uses Bun watch mode if available
-   ```
-
-3. **Start Frontend**:
-   ```bash
-   cd FocusBoard
-   npm run dev
-   ```
-
----
-
-## 8. Environment Variables
-
-### Backend (`FocusBoard-backend/.env`)
-| Variable | Purpose | Default |
-| -------- | ------- | ------- |
-| `PORT` | API Port | `5000` |
-| `MONGO_URI` | MongoDB Connection String | `mongodb://localhost:27017/focusboard` |
-| `JWT_SECRET` | Secret key for JWT signing | `Required` |
-| `ML_SERVICE_URL` | URL of the Python ML Service | `http://localhost:5001` |
-| `RATE_LIMIT_MAX` | Max requests per 15 min | `1500` |
-
-### ML Service (`ml-service/.env`)
-| Variable | Purpose | Default |
-| -------- | ------- | ------- |
-| `SENTENCE_TRANSFORMER_MODEL` | NLP Model to use | `all-MiniLM-L6-v2` |
-| `MIN_SIMILARITY_THRESHOLD` | Threshold for classification | `0.3` |
-
----
-
-## 9. API Documentation
-
-Core endpoints include:
-
-- **Auth**: `POST /api/auth/login`, `GET /api/auth/me`, `POST /api/auth/register`
-- **Activities**: `GET /api/activities`, `POST /api/activities`, `POST /api/activities/batch`
-- **Analytics**: `GET /api/metrics/dashboard`, `GET /api/metrics/summary`, `GET /api/metrics/timeline`
-- **Management**: `GET /api/projects`, `GET /api/leads`, `GET /api/teams`
-- **System**: `GET /health` (Reports DB and ML connectivity)
-
----
-
-## 10. Database Design
-
-FocusBoard uses MongoDB for its flexible schema. Key collections:
-
-- **Users**: Authentication data, preferences, and profile.
-- **Activities**: Raw logs of window titles, URLs, and timing.
-- **Categories**: User-defined activity buckets with vector embeddings.
-- **ActivityMappings**: Relationships between activities and categories (with confidence scores).
-- **Goals**: Time-based targets for specific categories or projects.
-- **Events**: Significant calendar/system events.
-
----
-
-## 11. Development Workflow
-
-- **Branching**: Use `feature/` for new capabilities and `bugfix/` for repairs.
-- **Code Style**: ESLint handles JavaScript/TypeScript; PEP8 for Python.
-- **Commit Messages**: Follow conventional commits (e.g., `feat: add activity export`).
-
----
-
-## 12. Testing
-
-### Full CI Suite
+**ML Service Environment:**
 ```bash
-# Backend unit tests
-cd FocusBoard-backend && npm test
+cd ml-service
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+uvicorn main:app --port 5001
+```
 
-# Frontend unit tests
-cd FocusBoard && npm test
-
-# ML Service tests
-cd ml-service && pytest
-
-# End-to-End Tests (Cypress)
-cd FocusBoard && npm run cypress:run
+### Docker Orchestration
+For a unified environment, use the provided Docker Compose configuration:
+```bash
+docker-compose up --build -d
 ```
 
 ---
 
-## 13. Deployment
+## 8. API Specification
 
-FocusBoard is optimized for containerized environments. The `main.yml` GitHub workflow automates:
-1. Dependency installation for all services.
-2. Building the Frontend and ML docker images.
-3. Running the full test suite.
-4. Building the Tauri native artifacts for Windows/Linux/macOS.
-
----
-
-## 14. Debugging Guide
-
-- **Database Connectivity**: If backend reports `503 Service Unavailable`, check `MONGO_URI` and ensure MongoDB service is running.
-- **ML Loading**: The ML service requires ~500MB RAM to load the transformer model. Check logs if `/health` reports `mlService: disconnected`.
-- **WebSocket Issues**: Ensure `ALLOWED_ORIGINS` in backend config includes your frontend URL.
+| Method | Endpoint | Description | Validation |
+| --- | --- | --- | --- |
+| `POST` | `/api/auth/login` | Session Initialization | Email/Password (Zod) |
+| `POST` | `/api/activities` | Ingest Telemetry | Activity Object |
+| `GET` | `/api/metrics/dashboard` | Aggregated Performance | Auth Only |
+| `POST` | `/api/auth/dev-login` | Bypass Auth (Dev Only) | Restricted to `!production` |
 
 ---
 
-## 15. Performance Considerations
+## 9. Testing Architecture
 
-- **Caching**: The monitoring engine uses a rules cache to minimize database hits during categorization.
-- **Vector Search**: For large category sets, the system is designed to use efficient cosine similarity calculations via NumPy.
-- **Indexing**: Activity tracking relies on heavy write operations; ensure the `activities` collection has proper indexes on `user_id` and `start_time`.
-
----
-
-## 16. Security Considerations
-
-- **Authentication**: JWT-based stateless auth for all API routes.
-- **Rate Limiting**: Protects against brute-force and DoS attacks.
-- **NSFW Filtering**: Integrated at the ingestion level to prevent storage of sensitive data.
+FocusBoard maintains a high coverage bar across services:
+- **Unit (Backend)**: `Jest` (Mocked MongoDB/Services).
+- **Unit (Frontend)**: `Vitest` + `React Testing Library`.
+- **E2E**: `Cypress` for multi-service integration tests.
+- **ML**: `Pytest` for classification accuracy verification.
 
 ---
 
-## 17. Future Improvements
+## 10. Troubleshooting & Performance
 
-- **Mobile Companion**: Native apps for iOS/Android to track mobile screen time.
-- **Predictive Analytics**: Forecasting weekly goal success based on early behavior.
-- **Offline Tracking**: Improved local queuing for the desktop monitor during network outages.
+### Scaling Strategy
+- **Horizontal Scaling**: The `ml-service` is stateless and can be scaled independently behind a load balancer.
+- **Write Optimization**: Activity ingestion supports batching (`/api/activities/batch`) to reduce DB connection overhead.
 
----
-
-## 18. Contributing
-
-Contributions are welcome! Please read `CONTRIBUTING.md` (if present) or open an issue to discuss your ideas.
+### Common Failure Modes
+- **Category Drift**: If categorization confidence scores drop, ensure the `generate-embeddings` script is run after category modifications.
+- **Memory Pressure**: The ML service requires ~1GB peak RSS for the transformer model.
 
 ---
 
-## 19. License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+## 🏁 Final Notes
+FocusBoard is designed with extensibility in mind. For contribution guidelines, please see the `CONTRIBUTING.md` in the `docs` folder.
