@@ -7,6 +7,13 @@ services:
     volumes:
       - ./ml-service:/app
       - /app/venv
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
 
   backend:
     build:
@@ -18,9 +25,18 @@ services:
     volumes:
       - ./FocusBoard-backend:/app
       - /app/node_modules
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
     depends_on:
-      - ml-service
-      - mongo
+      ml-service:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
 
   mongo:
     image: mongo:7
@@ -28,6 +44,13 @@ services:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
 
 volumes:
   mongo_data:
