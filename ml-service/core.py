@@ -4,13 +4,17 @@ import re
 import os
 import numpy as np
 import threading
+import logging
+
+logger = logging.getLogger("ml_service")
+logging.basicConfig(level=os.environ.get("ML_LOG_LEVEL", "INFO"))
 
 try:
     from sentence_transformers import SentenceTransformer
 except Exception:
     SentenceTransformer = None
 
-EMBEDDING_DIM = 384
+EMBEDDING_DIM = int(os.environ.get("EMBEDDING_DIM", "384"))
 MODEL_NAME = os.environ.get('SENTENCE_TRANSFORMER_MODEL', 'all-MiniLM-L6-v2')
 MIN_SIMILARITY_THRESHOLD = float(os.environ.get('MIN_SIMILARITY_THRESHOLD', '0.3'))
 
@@ -19,9 +23,10 @@ MODEL_LOADED = False
 MODEL_LOAD_ERROR = None
 MODEL_LOCK = threading.Lock()
 MODEL_ATTEMPTED = False
+MODEL_VERSION = None
 
 def load_model():
-    global MODEL, MODEL_LOADED, MODEL_LOAD_ERROR, MODEL_ATTEMPTED
+    global MODEL, MODEL_LOADED, MODEL_LOAD_ERROR, MODEL_ATTEMPTED, EMBEDDING_DIM, MODEL_VERSION
     if MODEL_LOADED:
         return True
     if MODEL is not None:
@@ -38,18 +43,30 @@ def load_model():
                 MODEL = m
                 MODEL_LOADED = True
                 MODEL_ATTEMPTED = True
-                print(f"ML Model '{MODEL_NAME}' loaded successfully")
+                # try to infer embedding dim from model
+                try:
+                    dim = getattr(m, 'get_sentence_embedding_dimension', lambda: EMBEDDING_DIM)()
+                    EMBEDDING_DIM = int(dim)
+                except Exception:
+                    logger.warning("Unable to detect model embedding dim; using %s", EMBEDDING_DIM)
+                # set model version/identifier
+                try:
+                    MODEL_VERSION = getattr(m, '__str__', lambda: MODEL_NAME)()
+                except Exception:
+                    MODEL_VERSION = MODEL_NAME
+                logger.info("ML Model '%s' loaded successfully (dim=%d)", MODEL_NAME, EMBEDDING_DIM)
                 return True
             else:
                 MODEL_LOAD_ERROR = "sentence_transformers not installed"
                 MODEL_LOADED = False
                 MODEL_ATTEMPTED = True
+                logger.error(MODEL_LOAD_ERROR)
                 return False
         except Exception as e:
             MODEL_LOAD_ERROR = str(e)
             MODEL_LOADED = False
             MODEL_ATTEMPTED = True
-            print(f"Failed to load ML model: {MODEL_LOAD_ERROR}")
+            logger.exception("Failed to load ML model: %s", MODEL_LOAD_ERROR)
             return False
 
 # lazy model load: initialize on demand or via startup hook
@@ -102,11 +119,21 @@ def _expand_activity_text(text: str) -> str:
 
 
 def _embed_text(text: str) -> np.ndarray:
+    global EMBEDDING_DIM
     if MODEL:
         try:
-            return MODEL.encode(text)
+            emb = MODEL.encode(text)
+            emb_arr = np.asarray(emb)
+            try:
+                dim = int(emb_arr.shape[-1])
+                if dim != EMBEDDING_DIM:
+                    logger.info("Detected model embedding dim %d (was %d); updating", dim, EMBEDDING_DIM)
+                    EMBEDDING_DIM = dim
+            except Exception:
+                pass
+            return emb_arr
         except Exception as e:
-            print(f"Model encoding error: {e}")
+            logger.exception("Model encoding error: %s", e)
     
     tokens = re.findall(r"\b\w+\b", text.lower())
     vec = np.zeros(EMBEDDING_DIM, dtype=np.float32)
