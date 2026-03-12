@@ -66,6 +66,14 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+
+      - name: Cache Hugging Face Models
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/huggingface
+          key: ${{ runner.os }}-huggingface-${{ hashFiles('ml-service/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-huggingface-
           
       - name: Install ML Service Dependencies
         working-directory: ml-service
