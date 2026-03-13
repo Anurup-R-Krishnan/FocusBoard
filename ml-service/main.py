@@ -1,9 +1,13 @@
-from fastapi import FastAPI, Response
+from fastapi import FastAPI, Response, HTTPException
+from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel, Field
 from typing import List, Optional
 import numpy as np
 import re
+import asyncio
+import os
 import threading
+from dataclasses import dataclass
 from core import (
     _cosine_similarity,
     _embed_text,
@@ -19,6 +23,19 @@ from core import (
 )
 
 app = FastAPI(title="FocusBoard ML Service")
+
+MAX_QUEUE = max(1, int(os.environ.get("ML_MAX_QUEUE", "200")))
+WORKERS = max(1, int(os.environ.get("ML_WORKERS", "2")))
+MAX_BATCH_SIZE = max(1, int(os.environ.get("ML_MAX_BATCH_SIZE", "100")))
+
+EMBED_QUEUE = None
+WORKER_TASKS = []
+
+
+@dataclass
+class EmbedTask:
+    text: str
+    future: asyncio.Future
 
 
 def _model_metadata():
@@ -38,6 +55,15 @@ async def start_background_model_init():
         except Exception as e:
             logger.exception("Background model init failed: %s", e)
     threading.Thread(target=_init, daemon=True).start()
+
+
+@app.on_event("startup")
+async def start_worker_pool():
+    global EMBED_QUEUE
+    if EMBED_QUEUE is None:
+        EMBED_QUEUE = asyncio.Queue(maxsize=MAX_QUEUE)
+        for _ in range(WORKERS):
+            WORKER_TASKS.append(asyncio.create_task(_embed_worker()))
 
 class SimilarCategory(BaseModel):
     _id: str
@@ -83,6 +109,31 @@ class BatchEmbedResponse(BaseModel):
     model_version: Optional[str] = None
     embedding_dim: Optional[int] = None
 
+
+async def _embed_worker():
+    while True:
+        task = await EMBED_QUEUE.get()
+        try:
+            result = await run_in_threadpool(_embed_text, task.text)
+            task.future.set_result(result)
+        except Exception as exc:
+            task.future.set_exception(exc)
+        finally:
+            EMBED_QUEUE.task_done()
+
+
+async def _queue_embed(text: str) -> np.ndarray:
+    if EMBED_QUEUE is None:
+        return await run_in_threadpool(_embed_text, text)
+
+    loop = asyncio.get_running_loop()
+    fut = loop.create_future()
+    try:
+        EMBED_QUEUE.put_nowait(EmbedTask(text=text, future=fut))
+    except asyncio.QueueFull as exc:
+        raise HTTPException(status_code=429, detail="ML service overloaded. Retry with backoff.") from exc
+    return await fut
+
 @app.post("/find-similar", response_model=SimilarResponse)
 async def find_similar(req: SimilarRequest):
     if not req.text or not req.categories:
@@ -90,7 +141,7 @@ async def find_similar(req: SimilarRequest):
 
     threshold = req.threshold if req.threshold is not None else MIN_SIMILARITY_THRESHOLD
     
-    text_embedding = _embed_text(_expand_activity_text(req.text))
+    text_embedding = await _queue_embed(_expand_activity_text(req.text))
     best_match = None
     best_similarity = 0.0
 
@@ -154,15 +205,16 @@ async def check_nsfw(req: NsfwRequest):
 
 @app.post("/embed", response_model=EmbedResponse)
 async def embed_text(req: EmbedRequest):
-    embedding = _embed_text(req.text).tolist()
+    embedding = (await _queue_embed(req.text)).tolist()
     return EmbedResponse(embedding=embedding, **_model_metadata())
 
 @app.post("/embed/batch", response_model=BatchEmbedResponse)
 async def embed_batch(req: BatchEmbedRequest, max_batch_size: int = 100):
-    embeddings = []
-    for text in req.texts[:max_batch_size]:
-        embeddings.append(_embed_text(text).tolist())
-    return BatchEmbedResponse(embeddings=embeddings, **_model_metadata())
+    if len(req.texts) > MAX_BATCH_SIZE:
+        raise HTTPException(status_code=400, detail=f"Batch size exceeds {MAX_BATCH_SIZE}")
+    size = min(max_batch_size, MAX_BATCH_SIZE)
+    embeddings = await asyncio.gather(*[_queue_embed(text) for text in req.texts[:size]])
+    return BatchEmbedResponse(embeddings=[emb.tolist() for emb in embeddings], **_model_metadata())
 
 @app.get("/model/status")
 async def model_status():

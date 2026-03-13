@@ -27,6 +27,15 @@ def test_embed_endpoint_returns_vector():
     assert len(body["embedding"]) > 0
 
 
+def test_embed_batch_returns_vectors():
+    resp = client.post("/embed/batch", json={"texts": ["alpha", "beta"]})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert isinstance(body["embeddings"], list)
+    assert len(body["embeddings"]) == 2
+    assert "model_name" in body
+
+
 def test_check_nsfw_flags_keyword():
     resp = client.post("/check-nsfw", json={"url": "https://example.com", "window_title": "explicit content"})
     assert resp.status_code == 200

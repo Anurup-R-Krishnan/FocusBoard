@@ -169,12 +169,24 @@ def _embed_text(text: str) -> np.ndarray:
         except Exception as e:
             logger.exception("Model encoding error: %s", e)
     
-    tokens = re.findall(r"\b\w+\b", text.lower())
+    text = (text or "").lower()
     vec = np.zeros(EMBEDDING_DIM, dtype=np.float32)
+    if not text.strip():
+        return vec
+
+    # fallback embedding: hashed token counts + character trigrams
+    tokens = re.findall(r"\b\w+\b", text)
     for token in tokens:
         h = hashlib.md5(token.encode("utf-8")).hexdigest()
         idx = int(h, 16) % EMBEDDING_DIM
         vec[idx] += 1.0
+
+    compact = re.sub(r"\s+", " ", text)[:500]
+    for i in range(len(compact) - 2):
+        gram = compact[i:i+3]
+        h = hashlib.md5(gram.encode("utf-8")).hexdigest()
+        idx = int(h, 16) % EMBEDDING_DIM
+        vec[idx] += 0.5
     norm = np.linalg.norm(vec)
     if norm > 0:
         vec = vec / norm
