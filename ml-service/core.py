@@ -189,7 +189,7 @@ def get_model_status() -> dict:
     return {
         "loaded": MODEL_LOADED,
         "attempted": MODEL_ATTEMPTED,
-        "model_name": MODEL_NAME if MODEL_LOADED else None,
+        "model_name": MODEL_NAME,
         "model_version": MODEL_VERSION if MODEL_LOADED else None,
         "error": MODEL_LOAD_ERROR,
         "embedding_dim": EMBEDDING_DIM
