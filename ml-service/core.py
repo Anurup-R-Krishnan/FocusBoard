@@ -5,9 +5,29 @@ import os
 import numpy as np
 import threading
 import logging
+import json
+from datetime import datetime, timezone
+
+class JsonFormatter(logging.Formatter):
+    def format(self, record: logging.LogRecord) -> str:
+        payload = {
+            "ts": datetime.now(timezone.utc).isoformat(),
+            "level": record.levelname,
+            "logger": record.name,
+            "message": record.getMessage(),
+        }
+        if record.exc_info:
+            payload["exc_info"] = self.formatException(record.exc_info)
+        return json.dumps(payload)
+
 
 logger = logging.getLogger("ml_service")
-logging.basicConfig(level=os.environ.get("ML_LOG_LEVEL", "INFO"))
+logger.setLevel(os.environ.get("ML_LOG_LEVEL", "INFO"))
+if not logger.handlers:
+    handler = logging.StreamHandler()
+    handler.setFormatter(JsonFormatter())
+    logger.addHandler(handler)
+logger.propagate = False
 
 # Prometheus metrics for ML service
 try:
