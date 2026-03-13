@@ -9,6 +9,18 @@ import logging
 logger = logging.getLogger("ml_service")
 logging.basicConfig(level=os.environ.get("ML_LOG_LEVEL", "INFO"))
 
+# Prometheus metrics for ML service
+try:
+    from prometheus_client import Gauge, Summary, CollectorRegistry, generate_latest
+    METRICS_REGISTRY = CollectorRegistry()
+    MODEL_LOAD_TIME = Summary('ml_model_load_seconds', 'Time to load ML model', registry=METRICS_REGISTRY)
+    MODEL_READY = Gauge('ml_model_ready', '1 if model ready, 0 otherwise', registry=METRICS_REGISTRY)
+except Exception:
+    METRICS_REGISTRY = None
+    MODEL_LOAD_TIME = None
+    MODEL_READY = None
+    generate_latest = None
+
 try:
     from sentence_transformers import SentenceTransformer
 except Exception:
@@ -37,7 +49,9 @@ def load_model():
     with MODEL_LOCK:
         if MODEL_LOADED:
             return True
-        try:
+
+        def _do_load():
+            global MODEL, MODEL_LOADED, MODEL_LOAD_ERROR, MODEL_ATTEMPTED, EMBEDDING_DIM, MODEL_VERSION
             if SentenceTransformer:
                 m = SentenceTransformer(MODEL_NAME)
                 MODEL = m
@@ -55,18 +69,38 @@ def load_model():
                 except Exception:
                     MODEL_VERSION = MODEL_NAME
                 logger.info("ML Model '%s' loaded successfully (dim=%d)", MODEL_NAME, EMBEDDING_DIM)
+                if MODEL_READY is not None:
+                    try:
+                        MODEL_READY.set(1)
+                    except Exception:
+                        pass
                 return True
-            else:
-                MODEL_LOAD_ERROR = "sentence_transformers not installed"
-                MODEL_LOADED = False
-                MODEL_ATTEMPTED = True
-                logger.error(MODEL_LOAD_ERROR)
-                return False
+            MODEL_LOAD_ERROR = "sentence_transformers not installed"
+            MODEL_LOADED = False
+            MODEL_ATTEMPTED = True
+            logger.error(MODEL_LOAD_ERROR)
+            if MODEL_READY is not None:
+                try:
+                    MODEL_READY.set(0)
+                except Exception:
+                    pass
+            return False
+
+        try:
+            if MODEL_LOAD_TIME is not None:
+                with MODEL_LOAD_TIME.time():
+                    return _do_load()
+            return _do_load()
         except Exception as e:
             MODEL_LOAD_ERROR = str(e)
             MODEL_LOADED = False
             MODEL_ATTEMPTED = True
             logger.exception("Failed to load ML model: %s", MODEL_LOAD_ERROR)
+            if MODEL_READY is not None:
+                try:
+                    MODEL_READY.set(0)
+                except Exception:
+                    pass
             return False
 
 # lazy model load: initialize on demand or via startup hook
@@ -156,6 +190,16 @@ def get_model_status() -> dict:
         "loaded": MODEL_LOADED,
         "attempted": MODEL_ATTEMPTED,
         "model_name": MODEL_NAME if MODEL_LOADED else None,
+        "model_version": MODEL_VERSION if MODEL_LOADED else None,
         "error": MODEL_LOAD_ERROR,
         "embedding_dim": EMBEDDING_DIM
     }
+
+
+def get_metrics_payload():
+    if METRICS_REGISTRY is None or generate_latest is None:
+        return None
+    try:
+        return generate_latest(METRICS_REGISTRY)
+    except Exception:
+        return None

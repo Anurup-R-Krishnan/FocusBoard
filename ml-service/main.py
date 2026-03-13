@@ -1,8 +1,9 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 from pydantic import BaseModel, Field
 from typing import List, Optional
 import numpy as np
 import re
+import threading
 from core import (
     _cosine_similarity,
     _embed_text,
@@ -12,9 +13,22 @@ from core import (
     MIN_SIMILARITY_THRESHOLD,
     is_model_loaded,
     get_model_status,
+    load_model,
+    get_metrics_payload,
+    logger,
 )
 
 app = FastAPI(title="FocusBoard ML Service")
+
+
+@app.on_event("startup")
+async def start_background_model_init():
+    def _init():
+        try:
+            load_model()
+        except Exception as e:
+            logger.exception("Background model init failed: %s", e)
+    threading.Thread(target=_init, daemon=True).start()
 
 class SimilarCategory(BaseModel):
     _id: str
@@ -142,3 +156,20 @@ async def health_check():
         "model_loaded": is_model_loaded(),
         "model_info": get_model_status()
     }
+
+
+@app.get("/health/model")
+async def model_health():
+    status = get_model_status()
+    return {
+        "status": "ready" if status.get("loaded") else "not_ready",
+        "model": status
+    }
+
+
+@app.get("/metrics")
+async def metrics():
+    payload = get_metrics_payload()
+    if payload is None:
+        return Response(content="metrics unavailable", status_code=501)
+    return Response(content=payload, media_type="text/plain; version=0.0.4; charset=utf-8")
