@@ -1,293 +1,130 @@
-# 🎯 FocusBoard: Enterprise Productivity Intelligence
+# 🎯 FocusBoard
 
-FocusBoard is an ultra-high-fidelity productivity suite engineered for deep-work analysis, team alignment, and automated activity intelligence. It integrates a native **Rust monitoring engine**, a scalable **Node.js/Bun backend**, and a **Python-driven NLP pipeline** to transform raw interaction data into high-granularity business insights.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js](https://img.shields.io/badge/Node.js-v18+-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
+[![Bun](https://img.shields.io/badge/Bun-v1.0+-000000?logo=bun&logoColor=white)](https://bun.sh/)
+[![React](https://img.shields.io/badge/React-v18-61DAFB?logo=react&logoColor=black)](https://reactjs.org/)
+[![Rust](https://img.shields.io/badge/Rust-Telemetry-white?logo=rust&logoColor=black)](https://www.rust-lang.org/)
+[![Python](https://img.shields.io/badge/Python-Intelligence-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-v0.95+-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 
----
-
-## 📑 Table of Contents
-
-- [1. Technical Philosophy](#1-technical-philosophy)
-- [2. System Architecture V3](#2-system-architecture-v3)
-  - [2.1 Activity Lifecycle Flow](#21-activity-lifecycle-flow)
-  - [2.2 Authentication & Compliance Flow](#22-authentication--compliance-flow)
-- [3. Core Module Specifications](#3-core-module-specifications)
-  - [3.1 Native Telemetry (Rust/Tauri)](#31-native-telemetry-rusttauri)
-  - [3.2 Semantic Categorization Engine (NLP)](#32-semantic-categorization-engine-nlp)
-  - [3.3 Rule Engine (Priority Resolution)](#33-rule-engine-priority-resolution)
-- [4. Data Architecture (High-Fidelity)](#4-data-architecture-high-fidelity)
-  - [4.1 Core Domain Models](#41-core-domain-models)
-  - [4.2 Management & Support Models](#42-management--support-models)
-- [5. Full API Reference (v1.0.0)](#5-full-api-reference-v100)
-- [6. Deployment & Devops](#6-deployment--devops)
-  - [6.1 Infrastructure Orchestration](#61-infrastructure-orchestration)
-  - [6.2 CI/CD Pipeline Analysis](#62-cicd-pipeline-analysis)
-- [7. Security & Resilience Posture](#7-security--resilience-posture)
-- [8. Development Guide](#8-development-guide)
+FocusBoard is an enterprise-grade productivity intelligence environment designed for high-resolution activity analysis. By orchestrating a **Native Rust Telemetry Bridge**, a **Node.js/Bun Central API**, and a **Python-based Semantic Intelligence Layer**, FocusBoard transforms raw digital interactions into structured, actionable performance metrics.
 
 ---
 
-## 1. Technical Philosophy
+## 🏛️ System Architecture & Data Flow
 
-FocusBoard is built on the principle of **Passive Data Collection, Active Intelligence**. It minimizes user friction by automating the tracking-to-categorization pipeline while providing rigorous oversight mechanisms for privacy and safety.
-
-**Key Technical Attributes:**
-- **Zero-Polling Native Capture**: Utilizes Rust's system listeners to detect window changes instantly without high CPU cycles.
-- **Contextual Expansion**: The ML service doesn't just match keywords; it expands window titles with "HINTS" (e.g., "VSCode" -> "development programming coding") to improve embedding match rates.
-- **Distributed Intelligence**: Heavy transformer-based compute is isolated in the `ml-service` to ensure the API layer remains responsive.
-
----
-
-## 2. System Architecture V3
-
-### 2.1 Activity Lifecycle Flow
-This diagram illustrates the journey of a single activity event from hardware capture to analytical representation.
+FocusBoard operates as a distributed system, separating low-level hardware events from high-level cognitive classification.
 
 ```mermaid
-sequenceDiagram
-    participant OS as Operating System
-    participant Monitor as Tauri Monitor (Rust)
-    participant Backend as Node API
-    participant Worker as Background Job (node-schedule)
-    participant ML as ML Service (Python)
-    participant DB as MongoDB
+graph TD
+    subgraph "The Capture Tier (Hardware Integration)"
+        Rust[Rust/Tauri Native Bridge]
+        WebHook[Browser Focus Listener]
+    end
 
-    OS->>Monitor: Window Focus Change
-    Monitor->>Backend: POST /api/activities
-    Backend->>DB: Insert Uncategorized Record
-    Backend-->>ML: Request NSFW Check (Async)
-    Note over Worker: Runs every 60s
-    Worker->>DB: Query uncategorized Activities
-    Worker->>ML: POST /find-similar (Texts + Category Envs)
-    ML-->>Worker: Best Category ID + Confidence
-    Worker->>DB: Save ActivityMapping + Update Activity
-    Worker->>Backend: Trigger WebSocket Sync
-    Backend-->>UI: io.emit('data_updated')
+    subgraph "The Orchestration Tier (Node.js/Bun)"
+        API[Express API Orchestrator]
+        WS[Real-time WebSocket Sync]
+        Queue[Background Categorization Worker]
+    end
+
+    subgraph "The Intelligence Tier (Python)"
+        FastAPI[Inference Gateway]
+        Transformer[Sentence-Transformers Pipeline]
+        Safety[NSFW Safety Heuristics]
+    end
+
+    subgraph "Persistence Level"
+        Mongo[(MongoDB Atlas)]
+    end
+
+    Rust -->|Activity Payload| API
+    WebHook -->|Tab Context| API
+    API -->|Async Classification| Queue
+    Queue -->|Vector Inference| FastAPI
+    FastAPI --> Transformer
+    API -->|Live Dashboards| WS
+    API -->|Document Store| Mongo
 ```
 
-### 2.2 Authentication & Compliance Flow
-FocusBoard implements a strictly validated auth lifecycle with integrated safety checks for younger users.
-
-```mermaid
-graph LR
-    Reg[Register] --> Val[Zod Schema Validation]
-    Val --> Hash[Bcrypt Pwd Hashing]
-    Hash --> Save[Mongo Persistence]
-    Save --> JWT[JWT Issuance]
-    
-    Login[Login] --> Pwd[Password Check]
-    Pwd --> Issue[JWT Issue]
-    
-    Guard[API Access] --> JWTCheck[JWT Verify]
-    JWTCheck --> AgeCheck{User < 16?}
-    AgeCheck -->|Yes| Parental[Check Parental Email]
-    AgeCheck -->|No| Standard[Standard Access]
-```
+### The Native-to-Cloud Pipeline
+FocusBoard's sophistication lies in its multi-stage data lifecycle:
+1.  **Hardware Ingestion**: The Rust core in `src-tauri` intercepts OS-level focus events, capturing application paths and window metadata with sub-millisecond latency.
+2.  **Orchestration**: The backend serves as a stateless traffic controller, handling JWT-secured ingestion and routing telemetry to the intelligence tier.
+3.  **Semantic Inference**: Activities are mapped to internal vector spaces using `all-MiniLM-L6-v2`. This allows the system to understand that "vscode - activityController.js" belongs to "Software Development" without explicit user rules.
 
 ---
 
-## 3. Core Module Specifications
+## 🧠 Core Intelligence Logic
 
-### 3.1 Native Telemetry (Rust/Tauri)
-The native bridge in `src-tauri` is the source of truth for all activity.
-- **Tauri Event**: `activity-update`.
-- **Payload Schema**:
-  ```json
-  {
-    "app_name": "string",
-    "window_title": "string",
-    "url": "string (browser mode only)",
-    "idle_time": "number (ms)",
-    "timestamp": "ISO8601"
-  }
-  ```
-- **Fallback**: Browser-based tracking via `document.hasFocus()` and title polling when running in non-Tauri environments.
+### 1. Semantic State Engine
+Unlike traditional keyword-based trackers, FocusBoard utilizes vector embeddings for high-accuracy categorization.
+- **Confidence Thresholding**: Automatic mapping requires a cosine similarity $\geq 0.3$.
+- **Activity Hints**: The `ml-service` expands minimal metadata (e.g., `Slack`) with semantic hints (`communication chat team messaging`) to increase the probability of a correct category match.
 
-### 3.2 Semantic Categorization Engine (NLP)
-Powered by the `ml-service` (FastAPI), the system performs vector similarity searches.
-- **Model**: `all-MiniLM-L6-v2` (384-dimensional embeddings).
-- **Thresholding**: Default `0.3` (configurable via `MIN_SIMILARITY_THRESHOLD`).
-- **Context Expansion**: Titles are augmented with app-specific hints (e.g., mapping `Chrome` to `web browsing internet`) before vectorization.
+> [!NOTE]
+> If categorization confidence falls below the threshold, the activity moves to a "Pending Review" state for user-assisted learning.
 
-### 3.3 Rule Engine (Priority Resolution)
-The `categorizationService.js` handles explicit user overrides.
-- **Algorithm**: Wildcard-to-Regex conversion.
-- **Resolution**:
-  1.  **Rule Match** (Highest Priority): Direct hit on `app_name`, `url`, or `window_title` patterns.
-  2.  **ML Match**: Secondary fallback if no explicit rules match.
-  3.  **Manual Override**: Permanent override if a user manually re-categorizes an item.
+### 2. Native Monitoring Bridge
+The Rust implementation in `src-tauri` ensures FocusBoard doesn't impact system performance.
+- **Low Overhead**: Passive listeners replace intensive polling mechanisms.
+- **Event Scope**: Captures `app_name`, `window_title`, `url` (via browser bridge), and automated `idle_time` calculation.
 
 ---
 
-## 4. Data Architecture (High-Fidelity)
+## 📂 Technical Data Model
 
-### 4.1 Core Domain Models
+The system utilizes a high-performance Mongoose-driven schema designed for high-write telemetry ingestion.
 
-#### `Activity`
-| Field | Type | Default | Note |
-| --- | --- | --- | --- |
-| `app_name` | String | Required | Executable name (e.g., Chrome) |
-| `window_title`| String | `""` | Captured UI title |
-| `start_time` | Date | Required | |
-| `category_id` | String | null | Ref to `Category` |
-| `idle` | Number | `0` | Seconds of inactivity |
-| `nsfw_flagged`| Boolean| `false` | Triggered by ML service |
-
-#### `ActivityMapping`
-| Field | Type | Default | Note |
-| --- | --- | --- | --- |
-| `activityId` | String | Required | Ref link to `Activity` |
-| `categoryId` | String | Required | Semantic target |
-| `isManualOverride`| Boolean| `false` | User-driven change |
-| `confidenceScore`| Number | `0` | ML matching probability |
-
-#### `Category`
-| Field | Type | Default | Note |
-| --- | --- | --- | --- |
-| `name` | String | Required | Semantic label |
-| `productivityScore`| Number| `0` | -5 (Distraction) to +5 (Deep Work) |
-| `color` | String | `bg-blue-500`| Tailwind-style class |
-| `embedding` | [Number] | `[]` | 384-dimensional vector |
-
-#### `Goal`
-| Field | Type | Default | Note |
-| --- | --- | --- | --- |
-| `title` | String | Required | |
-| `target_deep_work` | Number | Required | Minutes target |
-| `distraction_limit`| Number | Required | Minutes cap |
-| `achieved` | Boolean | `false` | Daily objective status |
-
-#### `Integration`
-| Field | Type | Default | Note |
-| --- | --- | --- | --- |
-| `name` | String | Required | e.g., 'GitHub', 'Google Cal' |
-| `category` | String | Required | Integration vertical |
-| `connected` | Boolean | `false` | Auth status |
-| `syncStatus` | String | `Pending` | Synced, Syncing, Error, Pending |
-
-#### `Task`
-| Field | Type | Default | Note |
-| --- | --- | --- | --- |
-| `title` | String | Required | |
-| `status` | String | `TODO` | TODO, IN_PROGRESS, DONE |
-| `priority` | String | `MEDIUM` | HIGH, MEDIUM, LOW |
-| `timeSpent` | Number | `0` | Accumulated ms |
-
-#### `User`
-| Field | Type | Default | Note |
-| --- | --- | --- | --- |
-| `email_id` | String | Required | Unique Index |
-| `password` | String | Required | Bcrypt Hashed |
-| `age` | Number | | Used for NSFW logic |
-| `role` | String | `Member` | |
-| `status` | String | `OFFLINE` | Enum: FOCUS, BREAK, etc. |
-
-#### `TrackingRule`
-| Field | Type | Default | Note |
-| --- | --- | --- | --- |
-| `pattern` | String | Required | Regex/Wildcard pattern |
-| `matchType` | String | Required | app_name, url, window_title |
-| `priority` | Number | `50` | Higher = Matches first |
-| `categoryId` | String | Required | Target category link |
-
-#### `SupportTicket`
-| Field | Type | Default | Note |
-| --- | --- | --- | --- |
-| `subject` | String | Required | |
-| `priority` | String | `Medium` | Low, Medium, High, Critical |
-| `status` | String | `Open` | Open, In Progress, Resolved, Closed |
-| `deviceInfo` | String | `""` | Captured client context |
-
-### 4.2 Management & Support Models
-The system integrates full CRM and Project Management capabilities.
-- **`Project`**: Tracks `progress` (0-100) and `due_date`.
-- **`Task`**: Granular tracking with `status` (TODO, IN_PROGRESS, DONE) and `priority`.
-- **`Client`**: CRM entity for billable tracking with `hourlyRate`.
-- **`SupportTicket`**: Incident management with `deviceInfo` capture and log-sharing consent.
-
----
-
-## 5. Environment Configuration
-
-FocusBoard uses a centralized configuration matrix in `FocusBoard-backend/config/index.js`.
-
-| Variable | Default Value | Purpose |
+| Entity | Role | Key Attributes |
 | --- | --- | --- |
-| `PORT` | `5000` | API Listener port |
-| `MONGODB_URL` | `null` | Primary persistence URI |
-| `JWT_SECRET` | `focusboard_dev_secret_change_me` | Session signature key |
-| `ML_SERVICE_URL` | `http://localhost:5001` | NLP Gateway address |
-| `DEFAULT_ACTIVITY_COLOR` | `#3B82F6` | Activity chart fallback color |
-| `RATE_LIMIT_MAX` | `1500` (prod) / `5000` (dev) | Request throttling ceiling |
-| `ALLOWED_ORIGINS` | `localhost:5173, etc.` | CORS Whitelist |
+| **`Activity`** | Raw Telemetry | `app_name`, `window_title`, `url`, `start_time`, `idle_ms`, `nsfw_flagged` |
+| **`Category`** | Intelligence Targets | `name`, `productivityScore (-5 to +5)`, `embedding (Vector)`, `color` |
+| **`Mapping`** | Semantic Linkage | `activityId`, `categoryId`, `confidenceScore`, `isManualOverride` |
+| **`Rule`** | Explicit Overrides | `pattern (Regex/Wildcard)`, `matchType (URL/Window)`, `priority` |
+| **`User`** | Auth & Compliance | `email_id`, `age (NSFW logic)`, `parentEmail`, `role (Permissions)` |
+
+> [!IMPORTANT]
+> **Parental Compliance Logic**: Users under the age of 16 are subject to the `NSFW_ALERT_FORCE` logic, which requires a valid `parentEmail` for activity ingest if safety filters are enabled.
 
 ---
 
-## 6. Full API Reference (v1.0.0)
+## 🔌 API Ecosystem (v1.0.0)
 
-Base URL: `http://localhost:5000/api`
+Every endpoint is strictly enforced by **Zod-based validation** and stateless **JWT sessions**.
 
-| Group | Method | Endpoint | Description |
-| --- | --- | --- | --- |
-| **Auth** | `POST` | `/auth/register` | User instantiation |
-| | `POST` | `/auth/login` | JWT Grant |
-| | `GET` | `/auth/me` | Context retrieval |
-| | `POST` | `/auth/dev-login` | Offline-first bypass (restricted) |
-| **Activity**| `POST` | `/activities` | Single event ingest |
-| | `POST` | `/activities/batch`| High-throughput ingest (max 50) |
-| | `GET` | `/activities/recent`| Latest 15 logs |
-| | `GET` | `/activities/export`| CSV/JSON data retrieval |
-| **Metrics** | `GET` | `/metrics/dashboard`| Focus Score / Deep Work stats |
-| | `GET` | `/metrics/timeline` | Granular hourly breakdown |
-| | `GET` | `/metrics/summary` | Aggregated report |
-| **Project** | `GET` | `/projects` | Project overview |
-| | `POST`| `/projects` | New project instantiation |
+- **Authentication**: `POST /api/auth/login`, `POST /api/auth/register`, `POST /api/auth/dev-login`.
+- **Telemetry Ingest**: `POST /api/activities` (Individual), `POST /api/activities/batch` (Max 50/req).
+- **Intelligence Reports**: `GET /api/metrics/dashboard`, `GET /api/metrics/timeline`, `GET /api/metrics/trends`.
+- **Management**: `POST /api/projects`, `POST /api/tasks`, `POST /api/clients`.
 
 ---
 
-## 6. Deployment & Devops
+## 🚀 Production Readiness Checklist
 
-### 6.1 Infrastructure Orchestration
-The project is containerized via `docker-compose.yml`.
-
-| Service | Image | Exposed Port | Healthcheck |
-| --- | --- | --- | --- |
-| `backend` | Node:20 (Custom) | `5000` | `curl /health` |
-| `ml-service`| Python (Custom) | `5001` | `curl /health` |
-| `mongo` | Mongo:7 | `27017` | `mongosh ping` |
-
-### 6.2 CI/CD Pipeline Analysis
-GitHub Actions (`main.yml`) orchestrates a 10-phase pipeline:
-1.  **Environment Setup**: Node 20 + Rust Stable.
-2.  **Dep Installation**: Parallel `npm ci` for multiple directories.
-3.  **Build Phase**: React/Vite builds.
-4.  **Health-Wait Cycle**: Waits 120s for Docker health checks.
-5.  **Seeding**: Initializes demo data via `seedStudentDay.js`.
-6.  **E2E Testing**: `Cypress` execution against live dev server.
-7.  **Unit Strategy**: `Jest` (Backend) + `Vitest` (Frontend) + `Pytest` (ML).
-8.  **Tauri Compilation**: Native builds for linux/windows/macos.
+FocusBoard is built with industrial-grade resilience features:
+- [x] **Rate Limiting**: Throttling enabled on all public-facing routes via `express-rate-limit`.
+- [x] **Safety Architecture**: Multi-stage NSFW detection (Domain Blacklists + Keyword Sharding).
+- [x] **DB Fallback**: Integrated health-check middleware returning 503 on database disconnection.
+- [x] **Stateless Scaling**: The ML service and Backend are fully containerized and horizontally scalable.
+- [x] **Testing Maturity**: Integrated CI/CD pipeline covering Unit (Jest/Vitest), Integration, and E2E (Cypress).
 
 ---
 
-## 7. Security & Resilience Posture
+## 🛠️ Development & Deployment
 
-- **Layer 1: Runtime Context**: Uses `Bun` support for faster startup and native `.env` loading.
-- **Layer 2: Validation**: All controller entrypoints use **Zod schemas** to prevent injection and type-poisoning.
-- **Layer 3: Resilience**: Backend includes `MONGODB_URL` fallback and `RETRY_INTERVAL_MS` (10s) for database disconnection loops.
-- **Layer 4: Rate Limiting**: Defaults to 1500 req/window in production to prevent telemetry spam.
+### Quick Start (Docker Orchestration)
+The fastest way to experience the full stack is via Docker Compose:
+```bash
+docker-compose up --build -d
+```
 
----
-
-## 8. Development Guide
-
-### Contribution Workflow
-1.  **Branching**: `feat/` (Features), `fix/` (Bugs), `ref/` (Refactoring).
-2.  **Linting**: `npm run lint` (ESLint) + `ruff` (for Python).
-3.  **Local Dev**: 
-    - Start Mongo first.
-    - `cd ml-service && uvicorn main:app`.
-    - `cd FocusBoard-backend && bun server.js`.
-    - `cd FocusBoard && bun dev`.
+### Bare Metal Requirements
+- **Runtime**: Bun 1.0+ or Node.js 18+.
+- **Database**: MongoDB 6.0+.
+- **Intelligence**: Python 3.9+ (Pip requirements in `ml-service/`).
 
 ---
 
-*FocusBoard Documentation V3.0 (Technical Update: 2024)*
+*FocusBoard Technical Manual V4.0 | Engineered for Excellence*
