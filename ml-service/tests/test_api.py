@@ -10,7 +10,10 @@ client = TestClient(app)
 def test_health():
     resp = client.get("/health")
     assert resp.status_code == 200
-    assert resp.json() == {"status": "healthy"}
+    body = resp.json()
+    assert body["status"] == "healthy"
+    assert "model_loaded" in body
+    assert "model_info" in body
 
 
 def test_embed_endpoint_returns_vector():
@@ -18,6 +21,8 @@ def test_embed_endpoint_returns_vector():
     assert resp.status_code == 200
     body = resp.json()
     assert "embedding" in body
+    assert "model_name" in body
+    assert "embedding_dim" in body
     assert isinstance(body["embedding"], list)
     assert len(body["embedding"]) > 0
 
@@ -47,3 +52,4 @@ def test_find_similar_picks_best_category():
     body = resp.json()
     assert body["categoryId"] == "cat-good"
     assert body["similarity"] >= 0
+    assert "model_name" in body
