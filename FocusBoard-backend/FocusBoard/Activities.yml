@@ -1,0 +1,25 @@
+info:
+  name: Activities
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: http://localhost:3000/api/activities
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "app_name": "VS Code",
+        "start_time": "2026-02-27T14:00:00.000Z"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

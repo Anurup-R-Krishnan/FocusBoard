@@ -1,0 +1,5 @@
+node_modules
+ml-service
+logs
+*.log
+.env

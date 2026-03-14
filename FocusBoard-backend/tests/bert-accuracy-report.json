@@ -1,0 +1,1057 @@
+{
+  "summary": {
+    "total_tests": 100,
+    "correct": 86,
+    "incorrect": 14,
+    "accuracy_percent": "86.00",
+    "avg_time_ms": "5.88",
+    "total_time_s": "0.59"
+  },
+  "by_category": {
+    "Development": {
+      "correct": 12,
+      "total": 20
+    },
+    "Communication": {
+      "correct": 20,
+      "total": 20
+    },
+    "Entertainment": {
+      "correct": 19,
+      "total": 20
+    },
+    "Productivity": {
+      "correct": 15,
+      "total": 20
+    },
+    "Design": {
+      "correct": 20,
+      "total": 20
+    }
+  },
+  "detailed_results": [
+    {
+      "test_number": 1,
+      "input": "Visual Studio Code",
+      "expected": "Development",
+      "predicted": "Development",
+      "similarity": 0.5881437532996653,
+      "correct": true,
+      "duration_ms": 6,
+      "subcategory": "IDE"
+    },
+    {
+      "test_number": 2,
+      "input": "PyCharm Python IDE",
+      "expected": "Development",
+      "predicted": "Development",
+      "similarity": 0.4385470040446814,
+      "correct": true,
+      "duration_ms": 6,
+      "subcategory": "IDE"
+    },
+    {
+      "test_number": 3,
+      "input": "IntelliJ IDEA Java",
+      "expected": "Development",
+      "predicted": "Development",
+      "similarity": 0.3880853851018198,
+      "correct": true,
+      "duration_ms": 6,
+      "subcategory": "IDE"
+    },
+    {
+      "test_number": 4,
+      "input": "Android Studio",
+      "expected": "Development",
+      "predicted": "Development",
+      "similarity": 0.32867662767142636,
+      "correct": true,
+      "duration_ms": 6,
+      "subcategory": "IDE"
+    },
+    {
+      "test_number": 5,
+      "input": "Xcode Swift",
+      "expected": "Development",
+      "predicted": "Design",
+      "similarity": 0.2309422331368602,
+      "correct": false,
+      "duration_ms": 8,
+      "subcategory": "IDE"
+    },
+    {
+      "test_number": 6,
+      "input": "GitHub code review",
+      "expected": "Development",
+      "predicted": "Development",
+      "similarity": 0.3203764141320936,
+      "correct": true,
+      "duration_ms": 7,
+      "subcategory": "Version Control"
+    },
+    {
+      "test_number": 7,
+      "input": "GitLab repository",
+      "expected": "Development",
+      "predicted": "Development",
+      "similarity": 0.25587822089393697,
+      "correct": true,
+      "duration_ms": 5,
+      "subcategory": "Version Control"
+    },
+    {
+      "test_number": 8,
+      "input": "Terminal bash shell",
+      "expected": "Development",
+      "predicted": "Development",
+      "similarity": 0.11591524523082437,
+      "correct": true,
+      "duration_ms": 6,
+      "subcategory": "CLI"
+    },
+    {
+      "test_number": 9,
+      "input": "Docker container",
+      "expected": "Development",
+      "predicted": "Design",
+      "similarity": 0.06139193819757274,
+      "correct": false,
+      "duration_ms": 6,
+      "subcategory": "DevOps"
+    },
+    {
+      "test_number": 10,
+      "input": "Kubernetes deployment",
+      "expected": "Development",
+      "predicted": "Productivity",
+      "similarity": 0.09963529404153229,
+      "correct": false,
+      "duration_ms": 5,
+      "subcategory": "DevOps"
+    },
+    {
+      "test_number": 11,
+      "input": "npm package manager",
+      "expected": "Development",
+      "predicted": "Productivity",
+      "similarity": 0.20601359682548673,
+      "correct": false,
+      "duration_ms": 11,
+      "subcategory": "Tools"
+    },
+    {
+      "test_number": 12,
+      "input": "Postman API testing",
+      "expected": "Development",
+      "predicted": "Communication",
+      "similarity": 0.10923215441711741,
+      "correct": false,
+      "duration_ms": 6,
+      "subcategory": "Tools"
+    },
+    {
+      "test_number": 13,
+      "input": "MongoDB Compass database",
+      "expected": "Development",
+      "predicted": "Design",
+      "similarity": 0.0582873369276902,
+      "correct": false,
+      "duration_ms": 5,
+      "subcategory": "Database"
+    },
+    {
+      "test_number": 14,
+      "input": "MySQL Workbench",
+      "expected": "Development",
+      "predicted": "Productivity",
+      "similarity": 0.3102185152356254,
+      "correct": false,
+      "duration_ms": 5,
+      "subcategory": "Database"
+    },
+    {
+      "test_number": 15,
+      "input": "Redis Commander",
+      "expected": "Development",
+      "predicted": "Development",
+      "similarity": 0.14062237099005664,
+      "correct": true,
+      "duration_ms": 6,
+      "subcategory": "Database"
+    },
+    {
+      "test_number": 16,
+      "input": "Vim text editor",
+      "expected": "Development",
+      "predicted": "Productivity",
+      "similarity": 0.216632252866907,
+      "correct": false,
+      "duration_ms": 5,
+      "subcategory": "Editor"
+    },
+    {
+      "test_number": 17,
+      "input": "Sublime Text coding",
+      "expected": "Development",
+      "predicted": "Development",
+      "similarity": 0.3899682931452799,
+      "correct": true,
+      "duration_ms": 5,
+      "subcategory": "Editor"
+    },
+    {
+      "test_number": 18,
+      "input": "Eclipse IDE Java",
+      "expected": "Development",
+      "predicted": "Development",
+      "similarity": 0.5751146860075489,
+      "correct": true,
+      "duration_ms": 5,
+      "subcategory": "IDE"
+    },
+    {
+      "test_number": 19,
+      "input": "NetBeans programming",
+      "expected": "Development",
+      "predicted": "Development",
+      "similarity": 0.4538606800737152,
+      "correct": true,
+      "duration_ms": 6,
+      "subcategory": "IDE"
+    },
+    {
+      "test_number": 20,
+      "input": "Atom code editor",
+      "expected": "Development",
+      "predicted": "Development",
+      "similarity": 0.4322731536669933,
+      "correct": true,
+      "duration_ms": 5,
+      "subcategory": "Editor"
+    },
+    {
+      "test_number": 21,
+      "input": "Slack team chat",
+      "expected": "Communication",
+      "predicted": "Communication",
+      "similarity": 0.45316699389630904,
+      "correct": true,
+      "duration_ms": 5,
+      "subcategory": "Messaging"
+    },
+    {
+      "test_number": 22,
+      "input": "Microsoft Teams meeting",
+      "expected": "Communication",
+      "predicted": "Communication",
+      "similarity": 0.506539991640882,
+      "correct": true,
+      "duration_ms": 6,
+      "subcategory": "Messaging"
+    },
+    {
+      "test_number": 23,
+      "input": "Discord voice chat",
+      "expected": "Communication",
+      "predicted": "Communication",
+      "similarity": 0.5100641251371507,
+      "correct": true,
+      "duration_ms": 6,
+      "subcategory": "Messaging"
+    },
+    {
+      "test_number": 24,
+      "input": "Zoom video call",
+      "expected": "Communication",
+      "predicted": "Communication",
+      "similarity": 0.41114407891886146,
+      "correct": true,
+      "duration_ms": 6,
+      "subcategory": "Video"
+    },
+    {
+      "test_number": 25,
+      "input": "Google Meet conference",
+      "expected": "Communication",
+      "predicted": "Communication",
+      "similarity": 0.4931336769148358,
+      "correct": true,
+      "duration_ms": 6,
+      "subcategory": "Video"
+    },
+    {
+      "test_number": 26,
+      "input": "Skype call",
+      "expected": "Communication",
+      "predicted": "Communication",
+      "similarity": 0.42426435142276375,
+      "correct": true,
+      "duration_ms": 6,
+      "subcategory": "Video"
+    },
+    {
+      "test_number": 27,
+      "input": "WhatsApp messaging",
+      "expected": "Communication",
+      "predicted": "Communication",
+      "similarity": 0.4103668168534859,
+      "correct": true,
+      "duration_ms": 6,
+      "subcategory": "Messaging"
+    },
+    {
+      "test_number": 28,
+      "input": "Telegram chat",
+      "expected": "Communication",
+      "predicted": "Communication",
+      "similarity": 0.49474453382028155,
+      "correct": true,
+      "duration_ms": 6,
+      "subcategory": "Messaging"
+    },
+    {
+      "test_number": 29,
+      "input": "Gmail email",
+      "expected": "Communication",
+      "predicted": "Communication",
+      "similarity": 0.2505714979107657,
+      "correct": true,
+      "duration_ms": 6,
+      "subcategory": "Email"
+    },
+    {
+      "test_number": 30,
+      "input": "Outlook mail",
+      "expected": "Communication",
+      "predicted": "Communication",
+      "similarity": 0.26567191747751173,
+      "correct": true,
+      "duration_ms": 5,
+      "subcategory": "Email"
+    },
+    {
+      "test_number": 31,
+      "input": "Thunderbird email client",
+      "expected": "Communication",
+      "predicted": "Communication",
+      "similarity": 0.27833901175131365,
+      "correct": true,
+      "duration_ms": 6,
+      "subcategory": "Email"
+    },
+    {
+      "test_number": 32,
+      "input": "Signal secure messaging",
+      "expected": "Communication",
+      "predicted": "Communication",
+      "similarity": 0.41306994522391216,
+      "correct": true,
+      "duration_ms": 5,
+      "subcategory": "Messaging"
+    },
+    {
+      "test_number": 33,
+      "input": "Webex meeting",
+      "expected": "Communication",
+      "predicted": "Communication",
+      "similarity": 0.48958568284624,
+      "correct": true,
+      "duration_ms": 5,
+      "subcategory": "Video"
+    },
+    {
+      "test_number": 34,
+      "input": "GoToMeeting conference",
+      "expected": "Communication",
+      "predicted": "Communication",
+      "similarity": 0.29597939084748426,
+      "correct": true,
+      "duration_ms": 5,
+      "subcategory": "Video"
+    },
+    {
+      "test_number": 35,
+      "input": "Mattermost team chat",
+      "expected": "Communication",
+      "predicted": "Communication",
+      "similarity": 0.4346705479814263,
+      "correct": true,
+      "duration_ms": 5,
+      "subcategory": "Messaging"
+    },
+    {
+      "test_number": 36,
+      "input": "Rocket.Chat messaging",
+      "expected": "Communication",
+      "predicted": "Communication",
+      "similarity": 0.434464273674137,
+      "correct": true,
+      "duration_ms": 6,
+      "subcategory": "Messaging"
+    },
+    {
+      "test_number": 37,
+      "input": "IRC chat client",
+      "expected": "Communication",
+      "predicted": "Communication",
+      "similarity": 0.41780107138763617,
+      "correct": true,
+      "duration_ms": 5,
+      "subcategory": "Messaging"
+    },
+    {
+      "test_number": 38,
+      "input": "Matrix Element chat",
+      "expected": "Communication",
+      "predicted": "Communication",
+      "similarity": 0.36141473383386885,
+      "correct": true,
+      "duration_ms": 5,
+      "subcategory": "Messaging"
+    },
+    {
+      "test_number": 39,
+      "input": "Jitsi video call",
+      "expected": "Communication",
+      "predicted": "Communication",
+      "similarity": 0.33982105161108583,
+      "correct": true,
+      "duration_ms": 5,
+      "subcategory": "Video"
+    },
+    {
+      "test_number": 40,
+      "input": "BigBlueButton conference",
+      "expected": "Communication",
+      "predicted": "Communication",
+      "similarity": 0.34532547799746793,
+      "correct": true,
+      "duration_ms": 6,
+      "subcategory": "Video"
+    },
+    {
+      "test_number": 41,
+      "input": "Spotify music streaming",
+      "expected": "Entertainment",
+      "predicted": "Entertainment",
+      "similarity": 0.45996247903860593,
+      "correct": true,
+      "duration_ms": 6,
+      "subcategory": "Music"
+    },
+    {
+      "test_number": 42,
+      "input": "Netflix watching movies",
+      "expected": "Entertainment",
+      "predicted": "Entertainment",
+      "similarity": 0.3266778876982047,
+      "correct": true,
+      "duration_ms": 5,
+      "subcategory": "Video"
+    },
+    {
+      "test_number": 43,
+      "input": "YouTube videos",
+      "expected": "Entertainment",
+      "predicted": "Entertainment",
+      "similarity": 0.42153310589819454,
+      "correct": true,
+      "duration_ms": 7,
+      "subcategory": "Video"
+    },
+    {
+      "test_number": 44,
+      "input": "Twitch live streaming",
+      "expected": "Entertainment",
+      "predicted": "Entertainment",
+      "similarity": 0.4336998974266509,
+      "correct": true,
+      "duration_ms": 5,
+      "subcategory": "Streaming"
+    },
+    {
+      "test_number": 45,
+      "input": "Steam gaming platform",
+      "expected": "Entertainment",
+      "predicted": "Entertainment",
+      "similarity": 0.39963311211998626,
+      "correct": true,
+      "duration_ms": 6,
+      "subcategory": "Gaming"
+    },
+    {
+      "test_number": 46,
+      "input": "Epic Games Launcher",
+      "expected": "Entertainment",
+      "predicted": "Entertainment",
+      "similarity": 0.29819616039639346,
+      "correct": true,
+      "duration_ms": 6,
+      "subcategory": "Gaming"
+    },
+    {
+      "test_number": 47,
+      "input": "Discord gaming chat",
+      "expected": "Entertainment",
+      "predicted": "Communication",
+      "similarity": 0.4327232357641846,
+      "correct": false,
+      "duration_ms": 7,
+      "subcategory": "Gaming"
+    },
+    {
+      "test_number": 48,
+      "input": "Apple Music streaming",
+      "expected": "Entertainment",
+      "predicted": "Entertainment",
+      "similarity": 0.5130272174629116,
+      "correct": true,
+      "duration_ms": 6,
+      "subcategory": "Music"
+    },
+    {
+      "test_number": 49,
+      "input": "Amazon Prime Video",
+      "expected": "Entertainment",
+      "predicted": "Entertainment",
+      "similarity": 0.3071312603335128,
+      "correct": true,
+      "duration_ms": 6,
+      "subcategory": "Video"
+    },
+    {
+      "test_number": 50,
+      "input": "Hulu streaming",
+      "expected": "Entertainment",
+      "predicted": "Entertainment",
+      "similarity": 0.3824395421166623,
+      "correct": true,
+      "duration_ms": 6,
+      "subcategory": "Video"
+    },
+    {
+      "test_number": 51,
+      "input": "Disney Plus movies",
+      "expected": "Entertainment",
+      "predicted": "Entertainment",
+      "similarity": 0.253139829013987,
+      "correct": true,
+      "duration_ms": 6,
+      "subcategory": "Video"
+    },
+    {
+      "test_number": 52,
+      "input": "HBO Max series",
+      "expected": "Entertainment",
+      "predicted": "Entertainment",
+      "similarity": 0.10123116542850434,
+      "correct": true,
+      "duration_ms": 5,
+      "subcategory": "Video"
+    },
+    {
+      "test_number": 53,
+      "input": "Tidal music",
+      "expected": "Entertainment",
+      "predicted": "Entertainment",
+      "similarity": 0.36390813075396405,
+      "correct": true,
+      "duration_ms": 6,
+      "subcategory": "Music"
+    },
+    {
+      "test_number": 54,
+      "input": "SoundCloud audio",
+      "expected": "Entertainment",
+      "predicted": "Entertainment",
+      "similarity": 0.37856579268369245,
+      "correct": true,
+      "duration_ms": 7,
+      "subcategory": "Music"
+    },
+    {
+      "test_number": 55,
+      "input": "Deezer music player",
+      "expected": "Entertainment",
+      "predicted": "Entertainment",
+      "similarity": 0.3711366364763977,
+      "correct": true,
+      "duration_ms": 7,
+      "subcategory": "Music"
+    },
+    {
+      "test_number": 56,
+      "input": "VLC media player",
+      "expected": "Entertainment",
+      "predicted": "Entertainment",
+      "similarity": 0.46303129009901334,
+      "correct": true,
+      "duration_ms": 7,
+      "subcategory": "Media"
+    },
+    {
+      "test_number": 57,
+      "input": "Plex media server",
+      "expected": "Entertainment",
+      "predicted": "Entertainment",
+      "similarity": 0.3221952827765122,
+      "correct": true,
+      "duration_ms": 7,
+      "subcategory": "Media"
+    },
+    {
+      "test_number": 58,
+      "input": "Kodi entertainment center",
+      "expected": "Entertainment",
+      "predicted": "Entertainment",
+      "similarity": 0.3247295791134436,
+      "correct": true,
+      "duration_ms": 7,
+      "subcategory": "Media"
+    },
+    {
+      "test_number": 59,
+      "input": "Minecraft game",
+      "expected": "Entertainment",
+      "predicted": "Entertainment",
+      "similarity": 0.36739177226142405,
+      "correct": true,
+      "duration_ms": 7,
+      "subcategory": "Gaming"
+    },
+    {
+      "test_number": 60,
+      "input": "Fortnite gaming",
+      "expected": "Entertainment",
+      "predicted": "Entertainment",
+      "similarity": 0.45484313949675953,
+      "correct": true,
+      "duration_ms": 6,
+      "subcategory": "Gaming"
+    },
+    {
+      "test_number": 61,
+      "input": "Microsoft Word document",
+      "expected": "Productivity",
+      "predicted": "Productivity",
+      "similarity": 0.4379241364887516,
+      "correct": true,
+      "duration_ms": 8,
+      "subcategory": "Documents"
+    },
+    {
+      "test_number": 62,
+      "input": "Google Docs writing",
+      "expected": "Productivity",
+      "predicted": "Productivity",
+      "similarity": 0.46368108706050165,
+      "correct": true,
+      "duration_ms": 6,
+      "subcategory": "Documents"
+    },
+    {
+      "test_number": 63,
+      "input": "Excel spreadsheet",
+      "expected": "Productivity",
+      "predicted": "Productivity",
+      "similarity": 0.39774846840870864,
+      "correct": true,
+      "duration_ms": 6,
+      "subcategory": "Spreadsheet"
+    },
+    {
+      "test_number": 64,
+      "input": "Google Sheets data",
+      "expected": "Productivity",
+      "predicted": "Productivity",
+      "similarity": 0.30009031560099303,
+      "correct": true,
+      "duration_ms": 6,
+      "subcategory": "Spreadsheet"
+    },
+    {
+      "test_number": 65,
+      "input": "PowerPoint presentation",
+      "expected": "Productivity",
+      "predicted": "Design",
+      "similarity": 0.3558341742385149,
+      "correct": false,
+      "duration_ms": 6,
+      "subcategory": "Presentation"
+    },
+    {
+      "test_number": 66,
+      "input": "Google Slides deck",
+      "expected": "Productivity",
+      "predicted": "Design",
+      "similarity": 0.23800359618733335,
+      "correct": false,
+      "duration_ms": 6,
+      "subcategory": "Presentation"
+    },
+    {
+      "test_number": 67,
+      "input": "Notion notes",
+      "expected": "Productivity",
+      "predicted": "Productivity",
+      "similarity": 0.4089098930578252,
+      "correct": true,
+      "duration_ms": 5,
+      "subcategory": "Notes"
+    },
+    {
+      "test_number": 68,
+      "input": "Evernote notebook",
+      "expected": "Productivity",
+      "predicted": "Productivity",
+      "similarity": 0.45022730673418143,
+      "correct": true,
+      "duration_ms": 5,
+      "subcategory": "Notes"
+    },
+    {
+      "test_number": 69,
+      "input": "OneNote digital notes",
+      "expected": "Productivity",
+      "predicted": "Productivity",
+      "similarity": 0.46576757073678116,
+      "correct": true,
+      "duration_ms": 5,
+      "subcategory": "Notes"
+    },
+    {
+      "test_number": 70,
+      "input": "Trello project board",
+      "expected": "Productivity",
+      "predicted": "Productivity",
+      "similarity": 0.3516390099344923,
+      "correct": true,
+      "duration_ms": 6,
+      "subcategory": "Project Management"
+    },
+    {
+      "test_number": 71,
+      "input": "Asana task management",
+      "expected": "Productivity",
+      "predicted": "Productivity",
+      "similarity": 0.4652884339064009,
+      "correct": true,
+      "duration_ms": 5,
+      "subcategory": "Project Management"
+    },
+    {
+      "test_number": 72,
+      "input": "Jira issue tracking",
+      "expected": "Productivity",
+      "predicted": "Development",
+      "similarity": 0.18570560789000506,
+      "correct": false,
+      "duration_ms": 6,
+      "subcategory": "Project Management"
+    },
+    {
+      "test_number": 73,
+      "input": "Monday.com workflow",
+      "expected": "Productivity",
+      "predicted": "Productivity",
+      "similarity": 0.25349577773401727,
+      "correct": true,
+      "duration_ms": 5,
+      "subcategory": "Project Management"
+    },
+    {
+      "test_number": 74,
+      "input": "Todoist task list",
+      "expected": "Productivity",
+      "predicted": "Productivity",
+      "similarity": 0.4744165535884654,
+      "correct": true,
+      "duration_ms": 5,
+      "subcategory": "Tasks"
+    },
+    {
+      "test_number": 75,
+      "input": "TickTick todo app",
+      "expected": "Productivity",
+      "predicted": "Productivity",
+      "similarity": 0.2659608421452066,
+      "correct": true,
+      "duration_ms": 5,
+      "subcategory": "Tasks"
+    },
+    {
+      "test_number": 76,
+      "input": "Obsidian knowledge base",
+      "expected": "Productivity",
+      "predicted": "Entertainment",
+      "similarity": 0.14334291598623228,
+      "correct": false,
+      "duration_ms": 6,
+      "subcategory": "Notes"
+    },
+    {
+      "test_number": 77,
+      "input": "Roam Research notes",
+      "expected": "Productivity",
+      "predicted": "Productivity",
+      "similarity": 0.42219441765401156,
+      "correct": true,
+      "duration_ms": 5,
+      "subcategory": "Notes"
+    },
+    {
+      "test_number": 78,
+      "input": "Airtable database",
+      "expected": "Productivity",
+      "predicted": "Entertainment",
+      "similarity": 0.05332109137404144,
+      "correct": false,
+      "duration_ms": 6,
+      "subcategory": "Database"
+    },
+    {
+      "test_number": 79,
+      "input": "Coda documents",
+      "expected": "Productivity",
+      "predicted": "Productivity",
+      "similarity": 0.30139416110629624,
+      "correct": true,
+      "duration_ms": 6,
+      "subcategory": "Documents"
+    },
+    {
+      "test_number": 80,
+      "input": "LibreOffice Writer",
+      "expected": "Productivity",
+      "predicted": "Productivity",
+      "similarity": 0.42342158860296364,
+      "correct": true,
+      "duration_ms": 6,
+      "subcategory": "Documents"
+    },
+    {
+      "test_number": 81,
+      "input": "Figma design tool",
+      "expected": "Design",
+      "predicted": "Design",
+      "similarity": 0.5139776171664299,
+      "correct": true,
+      "duration_ms": 6,
+      "subcategory": "UI/UX"
+    },
+    {
+      "test_number": 82,
+      "input": "Adobe Photoshop editing",
+      "expected": "Design",
+      "predicted": "Design",
+      "similarity": 0.3875280388953824,
+      "correct": true,
+      "duration_ms": 6,
+      "subcategory": "Graphics"
+    },
+    {
+      "test_number": 83,
+      "input": "Adobe Illustrator vector",
+      "expected": "Design",
+      "predicted": "Design",
+      "similarity": 0.2220968394084399,
+      "correct": true,
+      "duration_ms": 6,
+      "subcategory": "Graphics"
+    },
+    {
+      "test_number": 84,
+      "input": "Sketch app design",
+      "expected": "Design",
+      "predicted": "Design",
+      "similarity": 0.539018806474059,
+      "correct": true,
+      "duration_ms": 6,
+      "subcategory": "UI/UX"
+    },
+    {
+      "test_number": 85,
+      "input": "Adobe XD prototyping",
+      "expected": "Design",
+      "predicted": "Design",
+      "similarity": 0.5538009780625998,
+      "correct": true,
+      "duration_ms": 7,
+      "subcategory": "UI/UX"
+    },
+    {
+      "test_number": 86,
+      "input": "InVision design",
+      "expected": "Design",
+      "predicted": "Design",
+      "similarity": 0.46959341963974854,
+      "correct": true,
+      "duration_ms": 6,
+      "subcategory": "UI/UX"
+    },
+    {
+      "test_number": 87,
+      "input": "Canva graphic design",
+      "expected": "Design",
+      "predicted": "Design",
+      "similarity": 0.4588898710167351,
+      "correct": true,
+      "duration_ms": 6,
+      "subcategory": "Graphics"
+    },
+    {
+      "test_number": 88,
+      "input": "GIMP image editor",
+      "expected": "Design",
+      "predicted": "Design",
+      "similarity": 0.3198734192879036,
+      "correct": true,
+      "duration_ms": 6,
+      "subcategory": "Graphics"
+    },
+    {
+      "test_number": 89,
+      "input": "Inkscape vector graphics",
+      "expected": "Design",
+      "predicted": "Design",
+      "similarity": 0.33225951093919365,
+      "correct": true,
+      "duration_ms": 6,
+      "subcategory": "Graphics"
+    },
+    {
+      "test_number": 90,
+      "input": "Affinity Designer",
+      "expected": "Design",
+      "predicted": "Design",
+      "similarity": 0.2946953008001327,
+      "correct": true,
+      "duration_ms": 5,
+      "subcategory": "Graphics"
+    },
+    {
+      "test_number": 91,
+      "input": "Affinity Photo editing",
+      "expected": "Design",
+      "predicted": "Design",
+      "similarity": 0.20361871692484165,
+      "correct": true,
+      "duration_ms": 6,
+      "subcategory": "Graphics"
+    },
+    {
+      "test_number": 92,
+      "input": "Blender 3D modeling",
+      "expected": "Design",
+      "predicted": "Design",
+      "similarity": 0.3013802601428297,
+      "correct": true,
+      "duration_ms": 5,
+      "subcategory": "3D"
+    },
+    {
+      "test_number": 93,
+      "input": "Maya 3D animation",
+      "expected": "Design",
+      "predicted": "Design",
+      "similarity": 0.29608391744805523,
+      "correct": true,
+      "duration_ms": 5,
+      "subcategory": "3D"
+    },
+    {
+      "test_number": 94,
+      "input": "Cinema 4D rendering",
+      "expected": "Design",
+      "predicted": "Design",
+      "similarity": 0.2670857085380236,
+      "correct": true,
+      "duration_ms": 5,
+      "subcategory": "3D"
+    },
+    {
+      "test_number": 95,
+      "input": "AutoCAD drafting",
+      "expected": "Design",
+      "predicted": "Design",
+      "similarity": 0.41676077250176613,
+      "correct": true,
+      "duration_ms": 6,
+      "subcategory": "CAD"
+    },
+    {
+      "test_number": 96,
+      "input": "SketchUp 3D design",
+      "expected": "Design",
+      "predicted": "Design",
+      "similarity": 0.4244178306221931,
+      "correct": true,
+      "duration_ms": 5,
+      "subcategory": "3D"
+    },
+    {
+      "test_number": 97,
+      "input": "Procreate digital art",
+      "expected": "Design",
+      "predicted": "Design",
+      "similarity": 0.44588337916060794,
+      "correct": true,
+      "duration_ms": 6,
+      "subcategory": "Graphics"
+    },
+    {
+      "test_number": 98,
+      "input": "Framer prototyping",
+      "expected": "Design",
+      "predicted": "Design",
+      "similarity": 0.4222576360296213,
+      "correct": true,
+      "duration_ms": 7,
+      "subcategory": "UI/UX"
+    },
+    {
+      "test_number": 99,
+      "input": "Principle animation",
+      "expected": "Design",
+      "predicted": "Design",
+      "similarity": 0.3014704608479272,
+      "correct": true,
+      "duration_ms": 6,
+      "subcategory": "UI/UX"
+    },
+    {
+      "test_number": 100,
+      "input": "Zeplin design handoff",
+      "expected": "Design",
+      "predicted": "Design",
+      "similarity": 0.25350177220156145,
+      "correct": true,
+      "duration_ms": 7,
+      "subcategory": "UI/UX"
+    }
+  ],
+  "model_info": {
+    "name": "all-MiniLM-L6-v2",
+    "dimensions": 384,
+    "similarity_threshold": 0.7
+  },
+  "nsfw_filters": {
+    "domains": [
+      "pornhub.com",
+      "xvideos.com",
+      "xnxx.com",
+      "redtube.com",
+      "youporn.com"
+    ],
+    "keywords": [
+      "porn",
+      "xxx",
+      "sex",
+      "nude",
+      "nsfw",
+      "adult",
+      "explicit"
+    ]
+  }
+}
