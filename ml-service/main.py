@@ -66,7 +66,7 @@ async def start_worker_pool():
             WORKER_TASKS.append(asyncio.create_task(_embed_worker()))
 
 class SimilarCategory(BaseModel):
-    _id: str
+    id: str = Field(alias="_id")
     embedding: List[float]
 
 class SimilarRequest(BaseModel):
@@ -159,7 +159,7 @@ async def find_similar(req: SimilarRequest):
     if best_match:
         meets_threshold = best_similarity >= threshold
         return SimilarResponse(
-            categoryId=best_match._id if meets_threshold else None,
+            categoryId=best_match.id if meets_threshold else None,
             similarity=best_similarity,
             meetsThreshold=meets_threshold,
             **_model_metadata(),

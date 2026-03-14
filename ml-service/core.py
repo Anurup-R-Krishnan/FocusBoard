@@ -174,6 +174,8 @@ def _expand_activity_text(text: str) -> str:
 
 def _embed_text(text: str) -> np.ndarray:
     global EMBEDDING_DIM
+    if not MODEL_LOADED and SentenceTransformer:
+        load_model()
     if MODEL:
         try:
             emb = MODEL.encode(text)

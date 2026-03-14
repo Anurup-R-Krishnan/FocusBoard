@@ -1,36 +1,58 @@
-# Node
+# Dependencies
 node_modules/
+jspm_packages/
+venv/
+.venv/
+env/
+
+# Build and Distribution
 dist/
 build/
+out/
+.next/
+src-tauri/target/
+
+# Logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-venv/
-env/
-.venv/
-.pytest_cache/
-
-# IDEs & OS
-.vscode/
-.idea/
-.DS_Store
-
-# Environment
+# Environment Variables
 .env
 .env.*
 !.env.example
 
-# Cypress
+# IDEs and Tools
+.claude/
+docs/
+scripts/
+.vscode/
+.idea/
+.project
+.classpath
+.settings/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Testing
 cypress/videos/
 cypress/screenshots/
+.pytest_cache/
+.coverage
+htmlcov/
+.eslintcache
 
-# DB
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+.ipynb_checkpoints/
+
+# Database
 mongo_data/
 
-# Tauri
-src-tauri/target/
+docs/
