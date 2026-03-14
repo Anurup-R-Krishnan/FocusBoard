@@ -107,3 +107,13 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           projectPath: "FocusBoard"
+
+      - name: Trigger Render Deployment
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          if [ -z "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" ]; then
+            echo "RENDER_DEPLOY_HOOK_URL is not set in GitHub Secrets."
+            echo "Please set it using the 'gh' CLI."
+            exit 1
+          fi
+          curl -s -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
