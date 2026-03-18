@@ -6,7 +6,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     HF_HOME=/app/.cache \
     TRANSFORMERS_CACHE=/app/.cache \
     SENTENCE_TRANSFORMERS_HOME=/app/.cache \
-    UVICORN_WORKERS=8
+    UVICORN_WORKERS=1
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl \
@@ -30,4 +30,4 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 EXPOSE 5001
 
 ENTRYPOINT ["docker-entrypoint.sh"]
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5001", "--workers", "8"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5001", "--workers", "1"]

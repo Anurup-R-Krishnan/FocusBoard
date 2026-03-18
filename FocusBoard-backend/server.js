@@ -11,12 +11,13 @@ const helmet = require('helmet');
 const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
 const morgan = require('morgan');
 const jwt = require('jsonwebtoken');
+const axios = require('axios');
 const logger = require('./utils/logger');
 const config = require('./config');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 
-const WORKERS = Math.max(1, Number.parseInt(process.env.WORKERS || '8', 10) || 8);
+const WORKERS = Math.max(1, Number.parseInt(process.env.WORKERS || '2', 10) || 2);
 
 if (cluster.isPrimary) {
   const cpuCount = os.cpus().length;
@@ -276,7 +277,6 @@ let mlServiceConnected = false;
 
 const checkMlService = async () => {
   try {
-    const axios = require('axios');
     await axios.get(`${ML_SERVICE_URL}/health`, { timeout: 3000 });
     mlServiceConnected = true;
   } catch (error) {

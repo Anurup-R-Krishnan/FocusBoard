@@ -172,14 +172,27 @@ def _expand_activity_text(text: str) -> str:
     return text
 
 
+_EMBED_CACHE: dict = {}
+_EMBED_CACHE_MAX = 256
+
+
 def _embed_text(text: str) -> np.ndarray:
+    """Embed text using the loaded model with an LRU-style dict cache.
+
+    The cache stores tuples (immutable) to prevent callers from mutating
+    cached state. Each call returns a fresh ndarray copy from the cached tuple.
+    """
     global EMBEDDING_DIM
+
+    if text in _EMBED_CACHE:
+        return np.array(_EMBED_CACHE[text], dtype=np.float32)
+
     if not MODEL_LOADED and SentenceTransformer:
         load_model()
     if MODEL:
         try:
             emb = MODEL.encode(text)
-            emb_arr = np.asarray(emb)
+            emb_arr = np.asarray(emb, dtype=np.float32)
             try:
                 dim = int(emb_arr.shape[-1])
                 if dim != EMBEDDING_DIM:
@@ -187,23 +200,26 @@ def _embed_text(text: str) -> np.ndarray:
                     EMBEDDING_DIM = dim
             except Exception:
                 pass
+            if len(_EMBED_CACHE) >= _EMBED_CACHE_MAX:
+                _EMBED_CACHE.pop(next(iter(_EMBED_CACHE)))
+            _EMBED_CACHE[text] = tuple(emb_arr.tolist())
             return emb_arr
         except Exception as e:
             logger.exception("Model encoding error: %s", e)
-    
-    text = (text or "").lower()
+
+    text_lower = (text or "").lower()
     vec = np.zeros(EMBEDDING_DIM, dtype=np.float32)
-    if not text.strip():
+    if not text_lower.strip():
         return vec
 
     # fallback embedding: hashed token counts + character trigrams
-    tokens = re.findall(r"\b\w+\b", text)
+    tokens = re.findall(r"\b\w+\b", text_lower)
     for token in tokens:
         h = hashlib.md5(token.encode("utf-8")).hexdigest()
         idx = int(h, 16) % EMBEDDING_DIM
         vec[idx] += 1.0
 
-    compact = re.sub(r"\s+", " ", text)[:500]
+    compact = re.sub(r"\s+", " ", text_lower)[:500]
     for i in range(len(compact) - 2):
         gram = compact[i:i+3]
         h = hashlib.md5(gram.encode("utf-8")).hexdigest()

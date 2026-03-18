@@ -1,7 +1,7 @@
 FROM node:20-slim
 
 ENV NODE_ENV=production \
-		WORKERS=8
+		WORKERS=2
 
 WORKDIR /app
 
