@@ -1,10 +1,11 @@
 const schedule = require('node-schedule');
-const axios = require('axios');
 const Activity = require('../models/Activity');
 const ActivityMapping = require('../models/ActivityMapping');
 const Category = require('../models/Category');
 const User = require('../models/User');
 const TrackingRule = require('../models/TrackingRule');
+const mlClient = require('./mlClient');
+const { findSimilarCached, checkNsfwCached } = require('./mlResponseCache');
 const logger = require('../utils/logger');
 const config = require('../config');
 
@@ -36,15 +37,19 @@ const processActivity = async (activity, categories) => {
 
     // Run categorization and NSFW check concurrently for this activity
     const [categorizeResult, nsfwResult] = await Promise.allSettled([
-        axios.post(`${ML_SERVICE_URL}/find-similar`, {
-            text,
-            categories: categories.map(c => ({ _id: c._id, embedding: c.embedding })),
-            threshold: SIMILARITY_THRESHOLD,
-        }, { timeout: 5000 }),
-        axios.post(`${ML_SERVICE_URL}/check-nsfw`, {
-            url: activity.url || '',
-            window_title: activity.window_title || '',
-        }, { timeout: 5000 }),
+        findSimilarCached(text, categories, SIMILARITY_THRESHOLD, () =>
+            mlClient.post('/find-similar', {
+                text,
+                categories: categories.map(c => ({ _id: c._id, embedding: c.embedding })),
+                threshold: SIMILARITY_THRESHOLD,
+            })
+        ).then(r => ({ data: r.data ?? r })),
+        checkNsfwCached(activity.url || '', activity.window_title || '', () =>
+            mlClient.post('/check-nsfw', {
+                url: activity.url || '',
+                window_title: activity.window_title || '',
+            })
+        ).then(r => ({ data: r.data ?? r })),
     ]);
 
     // Handle categorize result

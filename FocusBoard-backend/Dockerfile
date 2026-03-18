@@ -1,7 +1,7 @@
-FROM node:20-slim
+FROM oven/bun:1-slim
 
 ENV NODE_ENV=production \
-		WORKERS=2
+    WORKERS=2
 
 WORKDIR /app
 
@@ -9,14 +9,13 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends curl \
   && rm -rf /var/lib/apt/lists/*
 
-COPY package.json package-lock.json ./
-RUN --mount=type=cache,target=/root/.npm \
-	npm ci --omit=dev
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile --production
 
-COPY --chown=node:node . .
+COPY --chown=bun:bun . .
 
-USER node
+USER bun
 
 EXPOSE 5000
 
-CMD ["node", "server.js"]
+CMD ["bun", "run", "server.js"]

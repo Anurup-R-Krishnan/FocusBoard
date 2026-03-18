@@ -1,7 +1,7 @@
 const Category = require('../models/Category');
 const Activity = require('../models/Activity');
 const ActivityMapping = require('../models/ActivityMapping');
-const axios = require('axios');
+const mlClient = require('../services/mlClient');
 const config = require('../config');
 
 const ML_SERVICE_URL = config.ML_SERVICE_URL;
@@ -35,7 +35,7 @@ exports.generateEmbeddings = async (req, res) => {
             try {
                 const text = `${category.name} ${category.description || ''}`.trim();
                 
-                const response = await axios.post(`${ML_SERVICE_URL}/embed`, 
+                const response = await mlClient.post('/embed',
                     { text },
                     { timeout: 10000 }
                 );
@@ -76,7 +76,7 @@ exports.regenerateEmbedding = async (req, res) => {
 
         const text = `${category.name} ${category.description || ''}`.trim();
         
-        const response = await axios.post(`${ML_SERVICE_URL}/embed`, 
+        const response = await mlClient.post('/embed',
             { text },
             { timeout: 10000 }
         );
@@ -120,7 +120,7 @@ exports.recategorizeAllActivities = async (req, res) => {
             try {
                 const text = `${activity.app_name} ${activity.window_title || ''} ${activity.url || ''}`.trim();
                 
-                const response = await axios.post(`${ML_SERVICE_URL}/find-similar`, {
+                const response = await mlClient.post('/find-similar', {
                     text,
                     categories: categories.map(c => ({ _id: c._id, embedding: c.embedding })),
                     threshold: 0.3

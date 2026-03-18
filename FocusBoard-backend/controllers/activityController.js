@@ -3,7 +3,8 @@ const Activity = require('../models/Activity');
 const ActivityMapping = require('../models/ActivityMapping');
 const User = require('../models/User');
 const { matchByRules } = require('../services/categorizationService');
-const axios = require('axios');
+const mlClient = require('../services/mlClient');
+const { checkNsfwCached } = require('../services/mlResponseCache');
 const jwt = require('jsonwebtoken');
 const logger = require('../utils/logger');
 const config = require('../config');
@@ -121,8 +122,9 @@ const createActivity = async (req, res) => {
 
     if (url) {
       try {
-        const nsfwCheck = await axios.post(`${ML_SERVICE_URL}/check-nsfw`, { url, window_title: '' });
-        if (nsfwCheck.data.flagged && resolvedUserId) {
+        const nsfwCheck = await checkNsfwCached(url, '', () => mlClient.post('/check-nsfw', { url, window_title: '' }));
+        const nsfwData = nsfwCheck.data ?? nsfwCheck;
+        if (nsfwData.flagged && resolvedUserId) {
           const user = await User.findById(resolvedUserId);
           if (user && user.age && user.age < 16) {
             saved.nsfw_flagged = true;
