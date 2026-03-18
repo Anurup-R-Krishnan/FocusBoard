@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Activity, Clock, Monitor, Globe } from 'lucide-react';
+import { ClipboardList, Clock, Monitor, Globe, TrendingUp } from 'lucide-react';
 import { BackendActivity } from '../../services/activityApi';
 
 interface LiveTrackingPanelProps {
@@ -10,10 +10,10 @@ interface LiveTrackingPanelProps {
 
 function getAppIcon(appName: string) {
     const lower = appName.toLowerCase();
-    if (lower.includes('chrome') || lower.includes('firefox') || lower.includes('safari') || lower.includes('browser')) {
-        return <Globe size={14} className="text-blue-400 shrink-0" />;
+    if (lower.includes('chrome') || lower.includes('firefox') || lower.includes('safari') || lower.includes('browser') || lower.includes('zen')) {
+        return <Globe size={13} className="text-blue-400 shrink-0" />;
     }
-    return <Monitor size={14} className="text-neutral-400 shrink-0" />;
+    return <Monitor size={13} className="text-neutral-400 shrink-0" />;
 }
 
 function formatDuration(startTime: string, endTime?: string | null): string {
@@ -31,18 +31,18 @@ function formatTime(isoString: string): string {
     return new Date(isoString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-function getCategoryStyle(categoryName?: string): string {
-    if (!categoryName || categoryName === 'Uncategorized') return 'bg-neutral-800 text-neutral-500';
+function getCategoryStyle(categoryName?: string): { dot: string; badge: string } {
+    if (!categoryName || categoryName === 'Uncategorized') return { dot: 'bg-neutral-600', badge: 'bg-neutral-800 text-neutral-400' };
     const lower = categoryName.toLowerCase();
-    if (lower.includes('develop') || lower.includes('code')) return 'bg-blue-500/20 text-blue-400';
-    if (lower.includes('design')) return 'bg-purple-500/20 text-purple-400';
-    if (lower.includes('communic') || lower.includes('email') || lower.includes('slack')) return 'bg-yellow-500/20 text-yellow-400';
-    if (lower.includes('meet')) return 'bg-green-500/20 text-green-400';
-    if (lower.includes('social') || lower.includes('news') || lower.includes('distract')) return 'bg-red-500/20 text-red-400';
-    return 'bg-neutral-700/50 text-neutral-400';
+    if (lower.includes('develop') || lower.includes('code')) return { dot: 'bg-blue-400', badge: 'bg-blue-500/20 text-blue-300' };
+    if (lower.includes('design')) return { dot: 'bg-purple-400', badge: 'bg-purple-500/20 text-purple-300' };
+    if (lower.includes('communic') || lower.includes('email') || lower.includes('slack')) return { dot: 'bg-yellow-400', badge: 'bg-yellow-500/20 text-yellow-300' };
+    if (lower.includes('meet')) return { dot: 'bg-accent-green', badge: 'bg-accent-green/20 text-accent-green' };
+    if (lower.includes('social') || lower.includes('news') || lower.includes('distract')) return { dot: 'bg-red-400', badge: 'bg-red-500/20 text-red-300' };
+    return { dot: 'bg-neutral-500', badge: 'bg-neutral-700/50 text-neutral-400' };
 }
 
-// Running timer for the top active item
+// Running timer for the active item
 function LiveTimer({ startTime }: { startTime: string }) {
     const [elapsed, setElapsed] = useState(0);
 
@@ -54,10 +54,13 @@ function LiveTimer({ startTime }: { startTime: string }) {
         return () => clearInterval(interval);
     }, [startTime]);
 
-    const m = Math.floor(elapsed / 60);
+    const h = Math.floor(elapsed / 3600);
+    const m = Math.floor((elapsed % 3600) / 60);
     const s = elapsed % 60;
+
     return (
-        <span className="font-mono tabular-nums text-[10px] text-accent-green font-bold">
+        <span className="font-mono tabular-nums text-xs text-accent-green font-bold tracking-tight">
+            {h > 0 ? `${String(h).padStart(2, '0')}:` : ''}
             {String(m).padStart(2, '0')}:{String(s).padStart(2, '0')}
         </span>
     );
@@ -66,55 +69,64 @@ function LiveTimer({ startTime }: { startTime: string }) {
 const LiveTrackingPanel: React.FC<LiveTrackingPanelProps> = ({ activities, currentActivity }) => {
     const isEmpty = activities.length === 0 && !currentActivity;
 
-    // The most recent activity that has no end_time is "currently active"
     const activeActivity = activities.find(a => !a.end_time) ?? null;
-    const pastActivities = activities.filter(a => !!a.end_time).slice(0, 12);
+    const pastActivities = activities.filter(a => !!a.end_time).slice(0, 20);
+
+    const totalSessionSeconds = activities.reduce((acc, a) => {
+        const start = new Date(a.start_time).getTime();
+        const end = a.end_time ? new Date(a.end_time).getTime() : Date.now();
+        return acc + Math.max(0, Math.floor((end - start) / 1000));
+    }, 0);
+
+    const sessionDisplay = totalSessionSeconds < 60
+        ? `${totalSessionSeconds}s`
+        : totalSessionSeconds < 3600
+            ? `${Math.floor(totalSessionSeconds / 60)}m`
+            : `${Math.floor(totalSessionSeconds / 3600)}h ${Math.floor((totalSessionSeconds % 3600) / 60)}m`;
 
     return (
         <div className="bg-[#1C1C1E] border border-white/10 rounded-[22px] h-full flex flex-col overflow-hidden shadow-lg">
+
             {/* Header */}
-            <div className="flex items-center justify-between px-5 pt-5 pb-3 shrink-0">
+            <div className="flex items-center justify-between px-5 pt-5 pb-4 shrink-0 border-b border-white/[0.05]">
                 <div className="flex items-center gap-3">
                     <div className="p-2 bg-neutral-800 rounded-xl">
-                        <Activity size={16} className="text-white" />
+                        <ClipboardList size={16} className="text-neutral-300" />
                     </div>
                     <div>
-                        <h3 className="text-xs font-bold text-neutral-400 uppercase tracking-widest flex items-center gap-2">
-                            Activity Feed
-                        </h3>
-                        <div className="flex items-center gap-2 mt-0.5">
-                            <span className="flex items-center gap-1.5 text-[10px] font-bold text-accent-green">
+                        <div className="flex items-center gap-2">
+                            <h3 className="text-sm font-semibold text-white tracking-tight">Session Log</h3>
+                            <span className="flex items-center gap-1 text-[10px] font-bold text-accent-green bg-accent-green/10 px-1.5 py-0.5 rounded-md">
                                 <span className="w-1.5 h-1.5 rounded-full bg-accent-green animate-pulse" />
-                                LIVE TRACKING
+                                TRACKING
                             </span>
-                            {activities.length > 0 && (
-                                <span className="text-[10px] text-neutral-600">·</span>
-                            )}
-                            {activities.length > 0 && (
-                                <span className="text-[10px] text-neutral-500">{activities.length} events today</span>
-                            )}
                         </div>
+                        <p className="text-xs text-neutral-500 mt-0.5">
+                            {activities.length} events · {sessionDisplay} total
+                        </p>
                     </div>
                 </div>
-                <div className="flex items-center gap-2">
-                    <Clock size={14} className="text-neutral-600" />
+                <div className="flex items-center gap-1.5">
+                    <TrendingUp size={13} className="text-neutral-600" />
+                    <Clock size={13} className="text-neutral-600" />
                 </div>
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto px-4 pb-4 min-h-0 scrollbar-thin scrollbar-thumb-neutral-800 scrollbar-track-transparent">
+            <div className="flex-1 overflow-y-auto no-scrollbar px-3 pb-4 min-h-0">
                 {isEmpty ? (
                     <div className="flex flex-col items-center justify-center h-full gap-3 text-center">
-                        <div className="w-10 h-10 rounded-full bg-neutral-800/60 flex items-center justify-center">
-                            <Activity size={18} className="text-neutral-600" />
+                        <div className="w-12 h-12 rounded-full bg-neutral-800/60 flex items-center justify-center">
+                            <ClipboardList size={20} className="text-neutral-600" />
                         </div>
                         <div>
-                            <p className="text-sm text-neutral-500 font-medium">No activity recorded yet</p>
-                            <p className="text-xs text-neutral-700 mt-1">Start a focus session to begin tracking</p>
+                            <p className="text-sm font-medium text-neutral-400">No activity recorded yet</p>
+                            <p className="text-xs text-neutral-600 mt-1.5 leading-relaxed">Start a focus session to begin tracking</p>
                         </div>
                     </div>
                 ) : (
-                    <div className="flex flex-col gap-1.5">
+                    <div className="flex flex-col gap-1 pt-3">
+
                         {/* Active (running) item */}
                         <AnimatePresence>
                             {activeActivity && (
@@ -123,16 +135,20 @@ const LiveTrackingPanel: React.FC<LiveTrackingPanelProps> = ({ activities, curre
                                     initial={{ opacity: 0, y: -8 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: -8 }}
-                                    className="flex items-center gap-3 px-3 py-2.5 bg-accent-green/10 border border-accent-green/20 rounded-xl"
+                                    className="flex items-center gap-3 px-3 py-3 bg-accent-green/[0.08] border border-accent-green/25 rounded-2xl mb-1"
                                 >
                                     <span className="w-2 h-2 rounded-full bg-accent-green animate-pulse shrink-0" />
                                     <div className="min-w-0 flex-1">
                                         <div className="flex items-center gap-1.5">
                                             {getAppIcon(activeActivity.app_name)}
-                                            <span className="text-xs font-bold text-white truncate">{activeActivity.app_name}</span>
+                                            <span className="text-sm font-bold text-white truncate">
+                                                {activeActivity.app_name}
+                                            </span>
                                         </div>
                                         {activeActivity.window_title && (
-                                            <p className="text-[10px] text-neutral-500 truncate mt-0.5 italic">{activeActivity.window_title}</p>
+                                            <p className="text-xs text-neutral-400 truncate mt-0.5 leading-snug">
+                                                {activeActivity.window_title}
+                                            </p>
                                         )}
                                     </div>
                                     <LiveTimer startTime={activeActivity.start_time} />
@@ -140,7 +156,7 @@ const LiveTrackingPanel: React.FC<LiveTrackingPanelProps> = ({ activities, curre
                             )}
                         </AnimatePresence>
 
-                        {/* Current Tauri activity (if different from active DB activity) */}
+                        {/* Current Tauri activity (when no DB active activity) */}
                         <AnimatePresence>
                             {currentActivity && !activeActivity && (
                                 <motion.div
@@ -148,19 +164,23 @@ const LiveTrackingPanel: React.FC<LiveTrackingPanelProps> = ({ activities, curre
                                     initial={{ opacity: 0, y: -8 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: -8 }}
-                                    className="flex items-center gap-3 px-3 py-2.5 bg-accent-blue/10 border border-accent-blue/20 rounded-xl"
+                                    className="flex items-center gap-3 px-3 py-3 bg-accent-blue/[0.08] border border-accent-blue/25 rounded-2xl mb-1"
                                 >
                                     <span className="w-2 h-2 rounded-full bg-accent-blue animate-pulse shrink-0" />
                                     <div className="min-w-0 flex-1">
                                         <div className="flex items-center gap-1.5">
                                             {getAppIcon(currentActivity.app_name)}
-                                            <span className="text-xs font-bold text-white truncate">{currentActivity.app_name}</span>
+                                            <span className="text-sm font-bold text-white truncate">
+                                                {currentActivity.app_name}
+                                            </span>
                                         </div>
                                         {currentActivity.window_title && (
-                                            <p className="text-[10px] text-neutral-500 truncate mt-0.5 italic">{currentActivity.window_title}</p>
+                                            <p className="text-xs text-neutral-400 truncate mt-0.5 leading-snug">
+                                                {currentActivity.window_title}
+                                            </p>
                                         )}
                                     </div>
-                                    <span className="text-[10px] text-accent-blue font-bold">NOW</span>
+                                    <span className="text-xs text-accent-blue font-bold shrink-0">NOW</span>
                                 </motion.div>
                             )}
                         </AnimatePresence>
@@ -169,34 +189,42 @@ const LiveTrackingPanel: React.FC<LiveTrackingPanelProps> = ({ activities, curre
                         <AnimatePresence initial={false}>
                             {pastActivities.map((act, i) => {
                                 const categoryName = (act as any).category_id?.name;
+                                const style = getCategoryStyle(categoryName);
                                 return (
                                     <motion.div
                                         key={act._id || i}
-                                        initial={{ opacity: 0, y: -6 }}
+                                        initial={{ opacity: 0, y: -4 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: i * 0.02 }}
-                                        className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-white/[0.03] transition-colors group"
+                                        transition={{ delay: i * 0.015 }}
+                                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/[0.04] transition-colors group"
                                     >
-                                        <div className="shrink-0 w-1.5 h-1.5 rounded-full bg-neutral-700" />
+                                        {/* Category colour dot */}
+                                        <div className={`shrink-0 w-1.5 h-1.5 rounded-full ${style.dot}`} />
+
                                         <div className="min-w-0 flex-1">
-                                            <div className="flex items-center gap-1.5">
+                                            <div className="flex items-center gap-1.5 flex-wrap">
                                                 {getAppIcon(act.app_name)}
-                                                <span className="text-xs font-semibold text-neutral-300 truncate">{act.app_name}</span>
-                                                {categoryName && (
-                                                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${getCategoryStyle(categoryName)}`}>
+                                                <span className="text-xs font-semibold text-neutral-200 truncate">
+                                                    {act.app_name}
+                                                </span>
+                                                {categoryName && categoryName !== 'Uncategorized' && (
+                                                    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0 ${style.badge}`}>
                                                         {categoryName}
                                                     </span>
                                                 )}
                                             </div>
                                             {act.window_title && (
-                                                <p className="text-[10px] text-neutral-600 truncate mt-0.5 italic">{act.window_title}</p>
+                                                <p className="text-xs text-neutral-500 truncate mt-0.5 leading-snug">
+                                                    {act.window_title}
+                                                </p>
                                             )}
                                         </div>
+
                                         <div className="shrink-0 flex flex-col items-end gap-0.5">
-                                            <span className="text-[10px] text-neutral-500 font-mono tabular-nums">
+                                            <span className="text-xs text-neutral-400 font-mono tabular-nums">
                                                 {formatDuration(act.start_time, act.end_time)}
                                             </span>
-                                            <span className="text-[9px] text-neutral-700">
+                                            <span className="text-[10px] text-neutral-600 tabular-nums">
                                                 {formatTime(act.start_time)}
                                             </span>
                                         </div>
