@@ -1,7 +1,7 @@
 
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Task } from '../../types';
+import { Task } from '../../../types';
 import { Briefcase, CheckCircle2, Clock, AlertCircle, Layers } from 'lucide-react';
 import StatCard from '../shared/StatCard';
 

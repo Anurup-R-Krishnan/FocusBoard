@@ -19,8 +19,8 @@ const register = async (req, res) => {
             return res.status(409).json({ success: false, message: 'An account with this email already exists.' });
         }
 
-        const user = new User(req.body);
-        await user.save();
+        const hashedPassword = await User.hashPassword(req.body.password);
+        const user = await User.create({ ...req.body, password: hashedPassword });
 
         const token = generateToken(user);
 
@@ -45,7 +45,7 @@ const login = async (req, res) => {
             return res.status(401).json({ success: false, message: 'Invalid email or password.' });
         }
 
-        const isMatch = await user.comparePassword(req.body.password);
+        const isMatch = await User.comparePassword(req.body.password, user.password);
         if (!isMatch) {
             return res.status(401).json({ success: false, message: 'Invalid email or password.' });
         }

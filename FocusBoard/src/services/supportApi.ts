@@ -43,7 +43,6 @@ export const createIssueType = (p: IssueTypePayload) =>
     fetch(`${API_BASE}/issue-types`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(p) }).then(r => handleResponse<IssueType>(r));
 
 export const getAllIssueTypes = (page = 1, limit = 100) => fetchList<IssueType>('/issue-types', page, limit);
-export const getIssueTypeById = (id: string) => fetch(`${API_BASE}/issue-types/${id}`).then(r => handleResponse<IssueType>(r));
 export const updateIssueType = (id: string, p: Partial<IssueTypePayload>) =>
     fetch(`${API_BASE}/issue-types/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(p) }).then(r => handleResponse<IssueType>(r));
 export const deleteIssueType = async (id: string) => {
@@ -82,7 +81,6 @@ export interface TicketPayload {
 export const createTicket = (p: TicketPayload) =>
     fetch(`${API_BASE}/support-tickets`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(p) }).then(r => handleResponse<SupportTicket>(r));
 export const getAllTickets = (page = 1, limit = 100, extra = '') => fetchList<SupportTicket>('/support-tickets', page, limit, extra);
-export const getTicketById = (id: string) => fetch(`${API_BASE}/support-tickets/${id}`).then(r => handleResponse<SupportTicket>(r));
 export const updateTicket = (id: string, p: Partial<TicketPayload>) =>
     fetch(`${API_BASE}/support-tickets/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(p) }).then(r => handleResponse<SupportTicket>(r));
 export const deleteTicket = async (id: string) => {
@@ -115,9 +113,6 @@ export interface ResolutionPayload {
 export const createResolution = (p: ResolutionPayload) =>
     fetch(`${API_BASE}/ticket-resolutions`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(p) }).then(r => handleResponse<TicketResolution>(r));
 export const getAllResolutions = (page = 1, limit = 100, extra = '') => fetchList<TicketResolution>('/ticket-resolutions', page, limit, extra);
-export const getResolutionById = (id: string) => fetch(`${API_BASE}/ticket-resolutions/${id}`).then(r => handleResponse<TicketResolution>(r));
-export const updateResolution = (id: string, p: Partial<ResolutionPayload>) =>
-    fetch(`${API_BASE}/ticket-resolutions/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(p) }).then(r => handleResponse<TicketResolution>(r));
 export const deleteResolution = async (id: string) => {
     const res = await fetch(`${API_BASE}/ticket-resolutions/${id}`, { method: 'DELETE' });
     if (!res.ok) throw new Error((await res.json().catch(() => ({}))).message || 'Delete failed');
@@ -148,9 +143,6 @@ export interface FeedbackPayload {
 export const createFeedback = (p: FeedbackPayload) =>
     fetch(`${API_BASE}/user-feedback`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(p) }).then(r => handleResponse<UserFeedback>(r));
 export const getAllFeedback = (page = 1, limit = 100, extra = '') => fetchList<UserFeedback>('/user-feedback', page, limit, extra);
-export const getFeedbackById = (id: string) => fetch(`${API_BASE}/user-feedback/${id}`).then(r => handleResponse<UserFeedback>(r));
-export const updateFeedback = (id: string, p: Partial<FeedbackPayload>) =>
-    fetch(`${API_BASE}/user-feedback/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(p) }).then(r => handleResponse<UserFeedback>(r));
 export const deleteFeedback = async (id: string) => {
     const res = await fetch(`${API_BASE}/user-feedback/${id}`, { method: 'DELETE' });
     if (!res.ok) throw new Error((await res.json().catch(() => ({}))).message || 'Delete failed');
@@ -178,7 +170,6 @@ export interface LeadPayload {
 export const createLead = (p: LeadPayload) =>
     fetch(`${API_BASE}/leads`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(p) }).then(r => handleResponse<Lead>(r));
 export const getAllLeads = (page = 1, limit = 100) => fetchList<Lead>('/leads', page, limit);
-export const getLeadById = (id: string) => fetch(`${API_BASE}/leads/${id}`).then(r => handleResponse<Lead>(r));
 export const updateLead = (id: string, p: Partial<LeadPayload>) =>
     fetch(`${API_BASE}/leads/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(p) }).then(r => handleResponse<Lead>(r));
 export const deleteLead = async (id: string) => {

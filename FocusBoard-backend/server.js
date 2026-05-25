@@ -5,19 +5,17 @@ const { randomUUID } = require('crypto');
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
-const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
 const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
 const morgan = require('morgan');
 const jwt = require('jsonwebtoken');
-const axios = require('axios');
 const logger = require('./utils/logger');
 const config = require('./config');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 
-const WORKERS = Math.max(1, Number.parseInt(process.env.WORKERS || '2', 10) || 2);
+const WORKERS = Math.max(1, Number.parseInt(process.env.WORKERS || '1', 10) || 1);
 
 if (cluster.isPrimary) {
   const cpuCount = os.cpus().length;
@@ -126,89 +124,11 @@ io.on('connection', (socket) => {
 
 app.use(express.json({ limit: '10mb' }));
 
-// ── Database (offline-first) ─────────────────────────────────────────────────
-const MONGODB_URL = config.MONGODB_URL;
-
-if (!MONGODB_URL) {
-  logger.warn('MONGODB_URL is not set in .env — running without database');
-}
-
-let dbConnected = false;
-const RETRY_INTERVAL_MS = 10_000; // Retry every 10 seconds
-
-const { flushQueueToDb, startQueueWorker } = require('./services/persistentQueue');
-
-const connectWithRetry = () => {
-  if (!MONGODB_URL) return;
-
-  mongoose
-    .connect(MONGODB_URL)
-    .then(async () => {
-      dbConnected = true;
-      logger.info('Connected to MongoDB Atlas');
-      if (isPrimaryWorker) {
-        try {
-          await flushQueueToDb();
-        } catch (e) {
-          logger.error('Error flushing queued events after DB connect', e);
-        }
-      }
-    })
-    .catch((err) => {
-      dbConnected = false;
-      logger.error(`MongoDB connection failed: ${err.message}`);
-      logger.warn(`Retrying in ${RETRY_INTERVAL_MS / 1000}s...`);
-      setTimeout(connectWithRetry, RETRY_INTERVAL_MS);
-    });
-};
-
-// Listen for disconnect/reconnect events
-mongoose.connection.on('disconnected', () => {
-  dbConnected = false;
-  logger.warn('MongoDB disconnected');
-  setTimeout(connectWithRetry, RETRY_INTERVAL_MS);
-});
-
-mongoose.connection.on('reconnected', async () => {
-  dbConnected = true;
-  logger.info('MongoDB reconnected');
-  if (isPrimaryWorker) {
-    try {
-      await flushQueueToDb();
-    } catch (e) {
-      logger.error('Failed flushing queued events on reconnected', e);
-    }
-  }
-});
-
-// Start first connection attempt (non-blocking)
-connectWithRetry();
-if (isPrimaryWorker) {
-  startQueueWorker();
-}
-
-// Start background jobs
+// ── Database (NeDB embedded) ─────────────────────────────────────────────────
 const { startBackgroundJobs } = require('./services/backgroundCategorization');
 if (isPrimaryWorker) {
   startBackgroundJobs();
 }
-
-// Middleware: return 503 on /api routes when DB is down
-app.use('/api', (req, res, next) => {
-  // Allow dev-login to work even when database is down
-  if (req.path === '/auth/dev-login') {
-    return next();
-  }
-
-  if (!dbConnected) {
-    return res.status(503).json({
-      success: false,
-      message: 'Database is currently unavailable. The server will auto-reconnect when the connection is restored.',
-      offline: true,
-    });
-  }
-  next();
-});
 
 // Rate limiting for API routes
 const apiLimiter = rateLimit({
@@ -270,28 +190,11 @@ app.get('/', (_req, res) =>
   res.json({ message: 'FocusBoard API', version: '1.0.0' })
 );
 
-// Health-check (reports DB status)
-const ML_SERVICE_URL = config.ML_SERVICE_URL;
-
-let mlServiceConnected = false;
-
-const checkMlService = async () => {
-  try {
-    await axios.get(`${ML_SERVICE_URL}/health`, { timeout: 3000 });
-    mlServiceConnected = true;
-  } catch (error) {
-    mlServiceConnected = false;
-  }
-};
-
-setInterval(checkMlService, 30000);
-checkMlService();
-
 app.get('/health', (_req, res) =>
   res.json({
     status: 'ok',
-    database: dbConnected ? 'connected' : 'disconnected',
-    mlService: mlServiceConnected ? 'connected' : 'disconnected',
+    database: 'connected',
+    storage: 'nedb',
     timestamp: new Date().toISOString(),
   })
 );
@@ -321,13 +224,7 @@ const gracefulShutdown = (signal) => {
   logger.info(`${signal} received, shutting down gracefully...`);
   server.close(() => {
     logger.info('HTTP server closed');
-    mongoose.connection.close(false).then(() => {
-      logger.info('Database connection closed');
-      process.exit(0);
-    }).catch((err) => {
-      logger.error('Error closing database connection', err);
-      process.exit(1);
-    });
+    process.exit(0);
   });
 
   setTimeout(() => {

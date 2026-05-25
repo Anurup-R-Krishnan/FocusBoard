@@ -22,8 +22,7 @@ const createCategory = async (req, res) => {
   }
 
   try {
-    const category = new Category(result.data);
-    const saved = await category.save();
+    const saved = await Category.create(result.data);
     return res.status(201).json({ success: true, data: saved });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });

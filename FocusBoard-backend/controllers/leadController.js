@@ -21,12 +21,11 @@ const createLead = async (req, res) => {
     return res.status(400).json({ success: false, message: 'Validation failed.', errors: result.error.issues });
   }
   try {
-    const lead = new Lead({
+    const saved = await Lead.create({
       ...result.data,
       source: result.data.source || 'landing_page',
       message: result.data.message || '',
     });
-    const saved = await lead.save();
     return res.status(201).json({ success: true, data: saved });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });

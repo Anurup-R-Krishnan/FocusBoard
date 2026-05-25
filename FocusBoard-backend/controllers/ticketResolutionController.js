@@ -25,9 +25,8 @@ const createResolution = async (req, res) => {
     try {
         const data = { ...result.data };
         if (data.resolvedAt) data.resolvedAt = new Date(data.resolvedAt);
-        const resolution = new TicketResolution(data);
-        const saved = await resolution.save();
-        const populated = await saved.populate({ path: 'ticketId', select: 'subject status priority' });
+        const saved = await TicketResolution.create(data);
+        const populated = await TicketResolution.findById(saved._id).populate('ticketId', 'subject status priority');
         return res.status(201).json({ success: true, data: populated });
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message });

@@ -9,7 +9,7 @@ import {
 import { Task } from '../../types';
 
 // ── Types ────────────────────────────────────────────────────────────
-export interface FocusGoal {
+interface FocusGoal {
     _id?: string;
     title: string;
     target_deep_work: number;

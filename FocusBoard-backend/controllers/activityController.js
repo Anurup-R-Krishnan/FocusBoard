@@ -90,7 +90,7 @@ const createActivity = async (req, res) => {
       }
     }
 
-    const activity = new Activity({
+    const saved = await Activity.create({
       app_name,
       window_title: window_title || '',
       url: url || '',
@@ -102,21 +102,18 @@ const createActivity = async (req, res) => {
       idle: normalizedIdle,
     });
 
-    const saved = await activity.save();
-
     const matchedCategoryId = await matchByRules(saved);
     if (matchedCategoryId) {
-      const mapping = new ActivityMapping({
+      await ActivityMapping.create({
         activityId: saved._id,
         categoryId: matchedCategoryId,
         confidenceScore: 100,
         isManualOverride: false,
       });
-      await mapping.save();
 
       if (!saved.category_id) {
+        await Activity.updateOne({ _id: saved._id }, { $set: { category_id: matchedCategoryId } });
         saved.category_id = matchedCategoryId;
-        await saved.save();
       }
     }
 
@@ -127,8 +124,8 @@ const createActivity = async (req, res) => {
         if (nsfwData.flagged && resolvedUserId) {
           const user = await User.findById(resolvedUserId);
           if (user && user.age && user.age < 16) {
+            await Activity.updateOne({ _id: saved._id }, { $set: { nsfw_flagged: true } });
             saved.nsfw_flagged = true;
-            await saved.save();
           }
         }
       } catch (error) {
@@ -184,7 +181,7 @@ const createActivitiesBatch = async (req, res) => {
       const resolvedUserId = getUserIdFromRequest(req) || user_id || null;
       const normalizedIdle = typeof idle === 'boolean' ? (idle ? 1 : 0) : idle;
 
-      const activity = new Activity({
+      const saved = await Activity.create({
         app_name,
         window_title: window_title || '',
         url: url || '',
@@ -195,8 +192,6 @@ const createActivitiesBatch = async (req, res) => {
         color: color || DEFAULT_ACTIVITY_COLOR,
         idle: normalizedIdle,
       });
-
-      const saved = await activity.save();
       results.push(saved);
     } catch (e) {
       errors.push({ index: i, error: e.message });
@@ -367,8 +362,8 @@ const updateActivity = async (req, res) => {
         
         if (matchedCategoryId && matchedCategoryId !== updated.category_id) {
             updated.category_id = matchedCategoryId;
-            await updated.save();
-            
+            await Activity.updateOne({ _id: updated._id }, { $set: { category_id: matchedCategoryId } });
+
             await ActivityMapping.findOneAndUpdate(
                 { activityId: updated._id },
                 { categoryId: matchedCategoryId, confidenceScore: 100, isManualOverride: false },
@@ -532,7 +527,7 @@ const importActivities = async (req, res) => {
       try {
         const act = activities[i];
         
-        const activity = new Activity({
+        await Activity.create({
           app_name: act.app_name || act.appName || 'Unknown',
           window_title: act.window_title || act.windowTitle || '',
           url: act.url || '',
@@ -544,8 +539,6 @@ const importActivities = async (req, res) => {
           idle: act.idle || 0,
           nsfw_flagged: act.nsfw_flagged || act.nsfwFlagged || false,
         });
-
-        await activity.save();
         results.success++;
       } catch (e) {
         results.failed++;

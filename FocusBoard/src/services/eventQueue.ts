@@ -23,14 +23,6 @@ function hasQueueConsent(): boolean {
   }
 }
 
-export function setQueueConsent(enabled: boolean) {
-  try {
-    localStorage.setItem(CONSENT_KEY, enabled ? 'true' : 'false');
-  } catch (e) {
-    console.error('Failed to persist queue consent', e);
-  }
-}
-
 function loadQueue(): QueuedEvent[] {
   try {
     const raw = localStorage.getItem(QUEUE_KEY);
@@ -74,7 +66,7 @@ export function enqueueEvent(evt: QueuedEvent) {
   void flushQueue();
 }
 
-export async function flushQueue() {
+async function flushQueue() {
   if (typeof window !== 'undefined' && (window as any).navigator && !(window as any).navigator.onLine) {
     // offline — nothing to do
     return;
@@ -138,7 +130,7 @@ export async function flushQueue() {
   saveQueue(remaining);
 }
 
-export function startQueue(intervalMs = 15_000) {
+function startQueue(intervalMs = 15_000) {
   // periodic flush
   setInterval(() => {
     void flushQueue();

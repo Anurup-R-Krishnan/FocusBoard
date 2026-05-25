@@ -2,8 +2,7 @@ const Integration = require('../models/Integration');
 
 exports.createIntegration = async (req, res) => {
     try {
-        const integration = new Integration({ ...req.body, user_id: req.user.id });
-        await integration.save();
+        const integration = await Integration.create({ ...req.body, user_id: req.user.id });
         res.status(201).json({ success: true, data: integration });
     } catch (err) {
         res.status(400).json({ success: false, message: err.message });

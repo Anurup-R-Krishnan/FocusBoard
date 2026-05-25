@@ -23,9 +23,8 @@ const createFeedback = async (req, res) => {
     }
 
     try {
-        const feedback = new UserFeedback(result.data);
-        const saved = await feedback.save();
-        const populated = await saved.populate({ path: 'ticketId', select: 'subject status' });
+        const saved = await UserFeedback.create(result.data);
+        const populated = await UserFeedback.findById(saved._id).populate('ticketId', 'subject status');
         return res.status(201).json({ success: true, data: populated });
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message });

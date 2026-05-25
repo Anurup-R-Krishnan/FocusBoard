@@ -16,6 +16,8 @@ export const postActivity = async (event: ActivityEvent): Promise<void> => {
   const endTime = new Date(startTime.getTime() + 1000);
 
   try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
     await fetch(`${API_BASE}/activities`, {
       method: 'POST',
       headers: {
@@ -29,7 +31,9 @@ export const postActivity = async (event: ActivityEvent): Promise<void> => {
         end_time: endTime.toISOString(),
         idle: event.idle_time >= 30,
       }),
+      signal: controller.signal,
     });
+    clearTimeout(timeout);
   } catch (error) {
     console.error('Failed to post activity:', error);
   }

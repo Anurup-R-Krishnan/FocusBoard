@@ -1,12 +1,12 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "focusboard",
+  "productName": "FocusBoard",
   "version": "0.1.0",
   "identifier": "com.adarssh.focusboard",
   "build": {
-    "beforeDevCommand": "bun --cwd src dev",
+    "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "bun --cwd src build",
+    "beforeBuildCommand": "npm run build",
     "frontendDist": "../src/dist"
   },
   "app": {
@@ -18,22 +18,27 @@
       }
     ],
     "security": {
-      "csp": null,
-      "pattern":{
-        "use": "brownfield"
-      }
+      "csp": "default-src 'self'; img-src 'self' data: blob:; media-src 'self' data: blob:; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' http://localhost:5000 ws://localhost:5000; font-src 'self' data:;"
     }
   },
   "bundle": {
     "active": true,
-    "targets": "all",
+    "targets": ["deb", "appimage"],
+    "publisher": "FocusBoard",
+    "category": "Productivity",
+    "shortDescription": "Automatic activity tracking and focus analytics.",
+    "longDescription": "FocusBoard captures active application context to build a private timeline of your workday, helping you understand deep work, distractions, and focus trends.",
+    "license": "MIT",
+    "licenseFile": "../LICENSE",
     "icon": [
+      "icons/focusboard.svg",
       "icons/32x32.png",
       "icons/128x128.png",
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "resources": ["../LICENSE"]
   },
   "plugins": {
     "cli": {}

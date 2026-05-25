@@ -1,15 +1,11 @@
-const mongoose = require('mongoose');
+const { createModel } = require('../db/nedb');
 
-const projectSchema = new mongoose.Schema({
-    _id: { type: String, default: () => require('crypto').randomUUID() },
-    title: { type: String, required: true },
-    members: { type: Number, default: 1 },
-    progress: { type: Number, default: 0 },
-    status: { type: String, enum: ['On Track', 'At Risk', 'Delayed', 'Completed'], default: 'On Track', index: true },
-    due_date: { type: Date, index: true },
-    user_id: { type: String, ref: 'User', required: true, index: true }
-}, { timestamps: true });
-
-projectSchema.index({ user_id: 1, status: 1 });
-
-module.exports = mongoose.model('Project', projectSchema);
+module.exports = createModel('projects', {
+  _id: { type: String, default: () => require('crypto').randomUUID() },
+  title: { type: String, required: true },
+  members: { type: Number, default: 1 },
+  progress: { type: Number, default: 0 },
+  status: { type: String, default: 'On Track' },
+  due_date: { type: Date },
+  user_id: { type: String, ref: 'User', required: true },
+}, { timestamps: true, modelName: 'Project', indices: ['user_id', 'status', 'due_date'] });

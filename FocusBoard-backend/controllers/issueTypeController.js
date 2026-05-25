@@ -22,8 +22,7 @@ const createIssueType = async (req, res) => {
     }
 
     try {
-        const issueType = new IssueType(result.data);
-        const saved = await issueType.save();
+        const saved = await IssueType.create(result.data);
         return res.status(201).json({ success: true, data: saved });
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message });

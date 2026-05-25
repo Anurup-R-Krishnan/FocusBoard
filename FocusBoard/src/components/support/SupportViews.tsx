@@ -157,6 +157,7 @@ export const PrivacyPolicy = () => (
                 <p>We collect only the essential data required to provide our services:</p>
                 <ul className="list-disc pl-5 space-y-2 mt-2">
                     <li>Account information (email, name) for authentication.</li>
+                    <li>Activity context (app name and window title) when you enable tracking.</li>
                     <li>Usage metrics (focus duration, task completion) to generate reports.</li>
                     <li>System logs for debugging and performance monitoring.</li>
                 </ul>
@@ -165,7 +166,7 @@ export const PrivacyPolicy = () => (
             <section>
                 <h3 className="text-white font-bold text-xl mb-4">2. Local-First Architecture</h3>
                 <p>
-                    By default, detailed activity logs (such as app usage and window titles) are stored locally on your device. Only aggregated statistics are synced to our servers for team reporting. You can opt-out of cloud sync entirely in Settings.
+                    FocusBoard only collects activity data when tracking is enabled. You can disable tracking at any time in Settings. Depending on your team setup, aggregated statistics may be synced for dashboards. Local-only mode keeps detailed logs on your device.
                 </p>
             </section>
 

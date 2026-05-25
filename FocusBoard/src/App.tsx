@@ -18,6 +18,7 @@ import Navigation, { Page } from './components/layout/Navigation';
 import OnboardingFlow from './components/onboarding/OnboardingFlow';
 import { LoginView, SignUpView, ForgotPasswordView, ResetPasswordView, VerifyEmailView, AccountLockView } from './components/auth/AuthViews';
 import { listen } from '@tauri-apps/api/event';
+import { invoke } from '@tauri-apps/api/core';
 import { postActivity } from './services/activityService';
 import { useDashboardStore } from './store/useDashboardStore';
 import { useSessionStore } from './store/useSessionStore';
@@ -25,8 +26,23 @@ import { AUTH_BASE_URL } from './services/apiBase';
 
 const API_BASE = AUTH_BASE_URL;
 const IS_DEV = Boolean((import.meta as any).env?.DEV);
-const FORCE_LOGIN_EVERY_TIME = true;
+const FORCE_LOGIN_EVERY_TIME = (import.meta as any).env?.VITE_FORCE_LOGIN === 'true';
 const LAST_AUTHED_PAGE_KEY = 'focusboard_last_authed_page';
+const ONBOARDING_COMPLETE_KEY = 'focusboard_onboarding_complete';
+const TRACKING_ENABLED_KEY = 'focusboard_tracking_enabled';
+const IDLE_TIMEOUT_KEY = 'focusboard_tracking_idle_timeout';
+
+const loadTrackingEnabled = () => {
+    if (typeof window === 'undefined') return false;
+    const raw = localStorage.getItem(TRACKING_ENABLED_KEY);
+    if (raw === null) return false;
+    return raw === 'true';
+};
+
+const loadOnboardingComplete = () => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem(ONBOARDING_COMPLETE_KEY) === 'true';
+};
 
 const authedPages: Page[] = [
     'dashboard',
@@ -55,6 +71,7 @@ const App: React.FC = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isAuthLoading, setIsAuthLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState<Page>(() => {
+        if (!loadOnboardingComplete()) return 'onboarding';
         const saved = typeof window !== 'undefined' ? localStorage.getItem('focusboard_current_page') as Page : null;
         return saved || 'login';
     });
@@ -70,6 +87,7 @@ const App: React.FC = () => {
 
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isChangelogOpen, setIsChangelogOpen] = useState(false);
+    const [trackingEnabled, setTrackingEnabled] = useState<boolean>(() => loadTrackingEnabled());
     const { initSockets, stopSockets } = useDashboardStore();
 
     // Generic Detail State
@@ -126,9 +144,65 @@ const App: React.FC = () => {
             .finally(() => setIsAuthLoading(false));
     }, []);
 
+    useEffect(() => {
+        const handler = (event: Event) => {
+            const custom = event as CustomEvent<{ enabled: boolean }>;
+            if (custom?.detail?.enabled === undefined) return;
+            setTrackingEnabled(Boolean(custom.detail.enabled));
+        };
+        if (typeof window === 'undefined') return undefined;
+        window.addEventListener('focusboard_tracking_changed', handler as EventListener);
+        return () => window.removeEventListener('focusboard_tracking_changed', handler as EventListener);
+    }, []);
+
+    useEffect(() => {
+        const handler = (event: Event) => {
+            const custom = event as CustomEvent<{ minutes: number }>;
+            if (!custom?.detail?.minutes) return;
+            const seconds = Math.max(30, Math.floor(custom.detail.minutes * 60));
+            invoke('set_idle_threshold', { seconds }).catch(() => {
+                if (IS_DEV) {
+                    // eslint-disable-next-line no-console
+                    console.warn('Failed to update idle threshold in native monitor.');
+                }
+            });
+        };
+        if (typeof window === 'undefined') return undefined;
+        window.addEventListener('focusboard_idle_timeout_changed', handler as EventListener);
+        return () => window.removeEventListener('focusboard_idle_timeout_changed', handler as EventListener);
+    }, []);
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        localStorage.setItem(TRACKING_ENABLED_KEY, String(trackingEnabled));
+        const isTauri = '__TAURI_INTERNALS__' in window;
+        if (!isTauri) return;
+        invoke('set_tracking_enabled', { enabled: trackingEnabled }).catch(() => {
+            if (IS_DEV) {
+                // eslint-disable-next-line no-console
+                console.warn('Failed to update tracking state in native monitor.');
+            }
+        });
+    }, [trackingEnabled]);
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const stored = Number(localStorage.getItem(IDLE_TIMEOUT_KEY));
+        const minutes = Number.isFinite(stored) && stored > 0 ? stored : 5;
+        const seconds = Math.max(30, Math.floor(minutes * 60));
+        const isTauri = '__TAURI_INTERNALS__' in window;
+        if (!isTauri) return;
+        invoke('set_idle_threshold', { seconds }).catch(() => {
+            if (IS_DEV) {
+                // eslint-disable-next-line no-console
+                console.warn('Failed to initialize idle threshold in native monitor.');
+            }
+        });
+    }, []);
+
     // Listen for activity updates from Rust monitor
     useEffect(() => {
-        if (!isAuthenticated) return;
+        if (!isAuthenticated || !trackingEnabled) return;
 
         let unlisten: Promise<() => void> | null = null;
 
@@ -137,6 +211,7 @@ const App: React.FC = () => {
             try {
                 unlisten = listen('activity-update', (event: any) => {
                     const payload = event.payload;
+                    if (!trackingEnabled) return;
                     const current = useSessionStore.getState().currentActivity;
                     const sameActivity =
                         current &&
@@ -175,17 +250,13 @@ const App: React.FC = () => {
                     });
             }
         };
-    }, [isAuthenticated]);
+    }, [isAuthenticated, trackingEnabled]);
 
-    // Enforce consistent zoom in Tauri to offset system zoom settings
-    useEffect(() => {
-        if (typeof window === 'undefined' || !('__TAURI_INTERNALS__' in window)) return;
-        document.documentElement.style.zoom = '0.9';
-    }, []);
+    // Respect system zoom settings in production builds.
 
     // Browser-mode activity poller: tracks tab title changes when NOT inside Tauri
     useEffect(() => {
-        if (!isAuthenticated) return;
+        if (!isAuthenticated || !trackingEnabled) return;
         const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
         if (isTauri) return; // Tauri mode uses the native monitor instead
 
@@ -210,7 +281,7 @@ const App: React.FC = () => {
         poll(); // fire once immediately
         const interval = setInterval(poll, 2000);
         return () => clearInterval(interval);
-    }, [isAuthenticated]);
+    }, [isAuthenticated, trackingEnabled]);
 
     useEffect(() => {
         if (isAuthenticated) {
@@ -236,6 +307,9 @@ const App: React.FC = () => {
     const handleLogin = (token: string) => {
         localStorage.setItem('focusboard_token', token);
         setIsAuthenticated(true);
+        if (typeof window !== 'undefined') {
+            localStorage.setItem(ONBOARDING_COMPLETE_KEY, 'true');
+        }
         const lastAuthed = localStorage.getItem(LAST_AUTHED_PAGE_KEY) as Page | null;
         setCurrentPage(isAuthedPage(lastAuthed) ? lastAuthed : 'dashboard');
     };
@@ -258,7 +332,20 @@ const App: React.FC = () => {
 
     // --- Auth / Public / Onboarding Routes Layout ---
     if (currentPage === 'onboarding') {
-        return <OnboardingFlow onComplete={() => { setIsAuthenticated(true); setCurrentPage('dashboard'); }} />;
+        return (
+            <OnboardingFlow
+                onComplete={(prefs) => {
+                    if (typeof window !== 'undefined') {
+                        localStorage.setItem(ONBOARDING_COMPLETE_KEY, 'true');
+                        if (typeof prefs?.trackingEnabled === 'boolean') {
+                            localStorage.setItem(TRACKING_ENABLED_KEY, String(prefs.trackingEnabled));
+                            window.dispatchEvent(new CustomEvent('focusboard_tracking_changed', { detail: { enabled: prefs.trackingEnabled } }));
+                        }
+                    }
+                    setCurrentPage(isAuthenticated ? 'dashboard' : 'login');
+                }}
+            />
+        );
     }
 
     if (!isAuthenticated) {

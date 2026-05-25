@@ -2,8 +2,7 @@ const Task = require('../models/Task');
 
 exports.createTask = async (req, res) => {
     try {
-        const task = new Task({ ...req.body, user_id: req.user.id });
-        await task.save();
+        const task = await Task.create({ ...req.body, user_id: req.user.id });
 
         const io = req.app.get('io');
         if (io) {
@@ -49,12 +48,12 @@ exports.updateTask = async (req, res) => {
         if (!task) return res.status(404).json({ success: false, message: 'Task not found' });
 
         if (timeToAdd && typeof timeToAdd === 'number' && timeToAdd > 0) {
-            task.timeSpent = (task.timeSpent || 0) + timeToAdd;
+            updateData.timeSpent = (task.timeSpent || 0) + timeToAdd;
             delete updateData.timeToAdd;
         }
 
+        await Task.updateOne({ _id: task._id }, { $set: updateData });
         Object.assign(task, updateData);
-        await task.save();
 
         const io = req.app.get('io');
         if (io) {
@@ -79,8 +78,9 @@ exports.logTime = async (req, res) => {
         const task = await Task.findOne({ _id: req.params.id, user_id: req.user.id });
         if (!task) return res.status(404).json({ success: false, message: 'Task not found' });
 
-        task.timeSpent = (task.timeSpent || 0) + (minutes * 60);
-        await task.save();
+        const newTime = (task.timeSpent || 0) + (minutes * 60);
+        await Task.updateOne({ _id: task._id }, { $set: { timeSpent: newTime } });
+        task.timeSpent = newTime;
 
         const io = req.app.get('io');
         if (io) {

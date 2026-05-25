@@ -27,12 +27,10 @@ const createTicket = async (req, res) => {
     }
 
     try {
-        const ticket = new SupportTicket(result.data);
-        const saved = await ticket.save();
-        const populated = await saved.populate([
-            { path: 'userId', select: 'name email_id' },
-            { path: 'issueTypeId', select: 'name defaultPriority' },
-        ]);
+        const saved = await SupportTicket.create(result.data);
+        const populated = await SupportTicket.findById(saved._id)
+            .populate('userId', 'name email_id')
+            .populate('issueTypeId', 'name defaultPriority');
         return res.status(201).json({ success: true, data: populated });
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message });

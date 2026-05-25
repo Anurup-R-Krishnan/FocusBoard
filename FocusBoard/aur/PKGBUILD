@@ -1,0 +1,48 @@
+# Maintainer: FocusBoard Contributors
+
+pkgname=focusboard
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Automatic activity tracking and focus analytics"
+arch=('x86_64')
+url="https://github.com/anuruprkris/FocusBoard"
+license=('MIT')
+depends=(
+  'webkit2gtk'
+  'gtk3'
+  'libx11'
+  'libxcb'
+)
+makedepends=(
+  'git'
+  'nodejs'
+  'npm'
+  'rust'
+  'cargo'
+)
+options=('!strip')
+source=("${pkgname}-${pkgver}::git+${url}.git")
+sha256sums=('SKIP')
+
+prepare() {
+  cd "${srcdir}/${pkgname}-${pkgver}/FocusBoard"
+  npm install
+}
+
+build() {
+  cd "${srcdir}/${pkgname}-${pkgver}/FocusBoard"
+  npm run build
+  npm run tauri build -- --ci
+}
+
+package() {
+  cd "${srcdir}/${pkgname}-${pkgver}/FocusBoard"
+
+  install -Dm755 "src-tauri/target/release/focusboard" "${pkgdir}/usr/bin/focusboard"
+
+  # Install desktop file from AppDir bundle
+  install -Dm644 "src-tauri/target/release/bundle/appimage/FocusBoard.AppDir/FocusBoard.desktop" \
+    "${pkgdir}/usr/share/applications/focusboard.desktop"
+
+  install -Dm644 "LICENSE" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}

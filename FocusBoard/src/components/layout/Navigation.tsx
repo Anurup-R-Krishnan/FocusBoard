@@ -106,7 +106,10 @@ const NavItem = ({ page, icon: Icon, label, badge, currentPage, setCurrentPage, 
 };
 
 const Navigation: React.FC<NavigationProps> = ({ currentPage, setCurrentPage, isCollapsed, onToggleCollapse, onShowChangelog }) => {
-    const [showWhatsNew, setShowWhatsNew] = useState(() => localStorage.getItem('focusboard_whatsnew_hidden') !== 'true');
+    const [showWhatsNew, setShowWhatsNew] = useState(() => {
+        if (typeof window === 'undefined') return false;
+        return localStorage.getItem('focusboard_whatsnew_hidden') !== 'true';
+    });
 
     return (
         <motion.nav

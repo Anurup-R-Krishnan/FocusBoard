@@ -14,8 +14,7 @@ exports.createRule = async (req, res) => {
       return res.status(404).json({ success: false, error: 'Category not found' });
     }
     
-    const rule = new TrackingRule({ categoryId, pattern, matchType, priority, isAutoLearned });
-    await rule.save();
+    const rule = await TrackingRule.create({ categoryId, pattern, matchType, priority, isAutoLearned });
     res.status(201).json({ success: true, data: rule });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
@@ -84,14 +83,13 @@ exports.createRuleFromOverride = async (req, res) => {
       return res.status(404).json({ success: false, error: 'Activity not found' });
     }
     
-    const rule = new TrackingRule({
+    const rule = await TrackingRule.create({
       categoryId,
       pattern: activity.app_name,
       matchType: 'app_name',
       priority: 50,
       isAutoLearned: true
     });
-    await rule.save();
     res.status(201).json({ success: true, data: rule });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });

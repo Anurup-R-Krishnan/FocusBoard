@@ -47,13 +47,6 @@ export async function getAllMappings(page = 1, limit = 100): Promise<{ data: Act
     return { data: json.data || [], total: json.total || 0 };
 }
 
-export async function getMappingById(id: string): Promise<ActivityMapping> {
-    const res = await fetch(`${API_BASE}/activity-mappings/${id}`, {
-        headers: authHeaders(),
-    });
-    return handleResponse<ActivityMapping>(res);
-}
-
 export async function updateMapping(id: string, payload: Partial<ActivityMappingPayload>): Promise<ActivityMapping> {
     const res = await fetch(`${API_BASE}/activity-mappings/${id}`, {
         method: 'PUT',

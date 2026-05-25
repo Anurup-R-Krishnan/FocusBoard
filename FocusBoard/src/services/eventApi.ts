@@ -10,7 +10,7 @@ const DEFAULT_USER_ID = 'focusboard-user-1';
 // ---------- Types ----------
 
 /** Shape returned / accepted by the backend */
-export interface BackendEvent {
+interface BackendEvent {
     _id: string;
     title: string;
     category_id?: string | null;

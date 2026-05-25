@@ -5,8 +5,10 @@ use std::process::Command;
 use std::thread;
 use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::time::Duration;
-use tauri::{AppHandle, Emitter, Manager, Listener};
+use tauri::{AppHandle, Emitter, Listener, Manager};
+use user_idle::UserIdle;
 use regex::Regex;
 
 fn sanitize_title(input: &str) -> String {
@@ -69,7 +71,19 @@ fn try_hyprctl_active_window() -> Option<(String, String)> {
     }
 }
 
-pub fn start_monitor(app: AppHandle) {
+fn is_hyprland_session() -> bool {
+    std::env::var("XDG_SESSION_DESKTOP")
+        .map(|v| v.to_lowercase().contains("hyprland"))
+        .unwrap_or(false)
+}
+
+fn is_x11_session() -> bool {
+    std::env::var("XDG_SESSION_TYPE")
+        .map(|v| v.eq_ignore_ascii_case("x11"))
+        .unwrap_or(false)
+}
+
+pub fn start_monitor(app: AppHandle, tracking_enabled: Arc<AtomicBool>, idle_threshold: Arc<AtomicU64>) {
     let app_handle = app.clone();
     let (shutdown_tx, shutdown_rx) = mpsc::channel::<()>();
     let monitor_handle: Arc<Mutex<Option<thread::JoinHandle<()>>>> = Arc::new(Mutex::new(None));
@@ -78,11 +92,12 @@ pub fn start_monitor(app: AppHandle) {
         let mut last_app = String::new();
         let mut last_title = String::new();
         let mut was_idle = false;
-        let idle_threshold: u64 = std::env::var("FOCUSBOARD_IDLE_THRESHOLD").ok().and_then(|s| s.parse::<u64>().ok()).unwrap_or(30);
+        let env_idle_threshold: u64 = std::env::var("FOCUSBOARD_IDLE_THRESHOLD").ok().and_then(|s| s.parse::<u64>().ok()).unwrap_or(30);
+        idle_threshold.store(env_idle_threshold, Ordering::SeqCst);
         let allow_x11 = std::env::var("FOCUSBOARD_ALLOW_X11")
             .ok()
             .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
-            .unwrap_or(false);
+            .unwrap_or_else(|| is_x11_session());
         let base_poll_secs: u64 = std::env::var("FOCUSBOARD_POLL_SECS").ok().and_then(|s| s.parse::<u64>().ok()).unwrap_or(1);
         let max_poll_secs: u64 = std::env::var("FOCUSBOARD_MAX_POLL_SECS").ok().and_then(|s| s.parse::<u64>().ok()).unwrap_or(5);
         let background_poll_secs: u64 = std::env::var("FOCUSBOARD_BACKGROUND_POLL_SECS").ok().and_then(|s| s.parse::<u64>().ok()).unwrap_or(10);
@@ -93,22 +108,40 @@ pub fn start_monitor(app: AppHandle) {
                 break;
             }
 
+            let tracking_active = tracking_enabled.load(Ordering::SeqCst);
             let mut current_app = "Unknown".to_string();
             let mut current_title = "Unknown".to_string();
-            let current_idle_secs = 0;
+            let current_idle_secs = UserIdle::get_time()
+                .map(|idle| idle.as_seconds())
+                .unwrap_or(0);
 
-            // Prefer Hyprland (Wayland) to avoid X11/Xlib instability in some environments.
-            if let Some((app, title)) = try_hyprctl_active_window() {
-                current_app = app;
-                current_title = title;
-            } else if allow_x11 {
+            let active_idle_threshold = std::cmp::max(1, idle_threshold.load(Ordering::SeqCst));
+            if !tracking_active {
+                let is_idle = current_idle_secs >= active_idle_threshold;
+                if was_idle != is_idle {
+                    was_idle = is_idle;
+                }
+                thread::sleep(Duration::from_secs(background_poll_secs));
+                continue;
+            }
+
+            // Prefer Hyprland (Wayland) when available to avoid X11/Xlib instability.
+            let hyprland_active = is_hyprland_session();
+            if hyprland_active {
+                if let Some((app, title)) = try_hyprctl_active_window() {
+                    current_app = app;
+                    current_title = title;
+                }
+            }
+
+            if current_app == "Unknown" && allow_x11 {
                 if let Ok(window) = active_win_pos_rs::get_active_window() {
                     current_app = window.app_name;
                     current_title = window.title;
                 }
             }
 
-            let is_idle = current_idle_secs >= idle_threshold;
+            let is_idle = current_idle_secs >= active_idle_threshold;
 
             let window_changed = current_app != last_app || current_title != last_title;
             let idle_status_changed = is_idle != was_idle;

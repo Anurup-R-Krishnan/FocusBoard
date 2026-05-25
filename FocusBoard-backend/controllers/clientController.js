@@ -3,8 +3,7 @@ const Task = require('../models/Task');
 
 exports.createClient = async (req, res) => {
     try {
-        const client = new Client({ ...req.body, user_id: req.user.id });
-        await client.save();
+        const client = await Client.create({ ...req.body, user_id: req.user.id });
         res.status(201).json({ success: true, data: client });
     } catch (err) {
         res.status(400).json({ success: false, message: err.message });

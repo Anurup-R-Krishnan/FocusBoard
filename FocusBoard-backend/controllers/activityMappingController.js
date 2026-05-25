@@ -23,12 +23,10 @@ const createMapping = async (req, res) => {
     }
 
     try {
-        const mapping = new ActivityMapping(result.data);
-        const saved = await mapping.save();
-        const populated = await saved.populate([
-            { path: 'activityId', select: 'app_name start_time end_time' },
-            { path: 'categoryId', select: 'name color icon' },
-        ]);
+        const saved = await ActivityMapping.create(result.data);
+        const populated = await ActivityMapping.findById(saved._id)
+            .populate('activityId', 'app_name start_time end_time')
+            .populate('categoryId', 'name color icon');
         return res.status(201).json({ success: true, data: populated });
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message });

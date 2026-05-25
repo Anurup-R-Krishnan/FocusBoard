@@ -1,6 +1,9 @@
 import { io, Socket } from 'socket.io-client';
 
-const SOCKET_URL = (import.meta as any).env?.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:5000';
+const SOCKET_URL =
+    (import.meta as any).env?.VITE_WS_URL ||
+    (import.meta as any).env?.VITE_API_BASE_URL?.replace('/api', '') ||
+    'http://localhost:5000';
 const IS_DEV = Boolean((import.meta as any).env?.DEV);
 const logDebug = (...args: any[]) => {
     if (IS_DEV) {

@@ -24,12 +24,10 @@ const createGoal = async (req, res) => {
     }
 
     try {
-        const goal = new CategoryGoal(result.data);
-        const saved = await goal.save();
-        const populated = await saved.populate([
-            { path: 'userId', select: 'name email_id' },
-            { path: 'categoryId', select: 'name color icon' },
-        ]);
+        const saved = await CategoryGoal.create(result.data);
+        const populated = await CategoryGoal.findById(saved._id)
+            .populate('userId', 'name email_id')
+            .populate('categoryId', 'name color icon');
         return res.status(201).json({ success: true, data: populated });
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message });

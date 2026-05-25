@@ -33,12 +33,21 @@ const loadStoredString = (key: string, fallback: string) => {
     return raw ?? fallback;
 };
 
+const TRACKING_ENABLED_KEY = 'focusboard_tracking_enabled';
+const IDLE_TIMEOUT_KEY = 'focusboard_tracking_idle_timeout';
+
+const dispatchTrackingChanged = (enabled: boolean) => {
+    if (typeof window === 'undefined') return;
+    window.dispatchEvent(new CustomEvent('focusboard_tracking_changed', { detail: { enabled } }));
+};
+
 // --- Shared Components ---
 
-const Toggle = ({ value, onChange }: { value: boolean, onChange: (val: boolean) => void }) => (
+const Toggle = ({ value, onChange, disabled = false }: { value: boolean, onChange: (val: boolean) => void, disabled?: boolean }) => (
     <button
         onClick={() => onChange(!value)}
-        className={`w-11 h-6 rounded-full relative transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black focus:ring-accent-blue ${value ? 'bg-accent-blue' : 'bg-neutral-700'}`}
+        disabled={disabled}
+        className={`w-11 h-6 rounded-full relative transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black focus:ring-accent-blue ${value ? 'bg-accent-blue' : 'bg-neutral-700'} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
     >
         <motion.div
             layout
@@ -361,8 +370,9 @@ const AccountSettings = ({ onNavigate }: { onNavigate?: (p: Page) => void }) => 
 };
 
 const TrackingSettings = () => {
+    const [trackingEnabled, setTrackingEnabled] = useState<boolean>(() => loadStoredBoolean(TRACKING_ENABLED_KEY, false));
     const [idleTimeout, setIdleTimeout] = useState<number>(() => {
-        const parsed = Number(localStorage.getItem('focusboard_tracking_idle_timeout'));
+        const parsed = Number(localStorage.getItem(IDLE_TIMEOUT_KEY));
         return Number.isFinite(parsed) && parsed > 0 ? parsed : 5;
     });
     const [autoResume, setAutoResume] = useState<boolean>(() => loadStoredBoolean('focusboard_tracking_auto_resume', true));
@@ -375,8 +385,16 @@ const TrackingSettings = () => {
     const [newApp, setNewApp] = useState('');
 
     useEffect(() => {
-        localStorage.setItem('focusboard_tracking_idle_timeout', String(idleTimeout));
+        localStorage.setItem(IDLE_TIMEOUT_KEY, String(idleTimeout));
+        if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('focusboard_idle_timeout_changed', { detail: { minutes: idleTimeout } }));
+        }
     }, [idleTimeout]);
+
+    useEffect(() => {
+        localStorage.setItem(TRACKING_ENABLED_KEY, String(trackingEnabled));
+        dispatchTrackingChanged(trackingEnabled);
+    }, [trackingEnabled]);
 
     useEffect(() => {
         localStorage.setItem('focusboard_tracking_auto_resume', String(autoResume));
@@ -413,9 +431,13 @@ const TrackingSettings = () => {
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
             <div>
-                <SectionHeader title="Focus Detection" description="Configure how FocusBoard detects your flow state." />
+                <SectionHeader title="Focus Detection" description="Control whether FocusBoard captures active app and window titles." />
 
                 <div className="bg-titanium-dark border border-white/10 rounded-2xl p-6 space-y-6">
+                    <SettingRow label="Enable Activity Tracking" description="When enabled, FocusBoard records active window titles for insights.">
+                        <Toggle value={trackingEnabled} onChange={setTrackingEnabled} />
+                    </SettingRow>
+
                     <div>
                         <div className="flex justify-between mb-4">
                             <label className="text-sm font-medium text-white flex items-center gap-2">
@@ -429,6 +451,7 @@ const TrackingSettings = () => {
                             value={idleTimeout}
                             onChange={(e) => setIdleTimeout(parseInt(e.target.value))}
                             className="w-full h-1.5 bg-neutral-800 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:hover:scale-125 [&::-webkit-slider-thumb]:transition-transform"
+                            disabled={!trackingEnabled}
                         />
                         <p className="text-xs text-neutral-500 mt-3 flex justify-between">
                             <span>1 min</span>
@@ -438,11 +461,11 @@ const TrackingSettings = () => {
                     </div>
 
                     <SettingRow label="Auto-Resume" description="Resume session when you return to your computer.">
-                        <Toggle value={autoResume} onChange={setAutoResume} />
+                        <Toggle value={autoResume} onChange={setAutoResume} disabled={!trackingEnabled} />
                     </SettingRow>
 
                     <SettingRow label="Strict Mode" description="Block all distracting websites during Focus sessions.">
-                        <Toggle value={strictMode} onChange={setStrictMode} />
+                        <Toggle value={strictMode} onChange={setStrictMode} disabled={!trackingEnabled} />
                     </SettingRow>
                 </div>
             </div>

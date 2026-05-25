@@ -1,0 +1,18 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="fbGradient" x1="96" y1="32" x2="416" y2="480" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#B9BCC6"/>
+    </linearGradient>
+    <linearGradient id="fbGlow" x1="128" y1="96" x2="384" y2="416" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2F58CD" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#2F58CD" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect x="64" y="32" width="384" height="448" rx="96" fill="#0B0B0C"/>
+  <rect x="90" y="60" width="332" height="392" rx="78" fill="#141417" stroke="url(#fbGradient)" stroke-width="6"/>
+  <path d="M256 120L332 166V258C332 318 300 374 256 392C212 374 180 318 180 258V166L256 120Z" fill="url(#fbGradient)"/>
+  <path d="M256 144L306 175V252C306 294 283 334 256 349C229 334 206 294 206 252V175L256 144Z" fill="#0B0B0C"/>
+  <path d="M256 168L286 186V250C286 276 273 304 256 316C239 304 226 276 226 250V186L256 168Z" fill="url(#fbGradient)"/>
+  <circle cx="256" cy="256" r="92" fill="url(#fbGlow)"/>
+</svg>

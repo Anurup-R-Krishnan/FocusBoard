@@ -1,0 +1,40 @@
+{
+  "$schema": "https://unpkg.com/knip@latest/schema.json",
+  "entry": [
+    "src/index.tsx"
+  ],
+  "project": [
+    "src/**/*.{ts,tsx}"
+  ],
+  "ignore": [
+    "src/dist/**",
+    "src/test/**",
+    "cypress/**",
+    "src/vite.config.ts",
+    "cypress.config.ts",
+    "vitest.config.ts",
+    "src/components/**/__tests__/**",
+    "src/components/**/*.test.{ts,tsx}",
+    "src/hooks/**/*.test.{ts,tsx}",
+    "src/store/**/*.test.{ts,tsx}"
+  ],
+  "ignoreDependencies": [
+    "@tauri-apps/cli",
+    "@tailwindcss/postcss",
+    "@testing-library/dom",
+    "@testing-library/jest-dom",
+    "@testing-library/react",
+    "@testing-library/user-event",
+    "happy-dom",
+    "jsdom",
+    "postcss",
+    "tailwindcss",
+    "autoprefixer"
+  ],
+  "ignoreBinaries": [
+    "vite",
+    "tauri",
+    "cypress",
+    "vitest"
+  ]
+}

@@ -52,8 +52,7 @@ const createGoal = async (req, res) => {
     }
 
     try {
-        const goal = new Goal({ ...result.data, user_id: userId });
-        const saved = await goal.save();
+        const saved = await Goal.create({ ...result.data, user_id: userId });
         return res.status(201).json({ success: true, data: saved });
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message });
@@ -204,8 +203,7 @@ const checkGoalProgress = async (req, res) => {
             const isNowAchieved = focusMinutes >= goal.target_deep_work && distractionCount <= goal.distraction_limit;
 
             if (!wasAchieved && isNowAchieved) {
-                goal.achieved = true;
-                await goal.save();
+                await Goal.updateOne({ _id: goal._id }, { $set: { achieved: true } });
             }
 
             results.push({

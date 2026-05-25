@@ -32,14 +32,6 @@ export async function createActivity(payload: BackendActivity): Promise<BackendA
     return json.data ?? json;
 }
 
-export async function getActivityById(id: string): Promise<BackendActivity> {
-    const res = await fetch(`${API_BASE}/activities/${id}`, {
-        headers: authHeaders(),
-    });
-    const json = await handleResponse(res, 'Activity not found');
-    return json.data ?? json;
-}
-
 export async function updateActivity(id: string, payload: Partial<BackendActivity>): Promise<BackendActivity> {
     const res = await fetch(`${API_BASE}/activities/${id}`, {
         method: 'PUT',
@@ -80,52 +72,4 @@ export async function fetchRecentActivities(limit = 15): Promise<BackendActivity
     const json = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error((json as any).message || 'Failed to fetch recent activities');
     return json.data || [];
-}
-
-export async function createActivitiesBatch(activities: BackendActivity[]): Promise<BackendActivity[]> {
-    const res = await fetch(`${API_BASE}/activities/batch`, {
-        method: 'POST',
-        headers: authHeaders(),
-        body: JSON.stringify(activities),
-    });
-    const json = await handleResponse(res, 'Failed to create batch activities');
-    return json.data || [];
-}
-
-export async function importActivities(file: File): Promise<{ imported: number; errors: string[] }> {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    const token = localStorage.getItem('focusboard_token');
-    const headers: Record<string, string> = {};
-    if (token) headers['Authorization'] = `Bearer ${token}`;
-
-    const res = await fetch(`${API_BASE}/activities/import`, {
-        method: 'POST',
-        headers,
-        body: formData,
-    });
-    const json = await handleResponse(res, 'Failed to import activities');
-    return json.data || { imported: 0, errors: [] };
-}
-
-export async function exportActivities(format: 'json' | 'csv' = 'json'): Promise<Blob> {
-    const res = await fetch(`${API_BASE}/activities/export?format=${format}`, {
-        headers: authHeaders(),
-    });
-    if (!res.ok) {
-        const json = await res.json().catch(() => ({}));
-        throw new Error((json as any).message || 'Failed to export activities');
-    }
-    return await res.blob();
-}
-
-export async function bulkDeleteActivities(ids: string[]): Promise<{ deletedCount: number }> {
-    const res = await fetch(`${API_BASE}/activities`, {
-        method: 'DELETE',
-        headers: authHeaders(),
-        body: JSON.stringify({ ids }),
-    });
-    const json = await handleResponse(res, 'Failed to bulk delete activities');
-    return json.data || { deletedCount: 0 };
 }

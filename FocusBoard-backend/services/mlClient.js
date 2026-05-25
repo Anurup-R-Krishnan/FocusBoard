@@ -1,30 +1,43 @@
 'use strict';
 
-/**
- * Shared HTTP client for the ML service.
- *
- * Uses a persistent keep-alive agent so TCP connections are reused across
- * requests instead of torn down and re-established for every call. On a local
- * network (or Docker bridge) this saves 1-5 ms per request; on a live
- * deployment it also halves the number of TCP handshakes under sustained load.
- */
-const http = require('http');
-const https = require('https');
-const axios = require('axios');
-const config = require('../config');
+const ml = require('../mlService');
 
-const ML_SERVICE_URL = config.ML_SERVICE_URL;
-const ML_TIMEOUT_MS = parseInt(process.env.ML_TIMEOUT_MS || '5000', 10);
+const client = {
+  post: async (path, data) => {
+    switch (path) {
+      case '/find-similar': {
+        const { text, categories, threshold } = data;
+        const result = ml.findSimilar(text, categories, threshold);
+        return { data: { ...result, ...ml.modelMetadata() } };
+      }
+      case '/check-nsfw': {
+        const { url, window_title } = data;
+        return { data: ml.checkNsfw(url || '', window_title || '') };
+      }
+      case '/embed': {
+        const { text } = data;
+        return { data: { embedding: ml.embedText(text), ...ml.modelMetadata() } };
+      }
+      case '/embed/batch': {
+        const { texts } = data;
+        return { data: { embeddings: texts.map(t => ml.embedText(t)), ...ml.modelMetadata() } };
+      }
+      default:
+        throw new Error(`Unknown ML endpoint: ${path}`);
+    }
+  },
+  get: async (path) => {
+    switch (path) {
+      case '/health':
+        return { data: { status: 'healthy', model_loaded: true, model_info: ml.getModelStatus() } };
+      case '/model/status':
+        return { data: ml.getModelStatus() };
+      case '/health/model':
+        return { data: { status: 'ready', model: ml.getModelStatus() } };
+      default:
+        throw new Error(`Unknown ML endpoint: ${path}`);
+    }
+  },
+};
 
-const keepAliveAgent = ML_SERVICE_URL.startsWith('https')
-    ? new https.Agent({ keepAlive: true, maxSockets: 20, maxFreeSockets: 10, scheduling: 'fifo' })
-    : new http.Agent({ keepAlive: true, maxSockets: 20, maxFreeSockets: 10, scheduling: 'fifo' });
-
-const mlClient = axios.create({
-    baseURL: ML_SERVICE_URL,
-    timeout: ML_TIMEOUT_MS,
-    httpAgent: keepAliveAgent,
-    httpsAgent: keepAliveAgent,
-});
-
-module.exports = mlClient;
+module.exports = client;

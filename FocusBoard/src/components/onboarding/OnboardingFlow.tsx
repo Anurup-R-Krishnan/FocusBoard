@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Hexagon, Check, ArrowRight, Bell, Shield, Monitor, Clock, Globe, Layers, Plus, X, Lock, Eye, EyeOff } from 'lucide-react';
 
 interface OnboardingFlowProps {
-  onComplete: () => void;
+  onComplete: (prefs?: { trackingEnabled: boolean }) => void;
 }
 
 const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
@@ -55,7 +55,10 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
                 <PrivacyStep key="privacy" data={privacy} onChange={setPrivacy} onNext={nextStep} />
             )}
             {step === 5 && (
-                <CompletionStep key="completion" onComplete={onComplete} />
+                <CompletionStep
+                    key="completion"
+                    onComplete={() => onComplete({ trackingEnabled: permissions.activity })}
+                />
             )}
         </AnimatePresence>
       </div>

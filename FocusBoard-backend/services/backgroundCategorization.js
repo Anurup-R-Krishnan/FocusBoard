@@ -7,9 +7,6 @@ const TrackingRule = require('../models/TrackingRule');
 const mlClient = require('./mlClient');
 const { findSimilarCached, checkNsfwCached } = require('./mlResponseCache');
 const logger = require('../utils/logger');
-const config = require('../config');
-
-const ML_SERVICE_URL = config.ML_SERVICE_URL;
 const CATEGORIZATION_DELAY_MS = parseInt(process.env.CATEGORIZATION_DELAY_MS || '10000', 10);
 const MAX_ACTIVITIES_PER_JOB = parseInt(process.env.MAX_ACTIVITIES_PER_JOB || '100', 10);
 const SIMILARITY_THRESHOLD = parseFloat(process.env.ML_SIMILARITY_THRESHOLD || '0.3');
@@ -57,7 +54,7 @@ const processActivity = async (activity, categories) => {
         const data = categorizeResult.value.data;
         if (data.categoryId && data.similarity >= SIMILARITY_THRESHOLD) {
             const category = categories.find(c => String(c._id) === String(data.categoryId));
-            const mapping = new ActivityMapping({
+            await ActivityMapping.create({
                 activityId: activity._id,
                 categoryId: data.categoryId,
                 confidenceScore: Math.round(data.similarity * 100),
@@ -66,13 +63,12 @@ const processActivity = async (activity, categories) => {
                 model_version: data.model_version || null,
                 embedding_dim: Number.isFinite(data.embedding_dim) ? data.embedding_dim : null,
             });
-            await mapping.save();
 
-            activity.category_id = data.categoryId;
+            const activityUpdate = { category_id: data.categoryId };
             if (category && category.color) {
-                activity.color = category.color;
+                activityUpdate.color = category.color;
             }
-            await activity.save();
+            await Activity.updateOne({ _id: activity._id }, { $set: activityUpdate });
 
             logger.info(`[Background Job] Categorized ${activity.app_name} -> ${data.categoryId} (${data.similarity.toFixed(2)})`);
         }
@@ -95,8 +91,7 @@ const processActivity = async (activity, categories) => {
                     (user.nsfwAlertPreference && user.nsfwAlertPreference !== 'none');
 
                 if (shouldAlert) {
-                    activity.nsfw_flagged = true;
-                    await activity.save();
+                    await Activity.updateOne({ _id: activity._id }, { $set: { nsfw_flagged: true } });
 
                     const alertService = require('./alertService');
                     await alertService.sendNsfwAlert(user._id, activity, nsfwData);

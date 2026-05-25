@@ -21,10 +21,6 @@ const getUserIdFromRequest = (req) => {
     }
 };
 
-const mongoose = require('mongoose');
-const { enqueueEventToFile } = require('../services/persistentQueue');
-
-
 // Enhanced schema: stricter validation and sanitization at parse time
 const eventSchema = z.object({
   event_id: z.string().uuid().optional().nullable(),
@@ -138,30 +134,13 @@ const createEvent = async (req, res) => {
       });
     }
 
-    // If DB is not connected, persist to on-disk queue for later flushing
-    if (mongoose.connection.readyState !== 1) {
-      try {
-        enqueueEventToFile({
-          ...result.data,
-          user_id: userId,
-          start_time: startTime,
-          end_time: endTime,
-        });
-        return res.status(202).json({ success: true, queued: true, message: 'Event queued for later delivery.' });
-      } catch (e) {
-        console.error('Failed to enqueue event when DB down', e);
-        return res.status(503).json({ success: false, message: 'Database unavailable and queueing failed.' });
-      }
-    }
-
-    const event = new Event({
+    const saved = await Event.create({
       ...result.data,
       user_id: userId,
       category_id: result.data.category_id || undefined,
       start_time: startTime,
       end_time: endTime,
     });
-    const saved = await event.save();
     return res.status(201).json({ success: true, data: saved });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
@@ -191,11 +170,9 @@ const upsertEvent = async (req, res) => {
   }
 
   try {
-    if (mongoose.connection.readyState === 1) {
-      const existing = await Event.findOne({ event_id: result.data.event_id, user_id: userId });
-      if (existing) {
-        return res.status(200).json({ success: true, data: existing, idempotent: true });
-      }
+    const existing = await Event.findOne({ event_id: result.data.event_id, user_id: userId });
+    if (existing) {
+      return res.status(200).json({ success: true, data: existing, idempotent: true });
     }
 
     const startTime = parseDateOrNull(result.data.start_time);
@@ -218,29 +195,13 @@ const upsertEvent = async (req, res) => {
       });
     }
 
-    if (mongoose.connection.readyState !== 1) {
-      try {
-        enqueueEventToFile({
-          ...result.data,
-          user_id: userId,
-          start_time: startTime,
-          end_time: endTime,
-        });
-        return res.status(202).json({ success: true, queued: true, message: 'Event queued for later delivery.' });
-      } catch (e) {
-        console.error('Failed to enqueue event when DB down', e);
-        return res.status(503).json({ success: false, message: 'Database unavailable and queueing failed.' });
-      }
-    }
-
-    const event = new Event({
+    const saved = await Event.create({
       ...result.data,
       user_id: userId,
       category_id: result.data.category_id || undefined,
       start_time: startTime,
       end_time: endTime,
     });
-    const saved = await event.save();
     return res.status(201).json({ success: true, data: saved });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });

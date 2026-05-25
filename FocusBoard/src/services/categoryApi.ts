@@ -49,13 +49,6 @@ export async function getAllCategories(page = 1, limit = 100): Promise<{ data: C
     return { data: json.data || [], total: json.total || 0 };
 }
 
-export async function getCategoryById(id: string): Promise<Category> {
-    const res = await fetch(`${API_BASE}/categories/${id}`, {
-        headers: authHeaders(),
-    });
-    return handleResponse<Category>(res);
-}
-
 export async function updateCategory(id: string, payload: Partial<CategoryPayload>): Promise<Category> {
     const res = await fetch(`${API_BASE}/categories/${id}`, {
         method: 'PUT',
@@ -74,34 +67,4 @@ export async function deleteCategory(id: string): Promise<void> {
         const json = await res.json().catch(() => ({}));
         throw new Error((json as any).message || 'Failed to delete category');
     }
-}
-
-export async function generateCategoryEmbeddings(): Promise<{ generated: number }> {
-    const res = await fetch(`${API_BASE}/categories/generate-embeddings`, {
-        method: 'POST',
-        headers: authHeaders(),
-    });
-    const json = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error((json as any).message || 'Failed to generate embeddings');
-    return json.data || { generated: 0 };
-}
-
-export async function regenerateCategoryEmbedding(id: string): Promise<{ updated: boolean }> {
-    const res = await fetch(`${API_BASE}/categories/regenerate-embedding/${id}`, {
-        method: 'POST',
-        headers: authHeaders(),
-    });
-    const json = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error((json as any).message || 'Failed to regenerate embedding');
-    return json.data || { updated: false };
-}
-
-export async function recategorizeAllActivities(): Promise<{ recategorized: number }> {
-    const res = await fetch(`${API_BASE}/categories/recategorize-activities`, {
-        method: 'POST',
-        headers: authHeaders(),
-    });
-    const json = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error((json as any).message || 'Failed to recategorize activities');
-    return json.data || { recategorized: 0 };
 }

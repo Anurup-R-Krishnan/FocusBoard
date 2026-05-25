@@ -19,13 +19,6 @@ export interface Activity {
   idle: boolean;
 }
 
-export interface Category {
-  _id: string;
-  name: string;
-  color: string;
-  embedding?: number[];
-}
-
 export const fetchActivities = async (
   startDate?: Date,
   endDate?: Date,
@@ -46,21 +39,6 @@ export const fetchActivities = async (
     return json.data || [];
   } catch (err: any) {
     throw new Error(err?.message || 'Unable to fetch activities');
-  }
-};
-
-export const fetchCategories = async (): Promise<Category[]> => {
-  try {
-    const res = await fetch(`${API_BASE}/categories`, {
-      headers: getAuthHeaders(),
-    });
-    if (!res.ok) {
-      throw new Error(`Failed to fetch categories: ${res.status}`);
-    }
-    const json = await res.json();
-    return json.data || [];
-  } catch (err: any) {
-    throw new Error(err?.message || 'Unable to fetch categories');
   }
 };
 

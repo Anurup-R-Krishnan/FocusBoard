@@ -2,23 +2,6 @@ const Category = require('../models/Category');
 const Activity = require('../models/Activity');
 const ActivityMapping = require('../models/ActivityMapping');
 const mlClient = require('../services/mlClient');
-const config = require('../config');
-
-const ML_SERVICE_URL = config.ML_SERVICE_URL;
-
-const applyEmbeddingMetadata = (category, data) => {
-    if (!data) return;
-    if (typeof data.model_name === 'string') {
-        category.embedding_model_name = data.model_name;
-    }
-    if (typeof data.model_version === 'string') {
-        category.embedding_model_version = data.model_version;
-    }
-    if (Number.isFinite(data.embedding_dim)) {
-        category.embedding_dim = data.embedding_dim;
-    }
-    category.embedding_generated_at = new Date();
-};
 
 exports.generateEmbeddings = async (req, res) => {
     try {
@@ -41,9 +24,11 @@ exports.generateEmbeddings = async (req, res) => {
                 );
 
                 if (response.data && response.data.embedding) {
-                    category.embedding = response.data.embedding;
-                    applyEmbeddingMetadata(category, response.data);
-                    await category.save();
+                    const update = { embedding: response.data.embedding, embedding_generated_at: new Date() };
+                    if (typeof response.data.model_name === 'string') update.embedding_model_name = response.data.model_name;
+                    if (typeof response.data.model_version === 'string') update.embedding_model_version = response.data.model_version;
+                    if (Number.isFinite(response.data.embedding_dim)) update.embedding_dim = response.data.embedding_dim;
+                    await Category.updateOne({ _id: category._id }, { $set: update });
                     results.success++;
                 } else {
                     results.failed++;
@@ -85,9 +70,12 @@ exports.regenerateEmbedding = async (req, res) => {
             return res.status(500).json({ success: false, message: 'Failed to generate embedding' });
         }
 
-        category.embedding = response.data.embedding;
-        applyEmbeddingMetadata(category, response.data);
-        await category.save();
+        const update = { embedding: response.data.embedding, embedding_generated_at: new Date() };
+        if (typeof response.data.model_name === 'string') update.embedding_model_name = response.data.model_name;
+        if (typeof response.data.model_version === 'string') update.embedding_model_version = response.data.model_version;
+        if (Number.isFinite(response.data.embedding_dim)) update.embedding_dim = response.data.embedding_dim;
+        await Category.updateOne({ _id: category._id }, { $set: update });
+        Object.assign(category, update);
 
         return res.status(200).json({ 
             success: true, 
@@ -129,11 +117,13 @@ exports.recategorizeAllActivities = async (req, res) => {
                 if (response.data && response.data.categoryId) {
                     const category = categories.find(c => c._id === response.data.categoryId);
                     
-                    activity.category_id = response.data.categoryId;
+                    const activityUpdate = {
+                        category_id: response.data.categoryId,
+                    };
                     if (category && category.color) {
-                        activity.color = category.color;
+                        activityUpdate.color = category.color;
                     }
-                    await activity.save();
+                    await Activity.updateOne({ _id: activity._id }, { $set: activityUpdate });
                     
                         await ActivityMapping.findOneAndUpdate(
                             { activityId: activity._id },

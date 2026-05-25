@@ -3,8 +3,7 @@ const Task = require('../models/Task');
 
 exports.createProject = async (req, res) => {
     try {
-        const project = new Project({ ...req.body, user_id: req.user.id });
-        await project.save();
+        const project = await Project.create({ ...req.body, user_id: req.user.id });
 
         const io = req.app.get('io');
         if (io) {
@@ -58,8 +57,7 @@ exports.calculateProgress = async (req, res) => {
             const progress = total > 0 ? Math.round((done / total) * 100) : 0;
             
             if (progress !== project.progress) {
-                project.progress = progress;
-                await project.save();
+                await Project.updateOne({ _id: project._id }, { $set: { progress } });
             }
             
             results.push({
