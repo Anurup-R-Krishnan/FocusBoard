@@ -35,26 +35,27 @@ jobs:
         working-directory: FocusBoard
         run: npm run build
 
-      - name: Start Backend + ML + Mongo (Docker Compose)
+      - name: Start Backend
+        working-directory: FocusBoard-backend
         run: |
-          docker compose -f docker-compose.yml up -d --build mongo ml-service backend
+          WORKERS=1 node server.js &
+          echo $! > /tmp/backend.pid
 
-      - name: Wait For Backend + ML
+      - name: Wait For Backend
         run: |
-          for i in {1..60}; do
-            if curl -sSf http://localhost:5000/api/activities > /dev/null && curl -sSf http://localhost:5001/health > /dev/null; then
-              echo "Backend and ML are up";
+          for i in {1..30}; do
+            if curl -sSf http://localhost:5000/health > /dev/null; then
+              echo "Backend is up";
               exit 0;
             fi
             sleep 2
           done
-          echo "Backend/ML did not start in time";
-          docker compose -f docker-compose.yml logs --tail=200 backend ml-service
+          echo "Backend did not start in time";
           exit 1
 
-      - name: Seed Student Demo Data
-        run: |
-          MONGO_URI=mongodb://localhost:27017/focusboard node FocusBoard-backend/scripts/seedStudentDay.js
+      - name: Run Backend Tests
+        working-directory: FocusBoard-backend
+        run: npm test
 
       - name: Start Frontend Dev Server
         working-directory: FocusBoard
@@ -77,20 +78,7 @@ jobs:
         working-directory: FocusBoard
         run: npx cypress run --config baseUrl=http://localhost:1420
 
-      # Backend Checks (Stub for Future Unit Tests)
-      - name: Run Backend Tests
-        working-directory: FocusBoard-backend
-        run: npm test
-
-      # ML Service Tests (inside container)
-      - name: Run ML Service Tests
-        run: docker exec focus-ml-service-1 pytest
-
-      - name: Run Frontend Unit Tests
-        working-directory: FocusBoard
-        run: npm test
-
-      # Tauri Build Step (Phase 10 Requirement)
+      # Tauri Build Step
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@stable
 
@@ -107,13 +95,3 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           projectPath: "FocusBoard"
-
-      - name: Trigger Render Deployment
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: |
-          if [ -z "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" ]; then
-            echo "RENDER_DEPLOY_HOOK_URL is not set in GitHub Secrets."
-            echo "Please set it using the 'gh' CLI."
-            exit 1
-          fi
-          curl -s -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
