@@ -49,6 +49,39 @@ Refactor `monitor.rs` to split detection logic from output. Add a new binary tar
 - **No code duplication** — `run_monitor_loop()` is the shared core. Both Tauri and standalone provide different callbacks.
 - **std::process::Command** for `systemctl` — no `tauri-plugin-shell` needed, consistent with existing `try_hyprctl_active_window` pattern.
 
+## Remaining work (dependency order)
+
+### 1. Standalone monitor binary (`focusboard-monitor`)
+- Extract `run_monitor_loop()` from `monitor.rs` (shared core)
+- Create `monitor_bin.rs` — main() calls the loop, POSTs to backend via `ureq`
+- Add `[[bin]]` + `ureq` dep to `Cargo.toml`
+- Add `setup_systemd_service` Tauri command in `systemd.rs`
+
+### 2. AUR packaging files (new)
+- `aur/focusboard-backend.service` — systemd user unit for Node.js backend
+- `aur/focusboard-monitor.service` — systemd user unit for Rust monitor
+- `aur/focusboard.desktop` — static desktop file
+
+### 3. PKGBUILD rewrite
+- Build both binaries (`focusboard` + `focusboard-monitor`)
+- Install both to `/usr/bin/`
+- Install both `.service` files to `/usr/lib/systemd/user/`
+- Bundle Node.js backend at `/usr/share/focusboard/backend/`
+- Generate `.env` with random `JWT_SECRET`
+- Install desktop file + icon + license
+
+### 4. Frontend setup wizard
+- `<SetupWizard>` component: [Enable Services] button → invokes Rust → `systemctl --user enable --now`
+- `App.tsx`: health check on mount, show wizard if backend down
+
+### 5. Cleanup
+- Remove stale scripts from `package.json` (`seedStudentDay`, `dedupeEvents`, `ensureEventIdIndex`, `generate-embeddings`)
+
+### 6. Verification
+- Build PKGBUILD locally with `makepkg`
+- Install the built package
+- Test full flow: start services, launch app, verify tracking
+
 ## Open questions
 
 1. Should the standalone monitor poll less aggressively than the current 1-5s?

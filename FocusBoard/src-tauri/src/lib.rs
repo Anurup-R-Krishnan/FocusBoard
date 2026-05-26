@@ -1,5 +1,6 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-mod monitor;
+pub mod monitor;
+mod systemd;
 
 use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
 use std::sync::atomic::AtomicU64;
@@ -42,7 +43,11 @@ pub fn run() {
             }
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![set_tracking_enabled, set_idle_threshold]);
+        .invoke_handler(tauri::generate_handler![
+            set_tracking_enabled,
+            set_idle_threshold,
+            systemd::setup_systemd_service,
+        ]);
 
     match builder.run(tauri::generate_context!()) {
         Ok(_) => (),

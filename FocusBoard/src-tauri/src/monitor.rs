@@ -38,7 +38,7 @@ fn log_json(level: &str, message: &str, fields: Value) {
     println!("{}", payload);
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct ActivityEvent {
     pub app_name: String,
     pub window_title: String,
@@ -83,123 +83,153 @@ fn is_x11_session() -> bool {
         .unwrap_or(false)
 }
 
+pub fn run_monitor_loop<F, B>(
+    tracking_enabled: Arc<AtomicBool>,
+    idle_threshold: Arc<AtomicU64>,
+    on_activity: F,
+    is_backgrounded: B,
+    shutdown_rx: mpsc::Receiver<()>,
+) where
+    F: Fn(ActivityEvent) + Send + Sync + 'static,
+    B: Fn() -> bool + Send + Sync + 'static,
+{
+    let mut last_app = String::new();
+    let mut last_title = String::new();
+    let mut was_idle = false;
+    let env_idle_threshold: u64 = std::env::var("FOCUSBOARD_IDLE_THRESHOLD")
+        .ok()
+        .and_then(|s| s.parse::<u64>().ok())
+        .unwrap_or(30);
+    idle_threshold.store(env_idle_threshold, Ordering::SeqCst);
+    let allow_x11 = std::env::var("FOCUSBOARD_ALLOW_X11")
+        .ok()
+        .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
+        .unwrap_or_else(|| is_x11_session());
+    let base_poll_secs: u64 = std::env::var("FOCUSBOARD_POLL_SECS")
+        .ok()
+        .and_then(|s| s.parse::<u64>().ok())
+        .unwrap_or(1);
+    let max_poll_secs: u64 = std::env::var("FOCUSBOARD_MAX_POLL_SECS")
+        .ok()
+        .and_then(|s| s.parse::<u64>().ok())
+        .unwrap_or(5);
+    let background_poll_secs: u64 = std::env::var("FOCUSBOARD_BACKGROUND_POLL_SECS")
+        .ok()
+        .and_then(|s| s.parse::<u64>().ok())
+        .unwrap_or(10);
+    let mut poll_secs = base_poll_secs;
+
+    loop {
+        if shutdown_rx.try_recv().is_ok() {
+            break;
+        }
+
+        let tracking_active = tracking_enabled.load(Ordering::SeqCst);
+        let mut current_app = "Unknown".to_string();
+        let mut current_title = "Unknown".to_string();
+        let current_idle_secs = UserIdle::get_time()
+            .map(|idle| idle.as_seconds())
+            .unwrap_or(0);
+
+        let active_idle_threshold = std::cmp::max(1, idle_threshold.load(Ordering::SeqCst));
+        if !tracking_active {
+            let is_idle = current_idle_secs >= active_idle_threshold;
+            if was_idle != is_idle {
+                was_idle = is_idle;
+            }
+            thread::sleep(Duration::from_secs(background_poll_secs));
+            continue;
+        }
+
+        // Prefer Hyprland (Wayland) when available to avoid X11/Xlib instability.
+        let hyprland_active = is_hyprland_session();
+        if hyprland_active {
+            if let Some((app, title)) = try_hyprctl_active_window() {
+                current_app = app;
+                current_title = title;
+            }
+        }
+
+        if current_app == "Unknown" && allow_x11 {
+            if let Ok(window) = active_win_pos_rs::get_active_window() {
+                current_app = window.app_name;
+                current_title = window.title;
+            }
+        }
+
+        let is_idle = current_idle_secs >= active_idle_threshold;
+
+        let window_changed = current_app != last_app || current_title != last_title;
+        let idle_status_changed = is_idle != was_idle;
+
+        if window_changed || idle_status_changed {
+            last_app = current_app.clone();
+            last_title = current_title.clone();
+            was_idle = is_idle;
+
+            let sanitized_app = if is_idle {
+                "Idle".to_string()
+            } else {
+                sanitize_title(&current_app)
+            };
+            let sanitized_title = if is_idle {
+                "System Idle".to_string()
+            } else {
+                sanitize_title(&current_title)
+            };
+
+            let event = ActivityEvent {
+                app_name: sanitized_app,
+                window_title: sanitized_title,
+                idle_time: current_idle_secs,
+                timestamp: Local::now(),
+            };
+
+            on_activity(event.clone());
+
+            log_json("info", "activity_update", json!({
+                "app_name": event.app_name,
+                "idle_seconds": current_idle_secs,
+            }));
+            poll_secs = base_poll_secs;
+        } else if is_idle {
+            poll_secs = std::cmp::min(poll_secs.saturating_add(1), max_poll_secs);
+        } else {
+            poll_secs = base_poll_secs;
+        }
+
+        if is_backgrounded() {
+            poll_secs = background_poll_secs;
+        }
+
+        thread::sleep(Duration::from_secs(poll_secs));
+    }
+}
+
 pub fn start_monitor(app: AppHandle, tracking_enabled: Arc<AtomicBool>, idle_threshold: Arc<AtomicU64>) {
     let app_handle = app.clone();
     let (shutdown_tx, shutdown_rx) = mpsc::channel::<()>();
     let monitor_handle: Arc<Mutex<Option<thread::JoinHandle<()>>>> = Arc::new(Mutex::new(None));
 
     let monitor_thread = thread::spawn(move || {
-        let mut last_app = String::new();
-        let mut last_title = String::new();
-        let mut was_idle = false;
-        let env_idle_threshold: u64 = std::env::var("FOCUSBOARD_IDLE_THRESHOLD").ok().and_then(|s| s.parse::<u64>().ok()).unwrap_or(30);
-        idle_threshold.store(env_idle_threshold, Ordering::SeqCst);
-        let allow_x11 = std::env::var("FOCUSBOARD_ALLOW_X11")
-            .ok()
-            .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
-            .unwrap_or_else(|| is_x11_session());
-        let base_poll_secs: u64 = std::env::var("FOCUSBOARD_POLL_SECS").ok().and_then(|s| s.parse::<u64>().ok()).unwrap_or(1);
-        let max_poll_secs: u64 = std::env::var("FOCUSBOARD_MAX_POLL_SECS").ok().and_then(|s| s.parse::<u64>().ok()).unwrap_or(5);
-        let background_poll_secs: u64 = std::env::var("FOCUSBOARD_BACKGROUND_POLL_SECS").ok().and_then(|s| s.parse::<u64>().ok()).unwrap_or(10);
-        let mut poll_secs = base_poll_secs;
-
-        loop {
-            if shutdown_rx.try_recv().is_ok() {
-                break;
+        let emit_handle = app_handle.clone();
+        let on_activity = move |event: ActivityEvent| {
+            if let Err(err) = emit_handle.emit("activity-update", &event) {
+                log_json("error", "emit_failed", json!({ "error": format!("{:?}", err) }));
             }
-
-            let tracking_active = tracking_enabled.load(Ordering::SeqCst);
-            let mut current_app = "Unknown".to_string();
-            let mut current_title = "Unknown".to_string();
-            let current_idle_secs = UserIdle::get_time()
-                .map(|idle| idle.as_seconds())
-                .unwrap_or(0);
-
-            let active_idle_threshold = std::cmp::max(1, idle_threshold.load(Ordering::SeqCst));
-            if !tracking_active {
-                let is_idle = current_idle_secs >= active_idle_threshold;
-                if was_idle != is_idle {
-                    was_idle = is_idle;
-                }
-                thread::sleep(Duration::from_secs(background_poll_secs));
-                continue;
-            }
-
-            // Prefer Hyprland (Wayland) when available to avoid X11/Xlib instability.
-            let hyprland_active = is_hyprland_session();
-            if hyprland_active {
-                if let Some((app, title)) = try_hyprctl_active_window() {
-                    current_app = app;
-                    current_title = title;
-                }
-            }
-
-            if current_app == "Unknown" && allow_x11 {
-                if let Ok(window) = active_win_pos_rs::get_active_window() {
-                    current_app = window.app_name;
-                    current_title = window.title;
-                }
-            }
-
-            let is_idle = current_idle_secs >= active_idle_threshold;
-
-            let window_changed = current_app != last_app || current_title != last_title;
-            let idle_status_changed = is_idle != was_idle;
-
-            if window_changed || idle_status_changed {
-                last_app = current_app.clone();
-                last_title = current_title.clone();
-                was_idle = is_idle;
-
-                let sanitized_app = if is_idle {
-                    "Idle".to_string()
-                } else {
-                    sanitize_title(&current_app)
-                };
-                let sanitized_title = if is_idle {
-                    "System Idle".to_string()
-                } else {
-                    sanitize_title(&current_title)
-                };
-
-                let event = ActivityEvent {
-                    app_name: sanitized_app,
-                    window_title: sanitized_title,
-                    idle_time: current_idle_secs,
-                    timestamp: Local::now(),
-                };
-
-                // Emit and handle potential error
-                if let Err(err) = app_handle.emit("activity-update", &event) {
-                    log_json("error", "emit_failed", json!({ "error": format!("{:?}", err) }));
-                }
-
-                log_json("info", "activity_update", json!({
-                    "app_name": event.app_name,
-                    "idle_seconds": current_idle_secs,
-                }));
-                poll_secs = base_poll_secs;
-            } else if is_idle {
-                poll_secs = std::cmp::min(poll_secs.saturating_add(1), max_poll_secs);
-            } else {
-                poll_secs = base_poll_secs;
-            }
-
-            let is_backgrounded = app_handle
+        };
+        let is_backgrounded = move || {
+            app_handle
                 .get_webview_window("main")
                 .and_then(|window| window.is_visible().ok().map(|visible| !visible))
                 .unwrap_or(false)
                 || app_handle
                     .get_webview_window("main")
                     .and_then(|window| window.is_minimized().ok())
-                    .unwrap_or(false);
+                    .unwrap_or(false)
+        };
 
-            if is_backgrounded {
-                poll_secs = background_poll_secs;
-            }
-
-            thread::sleep(Duration::from_secs(poll_secs));
-        }
+        run_monitor_loop(tracking_enabled, idle_threshold, on_activity, is_backgrounded, shutdown_rx);
     });
 
     if let Ok(mut handle) = monitor_handle.lock() {

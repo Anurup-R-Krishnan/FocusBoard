@@ -13,10 +13,6 @@
   "scripts": {
     "start": "node server.js",
     "dev": "bun --watch server.js",
-    "generate-embeddings": "node scripts/generateCategoryEmbeddings.js",
-    "dedupe-events": "node scripts/dedupeEvents.js",
-    "ensure-event-id-index": "node scripts/ensureEventIdIndex.js",
-    "seed-student-day": "node scripts/seedStudentDay.js",
     "test": "jest"
   },
   "dependencies": {

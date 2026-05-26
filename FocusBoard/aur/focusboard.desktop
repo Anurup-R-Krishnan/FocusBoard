@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=FocusBoard
+Comment=Automatic activity tracking and focus analytics
+Exec=/usr/bin/focusboard
+Icon=focusboard
+Type=Application
+Categories=Productivity;Office;Utility;
+Terminal=false

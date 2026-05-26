@@ -17,6 +17,7 @@ import ChangelogModal from './components/overlays/ChangelogModal';
 import Navigation, { Page } from './components/layout/Navigation';
 import OnboardingFlow from './components/onboarding/OnboardingFlow';
 import { LoginView, SignUpView, ForgotPasswordView, ResetPasswordView, VerifyEmailView, AccountLockView } from './components/auth/AuthViews';
+import SetupWizard from './components/SetupWizard';
 import { listen } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core';
 import { postActivity } from './services/activityService';
@@ -70,6 +71,7 @@ const isAuthedPage = (page: Page | null): page is Page => {
 const App: React.FC = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isAuthLoading, setIsAuthLoading] = useState(true);
+    const [backendReady, setBackendReady] = useState<boolean | null>(null);
     const [currentPage, setCurrentPage] = useState<Page>(() => {
         if (!loadOnboardingComplete()) return 'onboarding';
         const saved = typeof window !== 'undefined' ? localStorage.getItem('focusboard_current_page') as Page : null;
@@ -142,6 +144,22 @@ const App: React.FC = () => {
                 localStorage.removeItem('focusboard_token');
             })
             .finally(() => setIsAuthLoading(false));
+    }, []);
+
+    useEffect(() => {
+        let mounted = true;
+        const checkBackend = async () => {
+            try {
+                const res = await fetch('http://localhost:5000/health');
+                if (!mounted) return;
+                setBackendReady(res.ok);
+            } catch (_e) {
+                if (!mounted) return;
+                setBackendReady(false);
+            }
+        };
+        checkBackend();
+        return () => { mounted = false; };
     }, []);
 
     useEffect(() => {
@@ -327,6 +345,15 @@ const App: React.FC = () => {
             <div className="min-h-screen bg-black flex items-center justify-center">
                 <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
             </div>
+        );
+    }
+
+    if (backendReady === false) {
+        return (
+            <SetupWizard
+                onReady={() => setBackendReady(true)}
+                onSkip={() => setBackendReady(true)}
+            />
         );
     }
 

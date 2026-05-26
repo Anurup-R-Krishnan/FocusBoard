@@ -5,13 +5,14 @@ pkgver=0.1.0
 pkgrel=1
 pkgdesc="Automatic activity tracking and focus analytics"
 arch=('x86_64')
-url="https://github.com/anuruprkris/FocusBoard"
+url="https://github.com/Anurup-R-Krishnan/FocusBoard"
 license=('MIT')
 depends=(
-  'webkit2gtk'
+  'webkit2gtk-4.1'
   'gtk3'
   'libx11'
   'libxcb'
+  'nodejs'
 )
 makedepends=(
   'git'
@@ -21,28 +22,50 @@ makedepends=(
   'cargo'
 )
 options=('!strip')
-source=("${pkgname}-${pkgver}::git+${url}.git")
+source=("${pkgname}-${pkgver}::git+${url}.git#branch=main")
 sha256sums=('SKIP')
 
 prepare() {
   cd "${srcdir}/${pkgname}-${pkgver}/FocusBoard"
   npm install
+
+  cd "${srcdir}/${pkgname}-${pkgver}/FocusBoard-backend"
+  npm install --production
 }
 
 build() {
   cd "${srcdir}/${pkgname}-${pkgver}/FocusBoard"
   npm run build
-  npm run tauri build -- --ci
+  npm run tauri build -- --ci --no-bundle
+
+  cd "${srcdir}/${pkgname}-${pkgver}/FocusBoard/src-tauri"
+  cargo build --release --bin focusboard-monitor
 }
 
 package() {
   cd "${srcdir}/${pkgname}-${pkgver}/FocusBoard"
 
   install -Dm755 "src-tauri/target/release/focusboard" "${pkgdir}/usr/bin/focusboard"
+  install -Dm755 "src-tauri/target/release/focusboard-monitor" "${pkgdir}/usr/bin/focusboard-monitor"
 
-  # Install desktop file from AppDir bundle
-  install -Dm644 "src-tauri/target/release/bundle/appimage/FocusBoard.AppDir/FocusBoard.desktop" \
-    "${pkgdir}/usr/share/applications/focusboard.desktop"
+  install -Dm644 "aur/focusboard.desktop" "${pkgdir}/usr/share/applications/focusboard.desktop"
+  install -Dm644 "src-tauri/icons/focusboard.svg" "${pkgdir}/usr/share/icons/hicolor/scalable/apps/focusboard.svg"
+
+  install -Dm644 "aur/focusboard-backend.service" "${pkgdir}/usr/lib/systemd/user/focusboard-backend.service"
+  install -Dm644 "aur/focusboard-monitor.service" "${pkgdir}/usr/lib/systemd/user/focusboard-monitor.service"
 
   install -Dm644 "LICENSE" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+
+  mkdir -p "${pkgdir}/usr/share/focusboard/backend"
+  cp -r "${srcdir}/${pkgname}-${pkgver}/FocusBoard-backend"/* "${pkgdir}/usr/share/focusboard/backend/"
+
+  rm -f "${pkgdir}/usr/share/focusboard/backend/.env"
+
+  jwt_secret=$(od -An -tx1 -N32 /dev/urandom | tr -d ' \n')
+  cat > "${pkgdir}/usr/share/focusboard/backend/.env" <<EOF
+JWT_SECRET=${jwt_secret}
+PORT=5000
+NODE_ENV=production
+WORKERS=1
+EOF
 }
