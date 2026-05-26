@@ -36,6 +36,7 @@ prepare() {
 build() {
   cd "${srcdir}/${pkgname}-${pkgver}/FocusBoard"
   npm run build
+  export RUSTFLAGS="${RUSTFLAGS} -C link-arg=-fuse-ld=bfd"
   npm run tauri build -- --ci --no-bundle
 
   cd "${srcdir}/${pkgname}-${pkgver}/FocusBoard/src-tauri"
@@ -47,6 +48,8 @@ package() {
 
   install -Dm755 "src-tauri/target/release/focusboard" "${pkgdir}/usr/bin/focusboard"
   install -Dm755 "src-tauri/target/release/focusboard-monitor" "${pkgdir}/usr/bin/focusboard-monitor"
+  strip --strip-unneeded "${pkgdir}/usr/bin/focusboard" || true
+  strip --strip-unneeded "${pkgdir}/usr/bin/focusboard-monitor" || true
 
   install -Dm644 "aur/focusboard.desktop" "${pkgdir}/usr/share/applications/focusboard.desktop"
   install -Dm644 "src-tauri/icons/focusboard.svg" "${pkgdir}/usr/share/icons/hicolor/scalable/apps/focusboard.svg"
