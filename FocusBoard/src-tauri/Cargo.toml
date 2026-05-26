@@ -27,7 +27,7 @@ chrono = {version= "0.4.43", features= ["serde"] }
 user-idle = "0.6.0"
 active-win-pos-rs = "0.9.1"
 regex = "1"
-ureq = { version = "2", features = ["json"] }
+ureq = { version = "2", default-features = false, features = ["json"] }
 ctrlc = "3"
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
