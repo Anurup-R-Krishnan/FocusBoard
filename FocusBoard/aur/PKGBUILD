@@ -22,7 +22,8 @@ makedepends=(
   'cargo'
 )
 options=('!strip')
-source=("${pkgname}-${pkgver}::git+${url}.git#branch=main")
+source=("${pkgname}-${pkgver}::git+file:///home/anuruprkris/Project/focus#branch=main")
+# NOTE: Change back to git+${url}.git#branch=main when publishing to AUR
 sha256sums=('SKIP')
 
 prepare() {
@@ -59,6 +60,10 @@ package() {
 
   install -Dm644 "aur/focusboard-backend.service" "${pkgdir}/usr/lib/systemd/user/focusboard-backend.service"
   install -Dm644 "aur/focusboard-monitor.service" "${pkgdir}/usr/lib/systemd/user/focusboard-monitor.service"
+  install -Dm644 /dev/stdin "${pkgdir}/usr/share/focusboard/backend/.env" <<'EOF'
+NODE_ENV=production
+WORKERS=1
+EOF
 
   install -Dm644 "LICENSE" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
 
