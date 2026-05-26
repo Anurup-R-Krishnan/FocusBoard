@@ -93,6 +93,7 @@ app.use(helmet({
 
 if (config.ENFORCE_HTTPS) {
   app.use((req, res, next) => {
+    if (req.path === '/health') return next();
     const proto = req.headers['x-forwarded-proto'] || (req.secure ? 'https' : 'http');
     if (proto !== 'https') {
       return res.status(400).json({ success: false, message: 'HTTPS required.' });
