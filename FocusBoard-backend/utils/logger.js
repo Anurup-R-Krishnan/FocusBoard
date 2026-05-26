@@ -1,4 +1,6 @@
 const winston = require('winston');
+const path = require('path');
+const fs = require('fs');
 
 // Define your severity levels.
 const levels = {
@@ -34,13 +36,21 @@ const format = winston.format.combine(
     ),
 );
 
+const logDir = process.env.FOCUSBOARD_LOG_DIR
+    ? path.resolve(process.env.FOCUSBOARD_LOG_DIR)
+    : path.join(__dirname, '..', 'logs');
+
+if (!fs.existsSync(logDir)) {
+    fs.mkdirSync(logDir, { recursive: true });
+}
+
 const transports = [
     new winston.transports.Console(),
     new winston.transports.File({
-        filename: 'logs/error.log',
+        filename: path.join(logDir, 'error.log'),
         level: 'error',
     }),
-    new winston.transports.File({ filename: 'logs/all.log' }),
+    new winston.transports.File({ filename: path.join(logDir, 'all.log') }),
 ];
 
 const logger = winston.createLogger({

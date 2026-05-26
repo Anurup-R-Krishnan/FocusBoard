@@ -6,3 +6,6 @@ Icon=focusboard
 Type=Application
 Categories=Productivity;Office;Utility;
 Terminal=false
+StartupWMClass=com.anurupkrishnan.focusboard
+StartupNotify=true
+TryExec=/usr/bin/focusboard

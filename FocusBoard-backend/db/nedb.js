@@ -5,7 +5,9 @@ const Datastore = require('@seald-io/nedb');
 const { randomUUID } = require('crypto');
 const fs = require('fs');
 
-const DB_DIR = path.join(__dirname, '..', 'data');
+const DB_DIR = process.env.FOCUSBOARD_DATA_DIR
+  ? path.resolve(process.env.FOCUSBOARD_DATA_DIR)
+  : path.join(__dirname, '..', 'data');
 
 const MODEL_REGISTRY = {};
 const DATABASE_REGISTRY = {};

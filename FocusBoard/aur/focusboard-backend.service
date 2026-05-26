@@ -8,6 +8,13 @@ WorkingDirectory=/usr/share/focusboard/backend
 ExecStart=/usr/bin/node /usr/share/focusboard/backend/server.js
 Environment=NODE_ENV=production
 Environment=WORKERS=1
+Environment=FOCUSBOARD_LOG_DIR=%h/.local/state/focusboard/logs
+Environment=FOCUSBOARD_DATA_DIR=%h/.local/share/focusboard/data
+StateDirectory=focusboard
+StateDirectoryMode=0750
+ExecStartPre=/usr/bin/mkdir -p %h/.local/share/focusboard/data
+ExecStartPre=/usr/bin/mkdir -p %h/.local/state/focusboard/logs
+ExecStartPre=/usr/bin/chmod 750 %h/.local/share/focusboard/data %h/.local/state/focusboard/logs
 Restart=on-failure
 RestartSec=5
 
