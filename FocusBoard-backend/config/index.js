@@ -9,5 +9,5 @@ module.exports = {
         .map((origin) => origin.trim())
         .filter(Boolean),
     TRUST_PROXY: process.env.TRUST_PROXY === 'true',
-    ENFORCE_HTTPS: process.env.ENFORCE_HTTPS === 'true' || process.env.NODE_ENV === 'production',
+    ENFORCE_HTTPS: process.env.ENFORCE_HTTPS === 'true' || (process.env.NODE_ENV === 'production' && process.env.ENFORCE_HTTPS !== 'false'),
 };
