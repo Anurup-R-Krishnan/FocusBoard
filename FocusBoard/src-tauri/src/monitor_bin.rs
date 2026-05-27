@@ -20,7 +20,7 @@ fn post_activity(event: ActivityEvent) {
 
     let _ = ureq::post(&url)
         .set("Content-Type", "application/json")
-        .send_json(payload);
+        .send_json(&payload);
 }
 
 fn main() {

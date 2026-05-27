@@ -112,7 +112,7 @@ const runCategorizationJob = async () => {
         const delayMsAgo = new Date(Date.now() - CATEGORIZATION_DELAY_MS);
 
         // Get IDs of already-mapped activities directly in the DB query
-        const mappedActivityIds = await ActivityMapping.find().distinct('activityId');
+        const mappedActivityIds = await ActivityMapping.distinct('activityId');
 
         const activitiesToCategorize = await Activity.find({
             start_time: { $lte: delayMsAgo },
