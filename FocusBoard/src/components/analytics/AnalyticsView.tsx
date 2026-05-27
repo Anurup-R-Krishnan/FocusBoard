@@ -14,6 +14,7 @@ import { Calendar as CalendarIcon, ChevronDown, Download, SlidersHorizontal, Pan
 import { Task, Category, TimeSegment } from '../../types';
 import FocusGauge from '../dashboard/FocusGauge';
 import { useDashboardStore } from '../../store/useDashboardStore';
+import { getAllCategories, Category } from '../../services/categoryApi';
 import { DrillDownType } from '../dashboard/DrillDownView';
 
 interface AnalyticsViewProps {
@@ -22,10 +23,11 @@ interface AnalyticsViewProps {
 
 const AnalyticsView: React.FC<AnalyticsViewProps> = ({ onNavigate }) => {
     const { metrics, timeline, tasks, isLoading, error } = useDashboardStore();
+    const [categories, setCategories] = useState<Category[]>([]);
 
-    // Map to state expected by the view
-    const state = { metrics, timeline, tasks };
-    const categories: any[] = []; // temporary fallback
+    useEffect(() => {
+        getAllCategories(1, 200).then(r => setCategories(r.data)).catch(() => {});
+    }, []);
     const [activeTab, setActiveTab] = useState<ReportType>('DAILY');
     const [isSidebarOpen, setSidebarOpen] = useState(true);
     const [dateRange, setDateRange] = useState<{ start: Date; end: Date }>({
