@@ -24,6 +24,7 @@ import { postActivity } from './services/activityService';
 import { useDashboardStore } from './store/useDashboardStore';
 import { useSessionStore } from './store/useSessionStore';
 import { AUTH_BASE_URL } from './services/apiBase';
+import { UserData } from './services/authApi';
 
 const API_BASE = AUTH_BASE_URL;
 const IS_DEV = Boolean((import.meta as any).env?.DEV);
@@ -91,6 +92,7 @@ const App: React.FC = () => {
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isChangelogOpen, setIsChangelogOpen] = useState(false);
     const [trackingEnabled, setTrackingEnabled] = useState<boolean>(() => loadTrackingEnabled());
+    const [user, setUser] = useState<UserData | null>(null);
     const { initSockets, stopSockets } = useDashboardStore();
 
     // Generic Detail State
@@ -131,11 +133,16 @@ const App: React.FC = () => {
         })
             .then(res => {
                 if (res.ok) {
-                    setIsAuthenticated(true);
-                    const lastAuthed = localStorage.getItem(LAST_AUTHED_PAGE_KEY) as Page | null;
-                    setCurrentPage(prev => {
-                        if (isAuthedPage(lastAuthed)) return lastAuthed;
-                        return prev === 'login' ? 'dashboard' : prev;
+                    return res.json().then(json => {
+                        if (json.data) {
+                            setUser(json.data);
+                        }
+                        setIsAuthenticated(true);
+                        const lastAuthed = localStorage.getItem(LAST_AUTHED_PAGE_KEY) as Page | null;
+                        setCurrentPage(prev => {
+                            if (isAuthedPage(lastAuthed)) return lastAuthed;
+                            return prev === 'login' ? 'dashboard' : prev;
+                        });
                     });
                 } else {
                     localStorage.removeItem('focusboard_token');
@@ -329,6 +336,14 @@ const App: React.FC = () => {
         if (typeof window !== 'undefined') {
             localStorage.setItem(ONBOARDING_COMPLETE_KEY, 'true');
         }
+        fetch(`${API_BASE}/me`, {
+            headers: { 'Authorization': `Bearer ${token}` },
+        })
+            .then(res => res.json())
+            .then(json => {
+                if (json.data) setUser(json.data);
+            })
+            .catch(() => {});
         const lastAuthed = localStorage.getItem(LAST_AUTHED_PAGE_KEY) as Page | null;
         setCurrentPage(isAuthedPage(lastAuthed) ? lastAuthed : 'dashboard');
     };
@@ -337,6 +352,7 @@ const App: React.FC = () => {
         localStorage.removeItem('focusboard_token');
         localStorage.removeItem(LAST_AUTHED_PAGE_KEY);
         setIsAuthenticated(false);
+        setUser(null);
         setCurrentPage('login');
     };
 
@@ -406,7 +422,7 @@ const App: React.FC = () => {
             {/* Main Content Area */}
             <main className={`flex-1 h-screen overflow-y-auto overflow-x-hidden relative bg-black ${currentPage !== 'session-details' ? 'pb-24 sm:pb-0' : ''} scroll-smooth`}>
                 {currentPage === 'dashboard' && (
-                    <Dashboard onNavigate={handleNavigateDetail} onPageChange={setCurrentPage} />
+                    <Dashboard onNavigate={handleNavigateDetail} onPageChange={setCurrentPage} user={user} />
                 )}
                 {currentPage === 'analytics' && (
                     <AnalyticsView />

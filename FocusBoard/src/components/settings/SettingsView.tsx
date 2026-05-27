@@ -111,9 +111,76 @@ const AccountSettings = ({ onNavigate }: { onNavigate?: (p: Page) => void }) => 
             });
     }, []);
 
-    const handleDeleteAccount = () => {
-        alert("Account deletion is not supported in the backend yet.");
+    const handleDeleteAccount = async () => {
+        const token = getToken();
+        if (!token) return;
+        try {
+            const res = await fetch(`${API_BASE_URL}/auth/account`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` },
+            });
+            const data = await res.json();
+            if (data.success) {
+                localStorage.removeItem('focusboard_token');
+                window.location.reload();
+            } else {
+                alert(data.message || 'Failed to delete account.');
+            }
+        } catch (e) {
+            alert('Failed to delete account.');
+            console.error(e);
+        }
         setShowDeleteConfirm(false);
+    };
+
+    const handleSaveProfile = async () => {
+        const token = getToken();
+        if (!token || !userProfile) return;
+        try {
+            const res = await fetch(`${API_BASE_URL}/auth/profile`, {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: userProfile.name, email_id: userProfile.email }),
+            });
+            const data = await res.json();
+            if (!data.success) {
+                alert(data.message || 'Error updating profile.');
+            }
+        } catch (e) {
+            alert('Failed to update profile.');
+            console.error(e);
+        }
+    };
+
+    const handleChangePassword = async () => {
+        const token = getToken();
+        if (!token) return;
+        if (passwordForm.new !== passwordForm.confirm) {
+            setPasswordError('New passwords do not match.');
+            return;
+        }
+        if (passwordForm.new.length < 6) {
+            setPasswordError('Password must be at least 6 characters.');
+            return;
+        }
+        try {
+            const res = await fetch(`${API_BASE_URL}/auth/change-password`, {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ currentPassword: passwordForm.current, newPassword: passwordForm.new }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                setIsChangePasswordOpen(false);
+                setPasswordForm({ current: '', new: '', confirm: '' });
+                setPasswordError(null);
+            } else {
+                setPasswordError(data.message || 'Failed to change password.');
+            }
+        } catch (e) {
+            setPasswordError('Failed to change password.');
+            console.error(e);
+        }
     };
 
     const handleSaveParentalControls = async () => {
@@ -168,10 +235,10 @@ const AccountSettings = ({ onNavigate }: { onNavigate?: (p: Page) => void }) => 
                     )}
                     <div className="flex items-center justify-center sm:justify-start gap-2 mt-2">
                         <span className="inline-block px-2 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-bold uppercase tracking-wider">
-                            Pro Plan
+                            FocusBoard
                         </span>
                         <span className="inline-block px-2 py-0.5 rounded bg-neutral-800 border border-neutral-700 text-neutral-400 text-[10px] font-bold uppercase tracking-wider">
-                            Member since 2023
+                            v1.2.0
                         </span>
                     </div>
                 </div>
@@ -228,6 +295,14 @@ const AccountSettings = ({ onNavigate }: { onNavigate?: (p: Page) => void }) => 
                             className="w-full bg-neutral-900 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-accent-blue focus:outline-none transition-colors"
                         />
                     </div>
+                    <div className="flex justify-end">
+                        <button
+                            onClick={handleSaveProfile}
+                            className="px-4 py-2 text-xs font-bold text-black bg-white hover:bg-neutral-200 rounded-lg transition-colors"
+                        >
+                            Save Profile
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -236,10 +311,10 @@ const AccountSettings = ({ onNavigate }: { onNavigate?: (p: Page) => void }) => 
                 <div className="bg-titanium-dark border border-white/10 rounded-2xl p-6">
                     <SettingRow label="Password" description="Last changed 3 months ago.">
                         <button
-                            onClick={() => onNavigate && onNavigate('forgot-password')}
+                            onClick={() => setIsChangePasswordOpen(true)}
                             className="text-xs font-bold text-white bg-neutral-800 px-3 py-1.5 rounded-lg hover:bg-neutral-700 transition-colors"
                         >
-                            Reset Password
+                            Change Password
                         </button>
                     </SettingRow>
                     <SettingRow label="Two-Factor Authentication" description="Add an extra layer of security to your account.">
@@ -325,6 +400,28 @@ const AccountSettings = ({ onNavigate }: { onNavigate?: (p: Page) => void }) => 
                     </button>
                 </div>
             </div>
+
+            {/* Change Password Modal */}
+            <AnimatePresence>
+                {isChangePasswordOpen && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => { setIsChangePasswordOpen(false); setPasswordForm({ current: '', new: '', confirm: '' }); setPasswordError(null); }} />
+                        <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative bg-titanium-surface border border-white/10 rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+                            <h3 className="text-lg font-bold text-white mb-4">Change Password</h3>
+                            {passwordError && <div className="bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 text-xs text-red-300 mb-4">{passwordError}</div>}
+                            <div className="space-y-3 mb-6">
+                                <input type="password" placeholder="Current password" value={passwordForm.current} onChange={e => setPasswordForm({ ...passwordForm, current: e.target.value })} className="w-full bg-neutral-900 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-accent-blue focus:outline-none" />
+                                <input type="password" placeholder="New password" value={passwordForm.new} onChange={e => setPasswordForm({ ...passwordForm, new: e.target.value })} className="w-full bg-neutral-900 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-accent-blue focus:outline-none" />
+                                <input type="password" placeholder="Confirm new password" value={passwordForm.confirm} onChange={e => setPasswordForm({ ...passwordForm, confirm: e.target.value })} className="w-full bg-neutral-900 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-accent-blue focus:outline-none" />
+                            </div>
+                            <div className="flex gap-3 justify-end">
+                                <button onClick={() => { setIsChangePasswordOpen(false); setPasswordForm({ current: '', new: '', confirm: '' }); setPasswordError(null); }} className="px-4 py-2 text-sm font-medium text-neutral-400 hover:text-white">Cancel</button>
+                                <button onClick={handleChangePassword} className="px-4 py-2 text-sm font-bold text-black bg-white hover:bg-neutral-200 rounded-lg">Update Password</button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
 
             {/* Delete Confirmation Modal */}
             <AnimatePresence>

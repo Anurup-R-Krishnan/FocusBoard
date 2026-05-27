@@ -132,6 +132,80 @@ const devLogin = async (req, res) => {
     }
 };
 
+// PUT /api/auth/profile
+const updateProfile = async (req, res) => {
+    try {
+        const { name, email_id } = req.body;
+        const updateFields = {};
+        if (name !== undefined) updateFields.name = name;
+        if (email_id !== undefined) updateFields.email_id = email_id;
+
+        if (email_id) {
+            const existing = await User.findOne({ email_id, _id: { $ne: req.user.id } });
+            if (existing) {
+                return res.status(409).json({ success: false, message: 'Email already in use.' });
+            }
+        }
+
+        const user = await User.findByIdAndUpdate(req.user.id, { $set: updateFields });
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found.' });
+        }
+
+        return res.status(200).json({
+            success: true,
+            data: {
+                id: user._id,
+                name: user.name,
+                email_id: user.email_id,
+            },
+        });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// DELETE /api/auth/account
+const deleteAccount = async (req, res) => {
+    try {
+        const user = await User.findByIdAndDelete(req.user.id);
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found.' });
+        }
+        return res.status(200).json({ success: true, message: 'Account deleted successfully.' });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// PUT /api/auth/change-password
+const changePassword = async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ success: false, message: 'Current and new password required.' });
+        }
+
+        const user = await User.findById(req.user.id);
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found.' });
+        }
+
+        const isMatch = await User.comparePassword(currentPassword, user.password);
+        if (!isMatch) {
+            return res.status(401).json({ success: false, message: 'Current password is incorrect.' });
+        }
+
+        const hashedPassword = await User.hashPassword(newPassword);
+        await User.findByIdAndUpdate(req.user.id, { $set: { password: hashedPassword } });
+
+        return res.status(200).json({ success: true, message: 'Password updated successfully.' });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 // PUT /api/auth/parental-controls
 const updateParentalControls = async (req, res) => {
     try {
@@ -158,4 +232,4 @@ const updateParentalControls = async (req, res) => {
     }
 };
 
-module.exports = { register, login, getMe, devLogin, updateParentalControls };
+module.exports = { register, login, getMe, updateProfile, deleteAccount, changePassword, devLogin, updateParentalControls };

@@ -1,6 +1,7 @@
 // Support / Customer Care API Service
 // Covers: IssueTypes, SupportTickets, TicketResolutions, UserFeedback, Leads
 import { API_BASE_URL } from './apiBase';
+import { authHeaders } from './authApi';
 
 const API_BASE = API_BASE_URL;
 
@@ -11,7 +12,9 @@ async function handleResponse<T>(res: Response): Promise<T> {
 }
 
 async function fetchList<T>(path: string, page = 1, limit = 100, extra = ''): Promise<{ data: T[]; total: number }> {
-    const res = await fetch(`${API_BASE}${path}?page=${page}&limit=${limit}${extra ? '&' + extra : ''}`);
+    const headers = authHeaders();
+    delete headers['Content-Type'];
+    const res = await fetch(`${API_BASE}${path}?page=${page}&limit=${limit}${extra ? '&' + extra : ''}`, { headers });
     const json = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error((json as any).message || `Failed to fetch ${path}`);
     return { data: json.data || [], total: json.total || 0 };
@@ -40,13 +43,13 @@ export interface IssueTypePayload {
 }
 
 export const createIssueType = (p: IssueTypePayload) =>
-    fetch(`${API_BASE}/issue-types`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(p) }).then(r => handleResponse<IssueType>(r));
+    fetch(`${API_BASE}/issue-types`, { method: 'POST', headers: authHeaders(), body: JSON.stringify(p) }).then(r => handleResponse<IssueType>(r));
 
 export const getAllIssueTypes = (page = 1, limit = 100) => fetchList<IssueType>('/issue-types', page, limit);
 export const updateIssueType = (id: string, p: Partial<IssueTypePayload>) =>
-    fetch(`${API_BASE}/issue-types/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(p) }).then(r => handleResponse<IssueType>(r));
+    fetch(`${API_BASE}/issue-types/${id}`, { method: 'PUT', headers: authHeaders(), body: JSON.stringify(p) }).then(r => handleResponse<IssueType>(r));
 export const deleteIssueType = async (id: string) => {
-    const res = await fetch(`${API_BASE}/issue-types/${id}`, { method: 'DELETE' });
+    const res = await fetch(`${API_BASE}/issue-types/${id}`, { method: 'DELETE', headers: authHeaders() });
     if (!res.ok) throw new Error((await res.json().catch(() => ({}))).message || 'Delete failed');
 };
 
@@ -79,12 +82,12 @@ export interface TicketPayload {
 }
 
 export const createTicket = (p: TicketPayload) =>
-    fetch(`${API_BASE}/support-tickets`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(p) }).then(r => handleResponse<SupportTicket>(r));
+    fetch(`${API_BASE}/support-tickets`, { method: 'POST', headers: authHeaders(), body: JSON.stringify(p) }).then(r => handleResponse<SupportTicket>(r));
 export const getAllTickets = (page = 1, limit = 100, extra = '') => fetchList<SupportTicket>('/support-tickets', page, limit, extra);
 export const updateTicket = (id: string, p: Partial<TicketPayload>) =>
-    fetch(`${API_BASE}/support-tickets/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(p) }).then(r => handleResponse<SupportTicket>(r));
+    fetch(`${API_BASE}/support-tickets/${id}`, { method: 'PUT', headers: authHeaders(), body: JSON.stringify(p) }).then(r => handleResponse<SupportTicket>(r));
 export const deleteTicket = async (id: string) => {
-    const res = await fetch(`${API_BASE}/support-tickets/${id}`, { method: 'DELETE' });
+    const res = await fetch(`${API_BASE}/support-tickets/${id}`, { method: 'DELETE', headers: authHeaders() });
     if (!res.ok) throw new Error((await res.json().catch(() => ({}))).message || 'Delete failed');
 };
 
@@ -111,10 +114,10 @@ export interface ResolutionPayload {
 }
 
 export const createResolution = (p: ResolutionPayload) =>
-    fetch(`${API_BASE}/ticket-resolutions`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(p) }).then(r => handleResponse<TicketResolution>(r));
+    fetch(`${API_BASE}/ticket-resolutions`, { method: 'POST', headers: authHeaders(), body: JSON.stringify(p) }).then(r => handleResponse<TicketResolution>(r));
 export const getAllResolutions = (page = 1, limit = 100, extra = '') => fetchList<TicketResolution>('/ticket-resolutions', page, limit, extra);
 export const deleteResolution = async (id: string) => {
-    const res = await fetch(`${API_BASE}/ticket-resolutions/${id}`, { method: 'DELETE' });
+    const res = await fetch(`${API_BASE}/ticket-resolutions/${id}`, { method: 'DELETE', headers: authHeaders() });
     if (!res.ok) throw new Error((await res.json().catch(() => ({}))).message || 'Delete failed');
 };
 
@@ -141,10 +144,10 @@ export interface FeedbackPayload {
 }
 
 export const createFeedback = (p: FeedbackPayload) =>
-    fetch(`${API_BASE}/user-feedback`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(p) }).then(r => handleResponse<UserFeedback>(r));
+    fetch(`${API_BASE}/user-feedback`, { method: 'POST', headers: authHeaders(), body: JSON.stringify(p) }).then(r => handleResponse<UserFeedback>(r));
 export const getAllFeedback = (page = 1, limit = 100, extra = '') => fetchList<UserFeedback>('/user-feedback', page, limit, extra);
 export const deleteFeedback = async (id: string) => {
-    const res = await fetch(`${API_BASE}/user-feedback/${id}`, { method: 'DELETE' });
+    const res = await fetch(`${API_BASE}/user-feedback/${id}`, { method: 'DELETE', headers: authHeaders() });
     if (!res.ok) throw new Error((await res.json().catch(() => ({}))).message || 'Delete failed');
 };
 
@@ -168,11 +171,11 @@ export interface LeadPayload {
 }
 
 export const createLead = (p: LeadPayload) =>
-    fetch(`${API_BASE}/leads`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(p) }).then(r => handleResponse<Lead>(r));
+    fetch(`${API_BASE}/leads`, { method: 'POST', headers: authHeaders(), body: JSON.stringify(p) }).then(r => handleResponse<Lead>(r));
 export const getAllLeads = (page = 1, limit = 100) => fetchList<Lead>('/leads', page, limit);
 export const updateLead = (id: string, p: Partial<LeadPayload>) =>
-    fetch(`${API_BASE}/leads/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(p) }).then(r => handleResponse<Lead>(r));
+    fetch(`${API_BASE}/leads/${id}`, { method: 'PUT', headers: authHeaders(), body: JSON.stringify(p) }).then(r => handleResponse<Lead>(r));
 export const deleteLead = async (id: string) => {
-    const res = await fetch(`${API_BASE}/leads/${id}`, { method: 'DELETE' });
+    const res = await fetch(`${API_BASE}/leads/${id}`, { method: 'DELETE', headers: authHeaders() });
     if (!res.ok) throw new Error((await res.json().catch(() => ({}))).message || 'Delete failed');
 };

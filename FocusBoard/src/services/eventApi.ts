@@ -1,11 +1,20 @@
 // Event API Service – talks to FocusBoard-backend /api/events
 
 import { API_BASE_URL } from './apiBase';
+import { authHeaders, getToken } from './authApi';
 import { enqueueEvent } from './eventQueue';
 const API_BASE = API_BASE_URL;
 
-// Default user id used for all events (no auth flow yet)
-const DEFAULT_USER_ID = 'focusboard-user-1';
+function getUserId(): string {
+    const token = getToken();
+    if (!token) return 'focusboard-user-1';
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return payload.id || 'focusboard-user-1';
+    } catch {
+        return 'focusboard-user-1';
+    }
+}
 
 // ---------- Types ----------
 
@@ -125,11 +134,11 @@ const toFrontend = (evt: BackendEvent): CalendarEventFE => {
 // ---------- API Calls ----------
 
 export async function fetchEvents(startDate?: Date, endDate?: Date): Promise<CalendarEventFE[]> {
-    const params = new URLSearchParams({ user_id: DEFAULT_USER_ID, limit: '200' });
+    const params = new URLSearchParams({ limit: '200' });
     if (startDate) params.set('startDate', startDate.toISOString());
     if (endDate) params.set('endDate', endDate.toISOString());
 
-    const res = await fetch(`${API_BASE}/events?${params}`);
+    const res = await fetch(`${API_BASE}/events?${params}`, { headers: authHeaders() });
     if (!res.ok) throw new Error('Failed to fetch events');
     const json = await res.json();
     return (json.data as BackendEvent[]).map(toFrontend);
@@ -137,12 +146,14 @@ export async function fetchEvents(startDate?: Date, endDate?: Date): Promise<Cal
 
 export async function createEvent(payload: CreateEventPayload): Promise<CalendarEventFE> {
     const eventId = (typeof crypto !== 'undefined' && (crypto as any).randomUUID) ? (crypto as any).randomUUID() : `evt-${Math.random().toString(36).slice(2,10)}${Date.now().toString(36)}`;
-    const body = { ...payload, user_id: DEFAULT_USER_ID, event_id: eventId };
+    const body = { ...payload, event_id: eventId };
+    const userId = getUserId();
+    if (userId !== 'focusboard-user-1') delete (body as any).user_id;
 
     try {
         const res = await fetch(`${API_BASE}/events`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: authHeaders(),
             body: JSON.stringify(body),
         });
         if (!res.ok) {
@@ -176,7 +187,7 @@ export async function createEvent(payload: CreateEventPayload): Promise<Calendar
             location: payload.location,
             attendees: payload.attendees || [],
             calendar: payload.calendar || 'google',
-            user_id: DEFAULT_USER_ID,
+            user_id: getUserId(),
             platform: 'google',
         };
     }
@@ -185,7 +196,7 @@ export async function createEvent(payload: CreateEventPayload): Promise<Calendar
 export async function updateEvent(id: string, payload: UpdateEventPayload): Promise<CalendarEventFE> {
     const res = await fetch(`${API_BASE}/events/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders(),
         body: JSON.stringify(payload),
     });
     if (!res.ok) {
@@ -197,7 +208,7 @@ export async function updateEvent(id: string, payload: UpdateEventPayload): Prom
 }
 
 export async function deleteEvent(id: string): Promise<void> {
-    const res = await fetch(`${API_BASE}/events/${id}`, { method: 'DELETE' });
+    const res = await fetch(`${API_BASE}/events/${id}`, { method: 'DELETE', headers: authHeaders() });
     if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error((err as any).message || 'Failed to delete event');

@@ -191,13 +191,14 @@ export const LoginView: React.FC<{ onNavigate: (p: Page) => void, onLogin: (toke
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <button className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-titanium-dark border border-white/10 hover:bg-white/5 transition-colors text-white text-sm font-medium">
+        <button disabled className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-titanium-dark border border-white/10 opacity-50 text-white text-sm font-medium cursor-not-allowed">
           <Github size={18} /> GitHub
         </button>
-        <button className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-titanium-dark border border-white/10 hover:bg-white/5 transition-colors text-white text-sm font-medium">
+        <button disabled className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-titanium-dark border border-white/10 opacity-50 text-white text-sm font-medium cursor-not-allowed">
           <Chrome size={18} /> Google
         </button>
       </div>
+      <p className="text-[10px] text-neutral-600 text-center mt-2">OAuth coming soon</p>
     </AuthLayout>
   );
 };
@@ -261,7 +262,7 @@ export const SignUpView: React.FC<{ onNavigate: (p: Page) => void }> = ({ onNavi
         <InputField icon={Lock} type="password" placeholder="Create password (min 6 chars)" value={password} onChange={(e: any) => setPassword(e.target.value)} />
 
         <div className="text-[10px] text-neutral-500 leading-tight py-1">
-          By creating an account, you agree to our <span className="text-neutral-300">Terms of Service</span> and <span className="text-neutral-300">Privacy Policy</span>.
+          By creating an account, you agree to our <span className="text-neutral-300 cursor-pointer hover:text-white underline" onClick={() => onNavigate('terms')}>Terms of Service</span> and <span className="text-neutral-300 cursor-pointer hover:text-white underline" onClick={() => onNavigate('privacy')}>Privacy Policy</span>.
         </div>
 
         <button
