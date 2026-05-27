@@ -314,7 +314,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onPageChange, user })
                         <div className="flex items-center gap-2 mt-1 truncate">
                             <p className="text-xs text-neutral-400 font-medium truncate">Good {(() => { const h = state.currentTime.getHours(); if (h < 12) return 'Morning'; if (h < 17) return 'Afternoon'; return 'Evening'; })()}, {user?.firstName || 'User'}</p>
                             <div className="h-1 w-1 rounded-full bg-neutral-600 shrink-0" />
-                            <p className="text-xs text-neutral-500 shrink-0">4h 12m remaining</p>
+                            <p className="text-xs text-neutral-500 shrink-0">{new Date().toLocaleDateString()}</p>
                         </div>
                     </div>
 
@@ -360,10 +360,12 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onPageChange, user })
                         </button>
                     )}
 
-                    <button className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full bg-[#1C1C1E] border border-white/10 text-xs font-semibold hover:bg-white/10 transition-colors group">
-                        <Star size={12} className="text-yellow-400" fill="currentColor" />
-                        <span>Get Pro</span>
-                        <ChevronRight size={12} className="text-neutral-500 group-hover:translate-x-0.5 transition-transform" />
+                    <button 
+                        onClick={() => store.fetchAll()} 
+                        className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full bg-[#1C1C1E] border border-white/10 text-xs font-semibold hover:bg-white/10 transition-colors group"
+                    >
+                        <Maximize2 size={12} className="text-neutral-400 group-hover:text-white transition-colors" />
+                        <span>Refresh</span>
                     </button>
                 </div>
             </header>
@@ -491,10 +493,12 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onPageChange, user })
                         <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent pointer-events-none" />
 
                         {/* Details Top */}
-                        <div className="absolute top-5 left-5 flex items-center gap-1.5 text-orange-400/80">
-                            <Flame size={14} fill="currentColor" />
-                            <span className="text-[10px] font-bold uppercase tracking-wider">4 Day Streak</span>
-                        </div>
+                        {state.metrics?.weeklyTrend && state.metrics.weeklyTrend.filter((v: number) => v > 0).length > 0 && (
+                            <div className="absolute top-5 left-5 flex items-center gap-1.5 text-orange-400/80">
+                                <Flame size={14} fill="currentColor" />
+                                <span className="text-[10px] font-bold uppercase tracking-wider">{state.metrics.weeklyTrend.filter((v: number) => v > 0).length} Day Activity</span>
+                            </div>
+                        )}
 
                         <FocusGauge metrics={state.metrics} recoveryProgress={state.sessionState === 'RECOVERY' ? state.recoveryProgress : undefined} />
 
@@ -538,7 +542,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onPageChange, user })
                                 <div className="flex items-center justify-start sm:justify-end gap-3 text-xs mt-1">
                                     <span className="font-medium text-neutral-500">Avg: {((state.metrics?.deepWorkTrend?.reduce((a: number, b: number) => a + b, 0) || 0) / 7 / 60).toFixed(1)}h/day</span>
                                     <span className="flex items-center gap-1 text-green-400 font-bold bg-green-500/10 px-1.5 py-0.5 rounded">
-                                        <TrendingUp size={10} /> +12%
+                                        <TrendingUp size={10} /> {state.metrics?.weeklyTrend ? `${(((state.metrics.weeklyTrend.slice(-1)[0] || 0) / (state.metrics.weeklyTrend.slice(-2, -1)[0] || 1) - 1) * 100).toFixed(0)}%` : '+0%'}
                                     </span>
                                 </div>
                             </div>

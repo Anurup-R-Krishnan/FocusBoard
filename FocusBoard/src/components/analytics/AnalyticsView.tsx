@@ -33,6 +33,7 @@ const AnalyticsView: React.FC<AnalyticsViewProps> = ({ onNavigate }) => {
         end: new Date(),
     });
     const [quickFilter, setQuickFilter] = useState<'today' | 'week' | 'month'>('today');
+    const [showExport, setShowExport] = useState(false);
 
     const applyQuickFilter = (filter: 'today' | 'week' | 'month') => {
         setQuickFilter(filter);
@@ -198,7 +199,7 @@ const AnalyticsView: React.FC<AnalyticsViewProps> = ({ onNavigate }) => {
 
                         {/* Filter Action */}
                         {['CATEGORY', 'PROJECT', 'CLIENT'].includes(activeTab) && (
-                            <button className="p-2.5 bg-neutral-900 border border-white/10 rounded-xl hover:bg-white/5 text-neutral-400 hover:text-white transition-colors">
+                            <button onClick={() => setActiveTab('DAILY')} className="p-2.5 bg-neutral-900 border border-white/10 rounded-xl hover:bg-white/5 text-neutral-400 hover:text-white transition-colors">
                                 <SlidersHorizontal size={18} />
                             </button>
                         )}
@@ -207,7 +208,8 @@ const AnalyticsView: React.FC<AnalyticsViewProps> = ({ onNavigate }) => {
                         {activeTab !== 'EXPORT' && (
                             <button
                                 className="p-2.5 bg-neutral-900 border border-white/10 rounded-xl hover:bg-white/5 text-neutral-400 hover:text-white transition-colors"
-                                title="Quick Export PDF"
+                                title="Export Data"
+                                onClick={() => setActiveTab('EXPORT')}
                             >
                                 <Download size={18} />
                             </button>

@@ -11,8 +11,13 @@ interface SquadViewProps {
 
 const SquadView: React.FC<SquadViewProps> = ({ onNavigate }) => {
     const { squad, triggerNudge } = useDashboardStore();
-    // Simulate empty feed for now since we don't fetch one by default here
-    const feed: any[] = [];
+    const feed = squad.slice(0, 5).map(m => ({
+        id: m.id,
+        user: m.name,
+        action: m.status === 'FOCUS' ? 'entered deep focus' : m.status === 'MEETING' ? 'is in a meeting' : 'is idle',
+        time: 'Just now',
+        status: m.status,
+    }));
     const getStatusColor = (status: string) => {
         switch (status) {
             case 'FOCUS': return 'bg-accent-green shadow-[0_0_12px_rgba(48,209,88,0.5)]';

@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Hexagon, Check, ArrowRight, Bell, Shield, Monitor, Clock, Globe, Layers, Plus, X, Lock, Eye, EyeOff } from 'lucide-react';
 
 interface OnboardingFlowProps {
-  onComplete: (prefs?: { trackingEnabled: boolean }) => void;
+  onComplete: (prefs?: { trackingEnabled: boolean; schedule?: { timezone: string; start: string; end: string }; projects?: string[]; privacy?: { localOnly: boolean; analytics: boolean; incognito: boolean } }) => void;
 }
 
 const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
