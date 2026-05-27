@@ -27,7 +27,8 @@ import { AUTH_BASE_URL } from './services/apiBase';
 
 const API_BASE = AUTH_BASE_URL;
 const IS_DEV = Boolean((import.meta as any).env?.DEV);
-const FORCE_LOGIN_EVERY_TIME = (import.meta as any).env?.VITE_FORCE_LOGIN === 'true';
+// Default to false for desktop app - preserve auth session across restarts
+const FORCE_LOGIN_EVERY_TIME = (import.meta as any).env?.VITE_FORCE_LOGIN === 'true' || false;
 const LAST_AUTHED_PAGE_KEY = 'focusboard_last_authed_page';
 const ONBOARDING_COMPLETE_KEY = 'focusboard_onboarding_complete';
 const TRACKING_ENABLED_KEY = 'focusboard_tracking_enabled';
