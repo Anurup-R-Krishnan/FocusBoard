@@ -74,7 +74,13 @@ fn try_hyprctl_active_window() -> Option<(String, String)> {
 fn is_hyprland_session() -> bool {
     std::env::var("XDG_SESSION_DESKTOP")
         .map(|v| v.to_lowercase().contains("hyprland"))
-        .unwrap_or(false)
+        .unwrap_or_else(|_| {
+            std::env::var("XDG_CURRENT_DESKTOP")
+                .map(|v| v.to_lowercase().contains("hyprland"))
+                .unwrap_or_else(|_| {
+                    std::env::var("HYPRLAND_INSTANCE_SIGNATURE").is_ok()
+                })
+        })
 }
 
 fn is_x11_session() -> bool {
