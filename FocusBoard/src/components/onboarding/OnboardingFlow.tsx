@@ -57,7 +57,12 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
             {step === 5 && (
                 <CompletionStep
                     key="completion"
-                    onComplete={() => onComplete({ trackingEnabled: permissions.activity })}
+                    onComplete={() => onComplete({ 
+                        trackingEnabled: permissions.activity,
+                        schedule,
+                        projects,
+                        privacy,
+                    })}
                 />
             )}
         </AnimatePresence>

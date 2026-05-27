@@ -127,17 +127,6 @@ const ControlsPanel: React.FC<ControlsPanelProps> = ({
         </ButtonBase>
 
         <div className="w-px h-8 bg-white/10 hidden sm:block" />
-
-        {/* Simulation Speed Controls */}
-        <div className="flex gap-2">
-            <ButtonBase onClick={onTogglePlay} active={!isPlaying} title={isPlaying ? "Pause Simulation" : "Resume Simulation"}>
-                {isPlaying ? <Pause size={18} className="text-neutral-400" /> : <Play size={18} className="text-neutral-400" />}
-            </ButtonBase>
-            
-            <ButtonBase onClick={onToggleSpeed} active={speedMultiplier > 1} title="Demo Mode (60x Speed)">
-                <FastForward size={18} className={speedMultiplier > 1 ? "text-accent-blue animate-pulse" : "text-neutral-400"} />
-            </ButtonBase>
-        </div>
     </div>
   );
 };

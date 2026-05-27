@@ -898,8 +898,8 @@ const CalendarView: React.FC<CalendarViewProps> = ({ actualTimeline = [], simula
                             <button onClick={() => setView('week')} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${view === 'week' ? 'bg-neutral-600 text-white shadow-sm' : 'text-neutral-400 hover:text-white'}`}>Week</button>
                             <button onClick={() => setView('month')} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${view === 'month' ? 'bg-neutral-600 text-white shadow-sm' : 'text-neutral-400 hover:text-white'}`}>Month</button>
                         </div>
-                        <button className="hidden sm:block p-2 hover:bg-white/10 rounded-lg text-neutral-400 hover:text-white transition-colors"><Search size={18} /></button>
-                        <button className="hidden sm:block p-2 hover:bg-white/10 rounded-lg text-neutral-400 hover:text-white transition-colors"><Filter size={18} /></button>
+                        <button onClick={() => setEditEvent(event)} className="hidden sm:block p-2 hover:bg-white/10 rounded-lg text-neutral-400 hover:text-white transition-colors"><Search size={18} /></button>
+                        <button onClick={handleRefresh} className="hidden sm:block p-2 hover:bg-white/10 rounded-lg text-neutral-400 hover:text-white transition-colors"><Filter size={18} /></button>
                     </div>
                 </header>
 
@@ -1369,7 +1369,13 @@ const ContextMenu = ({ x, y, event, onClose, onEdit, onDelete }: any) => (
             >
                 <Edit2 size={14} /> Edit Event
             </button>
-            <button className="flex items-center gap-2 px-3 py-2 text-xs text-neutral-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors text-left">
+            <button 
+                onClick={() => { 
+                    openCreateModal(event.start, event.end);
+                    onClose(); 
+                }} 
+                className="flex items-center gap-2 px-3 py-2 text-xs text-neutral-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors text-left"
+            >
                 <Copy size={14} /> Duplicate
             </button>
             <div className="h-px bg-white/5 my-1" />

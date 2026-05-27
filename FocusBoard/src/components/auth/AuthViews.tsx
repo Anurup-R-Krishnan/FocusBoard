@@ -332,25 +332,52 @@ export const VerifyEmailView: React.FC<{ onNavigate: (p: Page) => void }> = ({ o
 // --- 4. Forgot Password ---
 
 export const ForgotPasswordView: React.FC<{ onNavigate: (p: Page) => void }> = ({ onNavigate }) => {
+  const [email, setEmail] = useState('');
+  const [sent, setSent] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    try {
+      const res = await fetch(`${API_BASE}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email_id: email, password: '' }),
+      });
+      setSent(true);
+    } catch {
+      setError('Unable to connect. Please try again.');
+    }
+  };
+
   return (
     <AuthLayout
       title="Reset Password"
-      subtitle="Enter your email to receive password reset instructions."
+      subtitle={sent ? "If an account exists, you'll receive reset instructions." : "Enter your email to receive password reset instructions."}
       footer={
         <button onClick={() => onNavigate('login')} className="text-sm text-neutral-500 hover:text-white transition-colors">
           Return to login
         </button>
       }
     >
-      <form onSubmit={(e) => { e.preventDefault(); onNavigate('reset-password'); }} className="space-y-6">
-        <InputField icon={Mail} type="email" placeholder="Email address" />
-        <button
-          type="submit"
-          className="w-full bg-white text-black font-bold py-3.5 rounded-xl hover:bg-neutral-200 transition-colors"
-        >
-          Send Reset Link
-        </button>
-      </form>
+      {sent ? (
+        <div className="text-center">
+          <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Check size={28} className="text-green-400" />
+          </div>
+          <p className="text-sm text-neutral-400">Check your inbox for reset instructions.</p>
+          <button onClick={() => onNavigate('login')} className="mt-4 text-sm font-bold text-accent-blue hover:underline">Return to login</button>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {error && <ErrorBanner message={error} />}
+          <InputField icon={Mail} type="email" placeholder="Email address" value={email} onChange={(e: any) => setEmail(e.target.value)} />
+          <button type="submit" className="w-full bg-white text-black font-bold py-3.5 rounded-xl hover:bg-neutral-200 transition-colors">
+            Send Reset Link
+          </button>
+        </form>
+      )}
     </AuthLayout>
   );
 };
@@ -358,16 +385,38 @@ export const ForgotPasswordView: React.FC<{ onNavigate: (p: Page) => void }> = (
 // --- 5. Reset Password ---
 
 export const ResetPasswordView: React.FC<{ onNavigate: (p: Page) => void }> = ({ onNavigate }) => {
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    if (newPassword !== confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
+    if (newPassword.length < 6) {
+      setError('Password must be at least 6 characters.');
+      return;
+    }
+    onNavigate('login');
+  };
+
   return (
     <AuthLayout
       title="New Password"
       subtitle="Create a new strong password for your account."
     >
-      <form onSubmit={(e) => { e.preventDefault(); onNavigate('login'); }} className="space-y-4">
-        <InputField icon={Lock} type="password" placeholder="New Password" />
-        <InputField icon={Lock} type="password" placeholder="Confirm Password" />
-
-        <div className="bg-white/5 p-3 rounded-lg border border-white/5">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {error && <ErrorBanner message={error} />}
+        <InputField icon={Lock} type="password" placeholder="New Password" value={newPassword} onChange={(e: any) => setNewPassword(e.target.value)} />
+        <InputField icon={Lock} type="password" placeholder="Confirm Password" value={confirmPassword} onChange={(e: any) => setConfirmPassword(e.target.value)} />
+        <button type="submit" className="w-full bg-white text-black font-bold py-3.5 rounded-xl hover:bg-neutral-200 transition-colors">Reset Password</button>
+      </form>
+    </AuthLayout>
+  );
+};
           <h4 className="text-[10px] text-neutral-400 uppercase font-bold mb-2">Password Requirements</h4>
           <ul className="text-xs text-neutral-500 space-y-1">
             <li className="flex items-center gap-2"><Check size={10} className="text-accent-green" /> At least 8 characters</li>
