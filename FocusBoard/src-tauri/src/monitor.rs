@@ -96,6 +96,7 @@ pub fn run_monitor_loop<F, B>(
     let mut last_app = String::new();
     let mut last_title = String::new();
     let mut was_idle = false;
+    let hyprland_active = is_hyprland_session();
     let env_idle_threshold: u64 = std::env::var("FOCUSBOARD_IDLE_THRESHOLD")
         .ok()
         .and_then(|s| s.parse::<u64>().ok())
@@ -127,9 +128,14 @@ pub fn run_monitor_loop<F, B>(
         let tracking_active = tracking_enabled.load(Ordering::SeqCst);
         let mut current_app = "Unknown".to_string();
         let mut current_title = "Unknown".to_string();
-        let current_idle_secs = UserIdle::get_time()
-            .map(|idle| idle.as_seconds())
-            .unwrap_or(0);
+        let current_idle_secs = if hyprland_active {
+            // user-idle crate uses X11, which segfaults on Wayland
+            0
+        } else {
+            UserIdle::get_time()
+                .map(|idle| idle.as_seconds())
+                .unwrap_or(0)
+        };
 
         let active_idle_threshold = std::cmp::max(1, idle_threshold.load(Ordering::SeqCst));
         if !tracking_active {
@@ -142,7 +148,6 @@ pub fn run_monitor_loop<F, B>(
         }
 
         // Prefer Hyprland (Wayland) when available to avoid X11/Xlib instability.
-        let hyprland_active = is_hyprland_session();
         if hyprland_active {
             if let Some((app, title)) = try_hyprctl_active_window() {
                 current_app = app;
