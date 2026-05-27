@@ -417,24 +417,6 @@ export const ResetPasswordView: React.FC<{ onNavigate: (p: Page) => void }> = ({
     </AuthLayout>
   );
 };
-          <h4 className="text-[10px] text-neutral-400 uppercase font-bold mb-2">Password Requirements</h4>
-          <ul className="text-xs text-neutral-500 space-y-1">
-            <li className="flex items-center gap-2"><Check size={10} className="text-accent-green" /> At least 8 characters</li>
-            <li className="flex items-center gap-2"><Check size={10} className="text-accent-green" /> One uppercase letter</li>
-            <li className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full border border-neutral-600" /> One number</li>
-          </ul>
-        </div>
-
-        <button
-          type="submit"
-          className="w-full bg-white text-black font-bold py-3.5 rounded-xl hover:bg-neutral-200 transition-colors mt-2"
-        >
-          Reset Password
-        </button>
-      </form>
-    </AuthLayout>
-  );
-};
 
 // --- 6. Account Locked ---
 
