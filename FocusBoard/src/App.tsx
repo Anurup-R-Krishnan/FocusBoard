@@ -447,7 +447,7 @@ const App: React.FC = () => {
                     <GoalsView />
                 )}
                 {currentPage === 'integrations' && <IntegrationsView />}
-                {currentPage === 'calendar' && <CalendarView />}
+                {currentPage === 'calendar' && <CalendarView actualTimeline={useDashboardStore.getState().timeline} />}
                 {currentPage === 'squad' && (
                     <SquadView onNavigate={handleNavigateDetail} />
                 )}
