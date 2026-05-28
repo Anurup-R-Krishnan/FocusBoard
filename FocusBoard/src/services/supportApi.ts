@@ -8,7 +8,7 @@ const API_BASE = API_BASE_URL;
 async function handleResponse<T>(res: Response): Promise<T> {
     const json = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error((json as any).message || `HTTP ${res.status}`);
-    return (json as any).data as T;
+    return (json as any).data ?? json as T;
 }
 
 async function fetchList<T>(path: string, page = 1, limit = 100, extra = ''): Promise<{ data: T[]; total: number }> {

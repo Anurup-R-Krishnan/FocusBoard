@@ -9,28 +9,19 @@ interface ChangelogModalProps {
 }
 
 const ChangelogModal: React.FC<ChangelogModalProps> = ({ isOpen, onClose }) => {
+  const today = new Date();
   const updates = [
     {
       version: 'v1.2.0',
-      date: 'October 24, 2023',
+      date: today.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
       highlights: [
-        'Introduced "Zen Mode" for distraction-free deep work sessions.',
-        'Added new "Team View" for managing workspace members and permissions.',
-        'Enhanced analytics with detailed Project and Client reports.',
-        'Keyboard shortcuts are now fully customizable.',
+        'Keyboard shortcuts fully customizable.',
+        'Team View with member management and permissions.',
+        'Enhanced analytics with Project and Client reports.',
+        'Profile settings, change password, delete account.',
       ],
-      tag: 'Major Update'
+      tag: 'Latest'
     },
-    {
-      version: 'v1.1.5',
-      date: 'October 10, 2023',
-      highlights: [
-        'Dark mode contrast improvements.',
-        'Fixed an issue with calendar sync latency.',
-        'Added export to CSV for all reports.',
-      ],
-      tag: 'Improvement'
-    }
   ];
 
   return (

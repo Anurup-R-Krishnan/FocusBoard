@@ -28,7 +28,7 @@ export interface CategoryPayload {
 async function handleResponse<T>(res: Response): Promise<T> {
     const json = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error((json as any).message || `HTTP ${res.status}`);
-    return (json as any).data as T;
+    return (json as any).data ?? json as T;
 }
 
 export async function createCategory(payload: CategoryPayload): Promise<Category> {

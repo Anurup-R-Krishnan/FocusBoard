@@ -306,7 +306,7 @@ const AccountSettings = ({ onNavigate }: { onNavigate?: (p: Page) => void }) => 
             <div>
                 <SectionHeader title="Password & Security" description="Manage your login credentials and security layers." />
                 <div className="bg-titanium-dark border border-white/10 rounded-2xl p-6">
-                    <SettingRow label="Password" description="Last changed 3 months ago.">
+                    <SettingRow label="Password" description="Change your login password.">
                         <button
                             onClick={() => setIsChangePasswordOpen(true)}
                             className="text-xs font-bold text-white bg-neutral-800 px-3 py-1.5 rounded-lg hover:bg-neutral-700 transition-colors"

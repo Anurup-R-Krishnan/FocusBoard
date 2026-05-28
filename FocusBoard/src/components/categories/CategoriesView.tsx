@@ -969,7 +969,7 @@ const CategoriesView: React.FC = () => {
                                         <input placeholder="Window Title" value={activityForm.window_title} onChange={e => setActivityForm({ ...activityForm, window_title: e.target.value })}
                                             className="bg-black border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-accent-blue outline-none" />
                                         <input placeholder="User ID (optional)" value={activityForm.user_id} onChange={e => setActivityForm({ ...activityForm, user_id: e.target.value })}
-                                            className="bg-black border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-accent-blue outline-none sm:col-span-2" />
+                                            className="bg-black border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-accent-blue outline-none sm:col-span-2" title="Leave empty for current user" />
                                         <input placeholder="URL (optional)" value={activityForm.url} onChange={e => setActivityForm({ ...activityForm, url: e.target.value })}
                                             className="bg-black border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-accent-blue outline-none sm:col-span-2" />
                                         <input type="datetime-local" value={activityForm.start_time} onChange={e => setActivityForm({ ...activityForm, start_time: e.target.value })}
