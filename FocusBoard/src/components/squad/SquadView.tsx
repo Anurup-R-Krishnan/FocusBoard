@@ -13,9 +13,10 @@ const SquadView: React.FC<SquadViewProps> = ({ onNavigate }) => {
     const { squad, triggerNudge } = useDashboardStore();
     const feed = squad.slice(0, 5).map(m => ({
         id: m.id,
-        user: m.name,
-        action: m.status === 'FOCUS' ? 'entered deep focus' : m.status === 'MEETING' ? 'is in a meeting' : 'is idle',
-        time: 'Just now',
+        memberName: m.name,
+        message: m.status === 'FOCUS' ? 'entered deep focus' : m.status === 'MEETING' ? 'is in a meeting' : m.status === 'RECOVERY' ? 'is recovering' : 'is idle',
+        timestamp: new Date(),
+        type: m.status === 'FOCUS' ? 'STATUS_CHANGE' : 'NUDGE',
         status: m.status,
     }));
     const getStatusColor = (status: string) => {
@@ -175,11 +176,13 @@ const SquadView: React.FC<SquadViewProps> = ({ onNavigate }) => {
                 <div className="bg-titanium-dark border border-titanium-border rounded-[22px] p-6">
                     <h3 className="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-4">Team Flow Score</h3>
                     <div className="flex items-end gap-3">
-                        <span className="text-5xl font-bold text-white tracking-tighter">88</span>
-                        <span className="text-sm text-accent-green mb-2 font-bold bg-accent-green/10 px-2 py-0.5 rounded-lg">▲ 4%</span>
+                        <span className="text-5xl font-bold text-white tracking-tighter">{squad.filter(m => m.status === 'FOCUS').length * 25 + Math.min(25, squad.filter(m => m.status === 'RECOVERY').length * 10)}</span>
+                        <span className="text-sm text-accent-green mb-2 font-bold bg-accent-green/10 px-2 py-0.5 rounded-lg">
+                            {squad.filter(m => m.status === 'FOCUS').length} focusing
+                        </span>
                     </div>
                     <div className="w-full bg-neutral-800 h-2 rounded-full mt-4 overflow-hidden">
-                        <div className="bg-gradient-to-r from-accent-blue to-accent-purple w-[88%] h-full rounded-full" />
+                        <div className="bg-gradient-to-r from-accent-blue to-accent-purple h-full rounded-full" style={{ width: `${Math.min(100, squad.filter(s => s.status === 'FOCUS').length * 25 + 5)}%` }} />
                     </div>
                 </div>
             </div>

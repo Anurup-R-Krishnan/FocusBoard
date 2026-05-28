@@ -14,15 +14,13 @@ const FocusSessionModal: React.FC<FocusSessionModalProps> = ({ isOpen, onClose, 
     const [plannedMinutes, setPlannedMinutes] = useState(25);
     const [categoryId, setCategoryId] = useState<string>('');
     const [categories, setCategories] = useState<Category[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
         if (!isOpen) return;
-        setIsLoading(true);
+        setCategories([]);
         getAllCategories(1, 200)
             .then(result => setCategories(result.data || []))
-            .catch(() => setCategories([]))
-            .finally(() => setIsLoading(false));
+            .catch(() => setCategories([]));
     }, [isOpen]);
 
     useEffect(() => {

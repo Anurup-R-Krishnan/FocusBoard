@@ -788,12 +788,12 @@ const DataSettings = () => {
                     </div>
 
                     <div className="pt-4 border-t border-white/5">
-                        <button className="flex items-center gap-2 text-sm font-bold text-white hover:text-accent-blue transition-colors group">
-                            <div className="p-2 bg-white/5 rounded-lg group-hover:bg-white/10 transition-colors">
+                        <div className="flex items-center gap-3 p-2">
+                            <div className="p-2 bg-white/5 rounded-lg">
                                 <Database size={16} />
                             </div>
-                            Download all my data
-                        </button>
+                            <span className="text-sm text-neutral-400">Data exports available via the Analytics tab</span>
+                        </div>
                     </div>
                 </div>
             </div>

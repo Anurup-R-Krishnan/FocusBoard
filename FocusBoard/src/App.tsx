@@ -449,7 +449,7 @@ const App: React.FC = () => {
                 {currentPage === 'integrations' && <IntegrationsView />}
                 {currentPage === 'calendar' && <CalendarView />}
                 {currentPage === 'squad' && (
-                    <SquadView />
+                    <SquadView onNavigate={handleNavigateDetail} />
                 )}
                 {currentPage === 'settings' && <SettingsView onLogout={handleLogout} onNavigate={setCurrentPage} />}
                 {currentPage === 'support-tickets' && <SupportTicketsView />}
