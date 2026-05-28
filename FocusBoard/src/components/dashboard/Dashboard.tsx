@@ -497,7 +497,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onPageChange, user })
                         <div className="absolute bottom-5 left-0 right-0 flex justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                             <div className="flex items-center gap-1.5 bg-white/5 px-3 py-1 rounded-full border border-white/5">
                                 <Trophy size={12} className="text-yellow-400" />
-                                <span className="text-[10px] font-medium text-neutral-300">Top 10% Performance</span>
+                                <span className="text-[10px] font-medium text-neutral-300">{Math.round(state.metrics?.score || 0)}% Focus Score</span>
                             </div>
                         </div>
                     </div>

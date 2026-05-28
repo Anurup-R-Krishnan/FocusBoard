@@ -1288,7 +1288,7 @@ const SquadDetailView: React.FC<{ squad: SquadMember[], feed: ActivityEvent[], o
                     </div>
                     <div>
                         <span className="text-xs text-neutral-500 font-bold uppercase tracking-widest block mb-1">Team Focus</span>
-                        <span className="text-2xl font-mono text-green-400">88%</span>
+                        <span className="text-2xl font-mono text-green-400">{squad.filter(s => s.status === 'FOCUS').length > 0 ? Math.round((squad.filter(s => s.status === 'FOCUS').length / squad.length) * 100) : 0}%</span>
                     </div>
                 </div>
             </div>
