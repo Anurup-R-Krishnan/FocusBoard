@@ -274,11 +274,10 @@ export const SignUpView: React.FC<{ onNavigate: (p: Page) => void }> = ({ onNavi
         </button>
       </form>
 
-      <div className="mt-6 flex justify-center gap-4">
-        {/* Socials shortened */}
-        <div className="flex gap-4 opacity-50">
-          <Github size={20} className="text-neutral-400" />
-          <Chrome size={20} className="text-neutral-400" />
+      <div className="mt-6 flex justify-center">
+        <div className="flex gap-4 opacity-30">
+          <Github size={20} className="text-neutral-500" />
+          <Chrome size={20} className="text-neutral-500" />
         </div>
       </div>
     </AuthLayout>

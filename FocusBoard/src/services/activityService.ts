@@ -15,6 +15,12 @@ export const postActivity = async (event: ActivityEvent): Promise<void> => {
   const startTime = new Date(event.timestamp);
   const endTime = new Date(startTime.getTime() + 1000);
 
+  const key = `${event.app_name}::${event.window_title}`;
+  const last = JSON.parse(localStorage.getItem('focusboard_last_posted') || '{}');
+  const now = Date.now();
+  if (last[key] && (now - last[key]) < 5000) return;
+  localStorage.setItem('focusboard_last_posted', JSON.stringify({ ...last, [key]: now }));
+
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 5000);

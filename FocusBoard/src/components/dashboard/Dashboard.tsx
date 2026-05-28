@@ -69,59 +69,23 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onPageChange, user })
     const controls = {
         triggerNudge: store.triggerNudge,
         updateSegment: (id: string, updates: any) => {
-            const previousTimeline = useDashboardStore.getState().timeline;
-            const updatedTimeline = previousTimeline.map((segment: any) => (
-                segment.id === id ? { ...segment, ...updates } : segment
-            ));
-
-            useDashboardStore.setState({ timeline: updatedTimeline });
-
-            const targetSegment = updatedTimeline.find((segment: any) => segment.id === id);
-            const activityId = targetSegment?._id || targetSegment?.id;
-            if (!activityId) {
-                return;
-            }
-
+            const { prev, next } = store.updateTimelineSegment(id, updates);
+            const target = next.find((seg: any) => seg.id === id);
+            const activityId = target?._id || target?.id;
+            if (!activityId) return;
             updateActivity(activityId, {
-                window_title: targetSegment.userTitle || targetSegment.title || targetSegment.window_title,
-                color: targetSegment.color,
-            }).catch((error: any) => {
-                useDashboardStore.setState({
-                    timeline: previousTimeline,
-                    error: error?.message || 'Failed to update segment',
-                } as any);
-            });
+                window_title: target.userTitle || target.title || target.window_title,
+                color: target.color,
+            }).catch(() => store.updateTimelineSegment(id, prev.find((s: any) => s.id === id)));
         },
         tagSegment: (id: string, tag: string) => {
-            const previousTimeline = useDashboardStore.getState().timeline;
-            const updatedTimeline = previousTimeline.map((segment: any) => {
-                if (segment.id !== id) return segment;
-                const currentTags = Array.isArray(segment.tags) ? segment.tags : [];
-                const nextTags = currentTags.includes(tag) ? currentTags : [...currentTags, tag];
-                return {
-                    ...segment,
-                    tags: nextTags,
-                    title: segment.title || tag,
-                    userTitle: segment.userTitle || tag,
-                };
-            });
-
-            useDashboardStore.setState({ timeline: updatedTimeline });
-
-            const targetSegment = updatedTimeline.find((segment: any) => segment.id === id);
-            const activityId = targetSegment?._id || targetSegment?.id;
-            if (!activityId) {
-                return;
-            }
-
+            const { prev, next } = store.tagTimelineSegment(id, tag);
+            const target = next.find((seg: any) => seg.id === id);
+            const activityId = target?._id || target?.id;
+            if (!activityId) return;
             updateActivity(activityId, {
-                window_title: targetSegment.userTitle || targetSegment.title || tag,
-            }).catch((error: any) => {
-                useDashboardStore.setState({
-                    timeline: previousTimeline,
-                    error: error?.message || 'Failed to tag segment',
-                } as any);
-            });
+                window_title: target.userTitle || target.title || tag,
+            }).catch(() => store.tagTimelineSegment(id, prev.find((s: any) => s.id === id)?.tags?.[0]));
         },
         togglePlay: () => {},
         startFocus: () => {

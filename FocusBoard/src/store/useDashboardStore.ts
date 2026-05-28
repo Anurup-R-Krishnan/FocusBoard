@@ -48,6 +48,8 @@ interface DashboardState {
     toggleTaskArchived: (id: string) => void;
     renameProject: (oldName: string, newName: string) => void;
     renameClient: (oldName: string, newName: string) => void;
+    updateTimelineSegment: (id: string, updates: any) => void;
+    tagTimelineSegment: (id: string, tag: string) => void;
 }
 
 export const useDashboardStore = create<DashboardState>((set, get) => ({
@@ -79,7 +81,23 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
                 teamApi.getSquad()
             ]);
 
-            const mappedTasks = ts.map((task: any) => ({ ...task, id: task._id }));
+            const mappedTasks = ts.map((task: any) => ({ ...task, id: task._id     updateTimelineSegment: (id: string, updates: any) => {
+        const prev = get().timeline;
+        const next = prev.map((seg: any) => seg.id === id ? { ...seg, ...updates } : seg);
+        set({ timeline: next });
+        return { prev, next };
+    },
+    tagTimelineSegment: (id: string, tag: string) => {
+        const prev = get().timeline;
+        const next = prev.map((seg: any) => {
+            if (seg.id !== id) return seg;
+            const tags = Array.isArray(seg.tags) ? seg.tags : [];
+            return { ...seg, tags: tags.includes(tag) ? tags : [...tags, tag], title: seg.title || tag, userTitle: seg.userTitle || tag };
+        });
+        set({ timeline: next });
+        return { prev, next };
+    },
+}));
             const mappedTimeline = t.map((block: any) => {
                 const startDate = new Date(block.startTime);
                 const endDate = new Date(block.endTime);

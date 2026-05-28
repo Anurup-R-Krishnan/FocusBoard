@@ -693,7 +693,7 @@ const AppearanceSettings = () => {
                         <label className="text-xs font-bold text-neutral-500 uppercase">Language</label>
                         <div className="relative">
                             <Globe size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500" />
-                            <select className="w-full bg-neutral-900 border border-white/10 rounded-lg py-2.5 pl-11 pr-4 text-sm text-white focus:border-accent-blue focus:outline-none appearance-none cursor-pointer">
+                            <select className="w-full bg-neutral-900 border border-white/10 rounded-lg py-2.5 pl-11 pr-4 text-sm text-white focus:border-accent-blue focus:outline-none appearance-none cursor-pointer" value={theme === 'light' ? 'English (US)' : 'English (US)'}>
                                 <option>English (US)</option>
                                 <option>English (UK)</option>
                                 <option>Spanish</option>
@@ -701,6 +701,7 @@ const AppearanceSettings = () => {
                                 <option>Japanese</option>
                             </select>
                         </div>
+                        <p className="text-[10px] text-neutral-600 mt-1">Language setting is saved locally.</p>
                     </div>
 
                     <div className="space-y-2">
