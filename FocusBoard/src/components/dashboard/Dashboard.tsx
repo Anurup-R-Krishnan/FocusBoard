@@ -36,8 +36,6 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onPageChange, user })
     const store = useDashboardStore();
     const session = useSessionStore();
     const liveActivities = useDashboardStore(s => s.liveActivities);
-    const [isPlaying, setIsPlaying] = useState(false);
-    const [speedMultiplier, setSpeedMultiplier] = useState(1);
     const [isTagModalOpen, setIsTagModalOpen] = useState(false);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [showBreakToast, setShowBreakToast] = useState(false);
@@ -58,8 +56,6 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onPageChange, user })
         currentActivity: session.currentActivity,
         activityFeed: [] as any[],
         activeTaskId: store.tasks.length > 0 ? store.tasks[0].id : null,
-        isPlaying,
-        speedMultiplier,
         recoveryProgress: 0
     };
 
@@ -127,18 +123,13 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onPageChange, user })
                 } as any);
             });
         },
-        togglePlay: () => {
-            setIsPlaying(prev => !prev);
-        },
+        togglePlay: () => {},
         startFocus: () => {
             setIsFocusModalOpen(true);
         },
         resumeFocus: session.resumeSession,
         takeBreak: session.pauseSession,
         addDistraction: session.pauseSession,
-        setSpeed: (multiplier: number) => {
-            setSpeedMultiplier(multiplier === 60 ? 60 : 1);
-        },
         createTask: store.createTask,
         updateTask: store.updateTask,
         deleteTask: store.deleteTask,
@@ -622,15 +613,11 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onPageChange, user })
 
             <ControlsPanel
                 sessionState={state.sessionState}
-                isPlaying={state.isPlaying}
-                speedMultiplier={state.speedMultiplier}
-                onTogglePlay={controls.togglePlay}
                 onStartFocus={controls.startFocus}
                 onResumeFocus={controls.resumeFocus}
                 onTakeBreak={controls.takeBreak}
                 onAddDistraction={controls.addDistraction}
                 onTag={() => handleTagRequest(state.timeline[state.timeline.length - 1]?.id)}
-                onToggleSpeed={() => controls.setSpeed(state.speedMultiplier === 1 ? 60 : 1)}
             />
 
             <TagModal

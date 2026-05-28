@@ -1,32 +1,24 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Pause, Coffee, AlertCircle, Tag, FastForward, RotateCcw } from 'lucide-react';
+import { Play, Pause, Coffee, AlertCircle, Tag } from 'lucide-react';
 import { SessionState } from '../../types';
 
 interface ControlsPanelProps {
   sessionState: SessionState;
-  isPlaying: boolean;
-  speedMultiplier: number;
-  onTogglePlay: () => void;
   onStartFocus: () => void;
   onResumeFocus: () => void;
   onTakeBreak: () => void;
   onAddDistraction: () => void;
   onTag: () => void;
-  onToggleSpeed: () => void;
 }
 
 const ControlsPanel: React.FC<ControlsPanelProps> = ({
   sessionState,
-  isPlaying,
-  speedMultiplier,
-  onTogglePlay,
   onStartFocus,
   onResumeFocus,
   onTakeBreak,
   onAddDistraction,
   onTag,
-  onToggleSpeed
 }) => {
   
   const ButtonBase = ({ children, onClick, active, colorClass = "bg-titanium-dark", title, disabled = false }: any) => (

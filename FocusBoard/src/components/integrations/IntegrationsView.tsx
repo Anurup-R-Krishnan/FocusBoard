@@ -382,15 +382,9 @@ const IntegrationDrawer = ({ integration, onClose, onUpdate }: { integration: In
                                         <span>Event</span>
                                         <span>Time</span>
                                     </div>
-                                    {[1, 2, 3, 4, 5].map((_, i) => (
-                                        <div key={i} className="flex justify-between items-center p-2 rounded hover:bg-white/5 transition-colors">
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                                                <span className="text-neutral-300">sync.completed</span>
-                                            </div>
-                                            <span className="text-neutral-600">10:{42 - i}:00 AM</span>
-                                        </div>
-                                    ))}
+                                    <div className="text-center py-6 text-neutral-500 text-sm">
+                                        Activity logs will appear here after integration is connected and active.
+                                    </div>
                                 </div>
                             )}
                         </div>
