@@ -125,8 +125,8 @@ const FocusSessionModal: React.FC<FocusSessionModalProps> = ({ isOpen, onClose, 
                                             </select>
                                             <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 pointer-events-none" />
                                         </div>
-                                        {isLoading && (
-                                            <p className="text-[10px] text-neutral-600 mt-1">Loading categories…</p>
+                                        {categories.length === 0 && (
+                                            <p className="text-[10px] text-neutral-600 mt-1">No categories found</p>
                                         )}
                                     </div>
                                 </div>
