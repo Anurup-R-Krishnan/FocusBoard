@@ -79,7 +79,7 @@ export const HelpCenter: React.FC<{ onNavigate: (page: any) => void }> = ({ onNa
                 </div>
                 <div className="flex gap-4">
                     <button onClick={() => onNavigate('support-tickets')} className="px-6 py-3 bg-white text-black font-bold rounded-xl hover:bg-neutral-200 transition-colors">Contact Support</button>
-                    <button className="px-6 py-3 bg-transparent border border-white/20 text-white font-bold rounded-xl hover:bg-white/5 transition-colors">Join Community</button>
+                    <button onClick={() => window.open('https://github.com/Anurup-R-Krishnan/FocusBoard/discussions', '_blank')} className="px-6 py-3 bg-transparent border border-white/20 text-white font-bold rounded-xl hover:bg-white/5 transition-colors">Join Community</button>
                 </div>
             </div>
         </SupportLayout>

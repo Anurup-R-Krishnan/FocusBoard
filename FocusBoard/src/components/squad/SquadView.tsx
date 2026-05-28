@@ -107,9 +107,9 @@ const SquadView: React.FC<SquadViewProps> = ({ onNavigate }) => {
                                     <Zap size={14} className="group-hover/btn:text-yellow-400 transition-colors" />
                                     Nudge
                                 </button>
-                                <button className="flex-1 py-2.5 rounded-xl bg-neutral-900 border border-titanium-border hover:bg-neutral-800 text-xs font-bold text-neutral-300 transition-colors flex items-center justify-center gap-2">
+                                <button onClick={() => onNavigate && onNavigate('WEEKLY_OVERVIEW', {})} className="flex-1 py-2.5 rounded-xl bg-neutral-900 border border-titanium-border hover:bg-neutral-800 text-xs font-bold text-neutral-300 transition-colors flex items-center justify-center gap-2">
                                     <MessageSquare size={14} />
-                                    Message
+                                    View Activity
                                 </button>
                             </div>
                         </motion.div>

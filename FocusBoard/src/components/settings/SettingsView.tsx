@@ -217,9 +217,6 @@ const AccountSettings = ({ onNavigate }: { onNavigate?: (p: Page) => void }) => 
                     <div className="w-20 h-20 rounded-full bg-neutral-800 border-2 border-white/10 flex items-center justify-center text-2xl font-bold text-white shadow-xl">
                         {userProfile ? (userProfile.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()) : '??'}
                     </div>
-                    <button className="absolute bottom-0 right-0 p-1.5 bg-accent-blue rounded-full text-white border-2 border-[#151515] hover:bg-blue-500 transition-colors">
-                        <Edit2 size={12} />
-                    </button>
                 </div>
                 <div className="flex-1 text-center sm:text-left">
                     {userProfile ? (
@@ -242,8 +239,8 @@ const AccountSettings = ({ onNavigate }: { onNavigate?: (p: Page) => void }) => 
                         </span>
                     </div>
                 </div>
-                <button className="px-4 py-2 text-xs font-bold text-neutral-400 hover:text-white border border-white/10 rounded-lg hover:bg-white/5 transition-colors">
-                    Manage Subscription
+                <button onClick={() => onNavigate && onNavigate('dashboard')} className="px-4 py-2 text-xs font-bold text-neutral-400 hover:text-white border border-white/10 rounded-lg hover:bg-white/5 transition-colors">
+                    Dashboard
                 </button>
             </div>
 
@@ -321,9 +318,7 @@ const AccountSettings = ({ onNavigate }: { onNavigate?: (p: Page) => void }) => 
                         <Toggle value={twoFactorEnabled} onChange={setTwoFactorEnabled} />
                     </SettingRow>
                     <SettingRow label="Active Sessions" description="Manage devices currently logged in.">
-                        <button className="text-xs font-bold text-neutral-400 hover:text-white flex items-center gap-1">
-                            View all <ChevronRight size={12} />
-                        </button>
+                        <span className="text-xs text-neutral-500">Current device only</span>
                     </SettingRow>
                 </div>
             </div>

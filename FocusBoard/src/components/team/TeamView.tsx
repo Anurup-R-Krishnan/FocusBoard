@@ -76,7 +76,7 @@ const WorkspaceSwitcher = () => {
                                 </button>
                             ))}
                             <div className="h-px bg-white/5 my-1" />
-                            <button className="w-full flex items-center gap-2 px-4 py-3 text-xs font-bold text-neutral-400 hover:bg-white/5 hover:text-white transition-colors">
+                            <button onClick={() => alert('Additional workspaces coming soon.')} className="w-full flex items-center gap-2 px-4 py-3 text-xs font-bold text-neutral-400 hover:bg-white/5 hover:text-white transition-colors">
                                 <Plus size={14} /> Create Workspace
                             </button>
                         </motion.div>
@@ -158,7 +158,13 @@ const TeamOverview = ({ members, tasks }: { members: Member[], tasks: any[] }) =
     </div>
 );
 
-const MemberList = ({ members }: { members: Member[] }) => (
+const MemberList = ({ members }: { members: Member[] }) => {
+    const [searchQuery, setSearchQuery] = useState('');
+    const filtered = members.filter(m =>
+        m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        m.email.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
             <div className="relative w-full sm:w-64">
@@ -166,10 +172,12 @@ const MemberList = ({ members }: { members: Member[] }) => (
                 <input
                     type="text"
                     placeholder="Search members..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full bg-titanium-dark border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-sm text-white focus:outline-none focus:border-accent-blue transition-colors"
                 />
             </div>
-            <button className="flex items-center gap-2 px-4 py-2.5 bg-accent-blue text-white rounded-xl text-sm font-bold hover:bg-blue-600 transition-colors shadow-lg shadow-blue-900/20">
+            <button onClick={() => alert('Invite feature coming soon.')} className="flex items-center gap-2 px-4 py-2.5 bg-accent-blue text-white rounded-xl text-sm font-bold hover:bg-blue-600 transition-colors shadow-lg shadow-blue-900/20">
                 <Mail size={16} /> Invite Member
             </button>
         </div>
@@ -187,7 +195,10 @@ const MemberList = ({ members }: { members: Member[] }) => (
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5">
-                        {members.map((member) => (
+                        {filtered.length === 0 && (
+                            <tr><td colSpan={5} className="p-8 text-center text-neutral-500 text-sm">No members found.</td></tr>
+                        )}
+                        {filtered.map((member) => (
                             <tr key={member.id} className="group hover:bg-white/5 transition-colors">
                                 <td className="p-4 pl-6">
                                     <div className="flex items-center gap-3">
@@ -230,7 +241,8 @@ const MemberList = ({ members }: { members: Member[] }) => (
             </div>
         </div>
     </div>
-);
+    );
+};
 
 const RolesUI = () => (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -520,7 +532,7 @@ const SidebarContent = ({ tabs, activeTab, setActiveTab, setSidebarOpen }: any) 
                 <p className="text-[10px] text-neutral-400 leading-relaxed mb-3">
                     You're using 5/10 seats on your current plan.
                 </p>
-                <button className="text-[10px] font-bold text-accent-blue hover:text-white transition-colors">
+                <button onClick={() => window.open('https://focusboard.app/billing', '_blank')} className="text-[10px] font-bold text-accent-blue hover:text-white transition-colors">
                     Manage Billing &rarr;
                 </button>
             </div>

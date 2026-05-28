@@ -288,10 +288,11 @@ export const SignUpView: React.FC<{ onNavigate: (p: Page) => void }> = ({ onNavi
 // --- 3. Verify Email Page ---
 
 export const VerifyEmailView: React.FC<{ onNavigate: (p: Page) => void }> = ({ onNavigate }) => {
+  const [email, setEmail] = useState('you@example.com');
   return (
     <AuthLayout
       title="Check your Inbox"
-      subtitle="We've sent a verification link to alex@example.com"
+      subtitle={`We've sent a verification link to ${email}`}
       footer={
         <button onClick={() => onNavigate('onboarding')} className="text-sm text-neutral-500 hover:text-white transition-colors">
           Skip Verification (Demo)
@@ -304,9 +305,9 @@ export const VerifyEmailView: React.FC<{ onNavigate: (p: Page) => void }> = ({ o
         </div>
 
         <div className="flex gap-2">
-          {[1, 2, 3, 4].map(i => (
-            <div key={i} className="w-12 h-14 bg-titanium-dark border border-white/10 rounded-xl flex items-center justify-center text-xl font-mono text-white">
-              {i === 1 ? '4' : ''}
+          {[1, 2, 3, 4, 5, 6].map(i => (
+            <div key={i} className="w-10 h-12 bg-titanium-dark border border-white/10 rounded-xl flex items-center justify-center text-lg font-mono text-white">
+              {i <= 4 ? Math.floor(Math.random() * 10) : ''}
             </div>
           ))}
         </div>
@@ -444,7 +445,7 @@ export const AccountLockView: React.FC<{ onNavigate: (p: Page) => void }> = ({ o
         </div>
 
         <button
-          onClick={() => onNavigate('login')}
+          onClick={() => onNavigate('help')}
           className="w-full bg-white text-black font-bold py-3.5 rounded-xl hover:bg-neutral-200 transition-colors"
         >
           Contact Support

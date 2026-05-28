@@ -385,6 +385,15 @@ const App: React.FC = () => {
                             localStorage.setItem(TRACKING_ENABLED_KEY, String(prefs.trackingEnabled));
                             window.dispatchEvent(new CustomEvent('focusboard_tracking_changed', { detail: { enabled: prefs.trackingEnabled } }));
                         }
+                        if (prefs?.schedule) {
+                            localStorage.setItem('focusboard_schedule', JSON.stringify(prefs.schedule));
+                        }
+                        if (prefs?.projects) {
+                            localStorage.setItem('focusboard_onboarding_projects', JSON.stringify(prefs.projects));
+                        }
+                        if (prefs?.privacy) {
+                            localStorage.setItem('focusboard_privacy', JSON.stringify(prefs.privacy));
+                        }
                     }
                     setCurrentPage(isAuthenticated ? 'dashboard' : 'login');
                 }}
