@@ -36,8 +36,35 @@ const ROLES_PERMISSIONS = [
 
 const WorkspaceSwitcher = () => {
     const [isOpen, setIsOpen] = useState(false);
-    const [current, setCurrent] = useState('FocusBoard Pro');
-    const workspaces = ['FocusBoard Pro', 'Personal', 'Side Hustle'];
+    const [current, setCurrent] = useState('FocusBoard');
+    const [workspaces, setWorkspaces] = useState<string[]>(['FocusBoard']);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        import('../../services/workspaceApi').then(api => {
+            api.getWorkspaces().then((ws: any[]) => {
+                const names = ws.map(w => w.name);
+                if (names.length > 0) {
+                    setWorkspaces(names);
+                    setCurrent(names[0]);
+                }
+                setLoading(false);
+            }).catch(() => setLoading(false));
+        });
+    }, []);
+
+    const handleCreate = async () => {
+        const name = prompt('Workspace name:');
+        if (!name) return;
+        try {
+            const api = await import('../../services/workspaceApi');
+            await api.createWorkspace(name.trim());
+            setWorkspaces(prev => [...prev, name.trim()]);
+            setCurrent(name.trim());
+        } catch (e: any) {
+            alert(e.message || 'Failed to create workspace');
+        }
+    };
 
     return (
         <div className="relative z-50">
@@ -50,7 +77,7 @@ const WorkspaceSwitcher = () => {
                 </div>
                 <div className="flex-1 text-left overflow-hidden">
                     <div className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider">Workspace</div>
-                    <div className="text-sm font-bold text-white truncate">{current}</div>
+                    <div className="text-sm font-bold text-white truncate">{loading ? 'Loading...' : current}</div>
                 </div>
                 <ChevronDown size={16} className={`text-neutral-500 transition-transform shrink-0 ${isOpen ? 'rotate-180' : ''}`} />
             </button>
@@ -76,7 +103,7 @@ const WorkspaceSwitcher = () => {
                                 </button>
                             ))}
                             <div className="h-px bg-white/5 my-1" />
-                            <button onClick={() => alert('Additional workspaces coming soon.')} className="w-full flex items-center gap-2 px-4 py-3 text-xs font-bold text-neutral-400 hover:bg-white/5 hover:text-white transition-colors">
+                            <button onClick={handleCreate} className="w-full flex items-center gap-2 px-4 py-3 text-xs font-bold text-neutral-400 hover:bg-white/5 hover:text-white transition-colors">
                                 <Plus size={14} /> Create Workspace
                             </button>
                         </motion.div>
