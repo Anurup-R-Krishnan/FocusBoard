@@ -133,7 +133,8 @@ const TasksView: React.FC<TasksViewProps> = ({ onNavigate }) => {
 
     const handleExportClients = async () => {
         try {
-            const blob = await clientApi.exportClients('csv');
+            const result = await clientApi.exportClients('csv');
+            const blob = result as Blob;
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;

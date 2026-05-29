@@ -1,7 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { SquadMember, ActivityEvent } from '../../types';
-import { Zap, Clock, Activity, MessageSquare } from 'lucide-react';
+import { Zap, Activity, MessageSquare } from 'lucide-react';
 import { useDashboardStore } from '../../store/useDashboardStore';
 import { DrillDownType } from '../dashboard/DrillDownView';
 
@@ -102,13 +101,13 @@ const SquadView: React.FC<SquadViewProps> = ({ onNavigate }) => {
                             {/* Actions */}
                             <div className="mt-6 pt-4 border-t border-white/5 flex gap-3">
                                 <button
-                                    onClick={() => onNudge(member.id)}
+                                    onClick={() => triggerNudge(member.id)}
                                     className="flex-1 py-2.5 rounded-xl bg-neutral-900 border border-titanium-border hover:bg-neutral-800 text-xs font-bold text-neutral-300 transition-colors flex items-center justify-center gap-2 group/btn"
                                 >
                                     <Zap size={14} className="group-hover/btn:text-yellow-400 transition-colors" />
                                     Nudge
                                 </button>
-                                <button onClick={() => onNavigate && onNavigate('WEEKLY_OVERVIEW', {})} className="flex-1 py-2.5 rounded-xl bg-neutral-900 border border-titanium-border hover:bg-neutral-800 text-xs font-bold text-neutral-300 transition-colors flex items-center justify-center gap-2">
+                                <button onClick={() => onNavigate && onNavigate('WEEKLY_OVERVIEW', member.id)} className="flex-1 py-2.5 rounded-xl bg-neutral-900 border border-titanium-border hover:bg-neutral-800 text-xs font-bold text-neutral-300 transition-colors flex items-center justify-center gap-2">
                                     <MessageSquare size={14} />
                                     View Activity
                                 </button>

@@ -12,7 +12,7 @@ const ChangelogModal: React.FC<ChangelogModalProps> = ({ isOpen, onClose }) => {
   const today = new Date();
   const updates = [
     {
-      version: 'v1.2.0',
+      version: 'Latest Update',
       date: today.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
       highlights: [
         'Keyboard shortcuts fully customizable.',

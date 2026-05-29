@@ -76,11 +76,14 @@ const SettingRow = ({ label, description, children, danger = false }: { label: s
 // --- Sub-Views ---
 
 const AccountSettings = ({ onNavigate }: { onNavigate?: (p: Page) => void }) => {
+    const showToast = useToastStore(s => s.show);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [userProfile, setUserProfile] = useState<{ name: string, email: string, age?: number, parentEmail?: string, nsfwAlertPreference?: string } | null>(null);
     const [isSavingParental, setIsSavingParental] = useState(false);
     const [profileError, setProfileError] = useState<string | null>(null);
-    const [actionFeedback, setActionFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+    const [passwordForm, setPasswordForm] = useState({ current: '', new: '', confirm: '' });
+    const [passwordError, setPasswordError] = useState<string | null>(null);
+    const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
     const [twoFactorEnabled, setTwoFactorEnabled] = useState<boolean>(() => loadStoredBoolean('focusboard_two_factor_enabled', true));
 
     useEffect(() => {
@@ -125,10 +128,10 @@ const AccountSettings = ({ onNavigate }: { onNavigate?: (p: Page) => void }) => 
                 localStorage.removeItem('focusboard_token');
                 window.location.reload();
             } else {
-                setActionFeedback({ type: 'error', message: data.message || 'Failed to delete account.' });
+                showToast('error', data.message || 'Failed to delete account.');
             }
         } catch (e) {
-            setActionFeedback({ type: 'error', message: 'Failed to delete account.' });
+            showToast('error', 'Failed to delete account.');
             console.error(e);
         }
         setShowDeleteConfirm(false);
@@ -145,14 +148,13 @@ const AccountSettings = ({ onNavigate }: { onNavigate?: (p: Page) => void }) => 
             });
             const data = await res.json();
             if (!data.success) {
-                setActionFeedback({ type: 'error', message: data.message || 'Error updating profile.' });
+                showToast('error', data.message || 'Error updating profile.');
             } else {
-                setActionFeedback({ type: 'success', message: 'Profile updated.' });
-                setTimeout(() => setActionFeedback(null), 2500);
+                showToast('success', 'Profile updated.');
                 return;
             }
         } catch (e) {
-            setActionFeedback({ type: 'error', message: 'Failed to update profile.' });
+            showToast('error', 'Failed to update profile.');
             console.error(e);
         }
     };
@@ -204,15 +206,14 @@ const AccountSettings = ({ onNavigate }: { onNavigate?: (p: Page) => void }) => 
             });
             const data = await res.json();
             if (!data.success) {
-                setActionFeedback({ type: 'error', message: data.message || 'Error updating controls' });
+                showToast('error', data.message || 'Error updating controls');
             } else {
-                setActionFeedback({ type: 'success', message: 'Parental controls updated.' });
-                setTimeout(() => setActionFeedback(null), 2500);
+                showToast('success', 'Parental controls updated.');
                 return;
             }
         } catch (e) {
             console.error(e);
-            setActionFeedback({ type: 'error', message: 'Failed to update parental controls.' });
+            showToast('error', 'Failed to update parental controls.');
         } finally {
             setIsSavingParental(false);
         }
@@ -220,11 +221,6 @@ const AccountSettings = ({ onNavigate }: { onNavigate?: (p: Page) => void }) => 
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
-            {actionFeedback && (
-                <div className={`px-4 py-3 rounded-xl border text-sm font-medium ${actionFeedback.type === 'success' ? 'bg-green-500/10 border-green-500/20 text-green-300' : 'bg-red-500/10 border-red-500/20 text-red-300'}`}>
-                    {actionFeedback.message}
-                </div>
-            )}
             {/* Profile Card */}
             <div className="bg-titanium-dark border border-white/10 rounded-2xl p-6 flex flex-col sm:flex-row items-center gap-6">
                 <div className="relative">
@@ -249,7 +245,7 @@ const AccountSettings = ({ onNavigate }: { onNavigate?: (p: Page) => void }) => 
                             FocusBoard
                         </span>
                         <span className="inline-block px-2 py-0.5 rounded bg-neutral-800 border border-neutral-700 text-neutral-400 text-[10px] font-bold uppercase tracking-wider">
-                            v1.2.0
+                            Settings
                         </span>
                     </div>
                 </div>
@@ -914,7 +910,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ onLogout, onNavigate }) => 
                         >
                             Sign Out
                         </button>
-                        <div className="text-[10px] text-neutral-600 text-center mt-4 font-mono">v1.2.0 • Build 592</div>
+                        
                     </div>
                 </div>
             </div>
@@ -957,7 +953,7 @@ const SidebarContent = ({ tabs, activeTab, setActiveTab, setSidebarOpen, onLogou
                 <LogOut size={18} />
                 Sign Out
             </button>
-            <div className="text-[10px] text-neutral-600 text-center mt-4 font-mono">v1.2.0 • Build 592</div>
+            
         </div>
     </div>
 );

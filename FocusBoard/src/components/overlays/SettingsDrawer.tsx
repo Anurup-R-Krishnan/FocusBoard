@@ -136,7 +136,7 @@ const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ isOpen, onClose }) => {
                         <div className="w-2 h-2 rounded-full bg-accent-blue animate-pulse" />
                         <span className="text-[10px] text-neutral-400 font-medium">System Online</span>
                     </div>
-                    <p className="text-[10px] text-neutral-600 text-center font-mono">FocusBoard v1.0.2 • Build 340</p>
+                    
                 </div>
             </motion.div>
         </>

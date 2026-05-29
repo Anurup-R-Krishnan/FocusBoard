@@ -898,7 +898,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ actualTimeline = [], simula
                             <button onClick={() => setView('week')} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${view === 'week' ? 'bg-neutral-600 text-white shadow-sm' : 'text-neutral-400 hover:text-white'}`}>Week</button>
                             <button onClick={() => setView('month')} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${view === 'month' ? 'bg-neutral-600 text-white shadow-sm' : 'text-neutral-400 hover:text-white'}`}>Month</button>
                         </div>
-                        <button onClick={fetchEventsForRange} className="hidden sm:block p-2 hover:bg-white/10 rounded-lg text-neutral-400 hover:text-white transition-colors" title="Refresh"><RefreshCw size={18} /></button>
+                        <button onClick={loadEvents} className="hidden sm:block p-2 hover:bg-white/10 rounded-lg text-neutral-400 hover:text-white transition-colors" title="Refresh"><RefreshCw size={18} /></button>
                         <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="hidden sm:block p-2 hover:bg-white/10 rounded-lg text-neutral-400 hover:text-white transition-colors"><Filter size={18} /></button>
                     </div>
                 </header>
@@ -1351,7 +1351,7 @@ const EventDetailsModal = ({ event, onClose, onEdit, onDelete }: any) => {
     );
 };
 
-const ContextMenu = ({ x, y, event, onClose, onEdit, onDelete }: any) => (
+const ContextMenu = ({ x, y, event, onClose, onEdit, onDelete, onDuplicate }: any) => (
     <>
         <div className="fixed inset-0 z-[80]" onClick={onClose} onContextMenu={(e) => { e.preventDefault(); onClose(); }} />
         <motion.div
@@ -1371,7 +1371,7 @@ const ContextMenu = ({ x, y, event, onClose, onEdit, onDelete }: any) => (
             </button>
             <button 
                 onClick={() => { 
-                    openCreateModal(event.start, event.end);
+                    onDuplicate?.(event);
                     onClose(); 
                 }} 
                 className="flex items-center gap-2 px-3 py-2 text-xs text-neutral-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors text-left"

@@ -68,7 +68,7 @@ const ShortcutHUD: React.FC = () => {
              </div>
              
              <div className="mt-6 pt-4 border-t border-white/5 text-center">
-                <p className="text-[10px] text-neutral-500">FocusBoard Pro • v1.0.2</p>
+                
              </div>
           </motion.div>
         </div>

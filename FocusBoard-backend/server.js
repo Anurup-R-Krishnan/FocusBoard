@@ -194,7 +194,7 @@ app.use('/api/metrics', metricsRoutes);
 
 // Root route
 app.get('/', (_req, res) =>
-  res.json({ message: 'FocusBoard API', version: '1.0.0' })
+  res.json({ message: 'FocusBoard API' })
 );
 
 app.get('/health', (_req, res) =>

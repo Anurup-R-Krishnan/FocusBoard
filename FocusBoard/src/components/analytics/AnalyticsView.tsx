@@ -10,11 +10,10 @@ import ProjectReport from './reports/ProjectReport';
 import ComparisonView from './reports/ComparisonView';
 import ExportScreen from './ExportScreen';
 import TagBreakdown from './TagBreakdown';
-import { Calendar as CalendarIcon, ChevronDown, Download, SlidersHorizontal, PanelLeft } from 'lucide-react';
-import { Task, Category, TimeSegment } from '../../types';
-import FocusGauge from '../dashboard/FocusGauge';
+import { Download, SlidersHorizontal, PanelLeft } from 'lucide-react';
 import { useDashboardStore } from '../../store/useDashboardStore';
-import { getAllCategories, Category } from '../../services/categoryApi';
+import { getAllCategories } from '../../services/categoryApi';
+import { type Category as ApiCategory } from '../../services/categoryApi';
 import { DrillDownType } from '../dashboard/DrillDownView';
 
 interface AnalyticsViewProps {
@@ -23,7 +22,7 @@ interface AnalyticsViewProps {
 
 const AnalyticsView: React.FC<AnalyticsViewProps> = ({ onNavigate }) => {
     const { metrics, timeline, tasks, isLoading, error } = useDashboardStore();
-    const [categories, setCategories] = useState<Category[]>([]);
+    const [categories, setCategories] = useState<ApiCategory[]>([]);
 
     useEffect(() => {
         getAllCategories(1, 200).then(r => setCategories(r.data)).catch(() => {});
@@ -112,7 +111,7 @@ const AnalyticsView: React.FC<AnalyticsViewProps> = ({ onNavigate }) => {
         const defaultColors = ['#3B82F6', '#EC4899', '#A855F7', '#EAB308', '#10B981', '#EF4444'];
 
         return Object.entries(stats).map(([label, minutes], i) => {
-            const cat = categories.find(c => c.label === label);
+            const cat = categories.find(c => c.name === label);
             // Convert tailwind class to rough hex or use fallback
             let color = defaultColors[i % defaultColors.length];
             if (cat) {

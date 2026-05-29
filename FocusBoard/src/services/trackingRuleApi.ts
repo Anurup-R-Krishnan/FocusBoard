@@ -2,6 +2,8 @@ import { handleResponse } from './activityApi';
 import { API_BASE_URL } from './apiBase';
 import { getToken } from './authApi';
 
+const API_BASE = API_BASE_URL;
+
 export interface TrackingRule {
     _id: string;
     name: string;

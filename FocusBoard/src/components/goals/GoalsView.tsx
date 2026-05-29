@@ -55,7 +55,7 @@ const GoalsView: React.FC<GoalsViewProps> = ({ onNavigate }) => {
         setError(null);
         try {
             const response = await goalApi.getGoals();
-            setGoals(response.data || []);
+            setGoals((response.data || []) as FocusGoal[]);
         } catch (e: any) {
             setError(e?.message || 'Could not load goals. Please try again.');
         } finally {

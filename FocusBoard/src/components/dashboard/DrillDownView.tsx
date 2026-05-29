@@ -13,6 +13,7 @@ import { TimeSegment, Task, SquadMember, ActivityEvent, FocusMetrics } from '../
 import { getAllCategories } from '../../services/categoryApi';
 import { trackingRuleApi } from '../../services/trackingRuleApi';
 import { useDashboardStore } from '../../store/useDashboardStore';
+import { useToastStore } from '../../store/useToastStore';
 import SyncWaveform from './SyncWaveform';
 import TrendAnalysisChart from './TrendChart';
 import TimelineScrubber from './TimelineScrubber';

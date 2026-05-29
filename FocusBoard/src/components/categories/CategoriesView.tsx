@@ -475,9 +475,8 @@ const CategoriesView: React.FC = () => {
                         start_time: fromLocalInput(activityForm.start_time),
                         end_time: activityForm.end_time ? fromLocalInput(activityForm.end_time) : undefined,
                         category_id: activityForm.category_id || null,
-                        user_id: activityForm.user_id || undefined,
                         idle: activityForm.idle ? 1 : 0,
-                    });
+                    } as any);
                     setActivities(prev => [created, ...prev]);
                     setActivityCreating(false);
                     resetActivityForm();

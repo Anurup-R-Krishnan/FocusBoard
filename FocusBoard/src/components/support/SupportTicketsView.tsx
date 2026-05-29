@@ -163,7 +163,7 @@ const IssueTypesTab: React.FC = () => {
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <input placeholder="Issue Type Name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
                                     className="bg-black border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-accent-blue outline-none" />
-                                <select value={form.defaultPriority} onChange={e => setForm({ ...form, defaultPriority: e.target.value })}
+                                <select value={form.defaultPriority} onChange={e => setForm({ ...form, defaultPriority: e.target.value as any })}
                                     className="bg-black border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-accent-blue outline-none">
                                     <option value="Low">Low</option><option value="Medium">Medium</option><option value="High">High</option><option value="Critical">Critical</option>
                                 </select>
@@ -266,7 +266,7 @@ const TicketsTab: React.FC = () => {
 
     useEffect(() => { fetchData(); }, [fetchData]);
 
-    const resetForm = () => setForm({ userId: '', issueTypeId: '', subject: '', description: '', screenshotUrl: '', deviceInfo: '', priority: 'Medium', consentToShareLogs: false });
+    const resetForm = () => setForm({ userId: '', issueTypeId: '', subject: '', description: '', screenshotUrl: '', deviceInfo: '', priority: 'Medium' as any, consentToShareLogs: false });
 
     const handleCreate = () => {
         if (!form.subject || !form.description || !form.userId || !form.issueTypeId) return;

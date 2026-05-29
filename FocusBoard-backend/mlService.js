@@ -114,7 +114,7 @@ function embedText(text) {
 function modelMetadata() {
   return {
     model_name: 'hash-fallback',
-    model_version: '1.0',
+    model_version: 'latest',
     embedding_dim: EMBEDDING_DIM,
   };
 }
@@ -188,7 +188,7 @@ function getModelStatus() {
     loaded: true,
     attempted: true,
     model_name: 'hash-fallback',
-    model_version: '1.0',
+    model_version: 'latest',
     error: null,
     embedding_dim: EMBEDDING_DIM,
   };

@@ -49,9 +49,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children, title, subtitle, foot
       )}
     </motion.div>
 
-    <div className="absolute bottom-6 text-[10px] text-neutral-600 font-mono">
-      FocusBoard Secure Authorization • v1.2
-    </div>
+
   </div>
 );
 

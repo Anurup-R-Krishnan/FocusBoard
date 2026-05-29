@@ -14,6 +14,7 @@ import IntegrationsView from './components/integrations/IntegrationsView';
 import DrillDownView, { DrillDownType } from './components/dashboard/DrillDownView';
 import { HelpCenter, ShortcutsPage, PrivacyPolicy, TermsOfService, SystemStatus } from './components/support/SupportViews';
 import ChangelogModal from './components/overlays/ChangelogModal';
+import Toast from './components/shared/Toast';
 import Navigation, { Page } from './components/layout/Navigation';
 import OnboardingFlow from './components/onboarding/OnboardingFlow';
 import { LoginView, SignUpView, ForgotPasswordView, ResetPasswordView, VerifyEmailView, AccountLockView } from './components/auth/AuthViews';
@@ -478,6 +479,7 @@ const App: React.FC = () => {
             </main>
 
             <ChangelogModal isOpen={isChangelogOpen} onClose={() => setIsChangelogOpen(false)} />
+            <Toast />
 
         </div>
     );

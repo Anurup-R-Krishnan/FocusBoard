@@ -165,7 +165,7 @@ export async function createEvent(payload: CreateEventPayload): Promise<Calendar
     } catch (e) {
         // enqueue for later delivery and return optimistic local event
         try {
-            enqueueEvent(body);
+            enqueueEvent(body as any);
         } catch (err) {
             console.error('Failed to enqueue event', err);
         }

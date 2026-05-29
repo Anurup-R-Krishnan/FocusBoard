@@ -69,23 +69,23 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onPageChange, user })
     const controls = {
         triggerNudge: store.triggerNudge,
         updateSegment: (id: string, updates: any) => {
-            const { prev, next } = store.updateTimelineSegment(id, updates);
-            const target = next.find((seg: any) => seg.id === id);
+            const result = store.updateTimelineSegment(id, updates) as unknown as { prev: any[]; next: any[] };
+            const target = result.next.find((seg: any) => seg.id === id);
             const activityId = target?._id || target?.id;
             if (!activityId) return;
             updateActivity(activityId, {
                 window_title: target.userTitle || target.title || target.window_title,
                 color: target.color,
-            }).catch(() => store.updateTimelineSegment(id, prev.find((s: any) => s.id === id)));
+            }).catch(() => store.updateTimelineSegment(id, result.prev.find((s: any) => s.id === id)));
         },
         tagSegment: (id: string, tag: string) => {
-            const { prev, next } = store.tagTimelineSegment(id, tag);
-            const target = next.find((seg: any) => seg.id === id);
+            const result = store.tagTimelineSegment(id, tag) as { prev: any[]; next: any[] };
+            const target = result.next.find((seg: any) => seg.id === id);
             const activityId = target?._id || target?.id;
             if (!activityId) return;
             updateActivity(activityId, {
                 window_title: target.userTitle || target.title || tag,
-            }).catch(() => store.tagTimelineSegment(id, prev.find((s: any) => s.id === id)?.tags?.[0]));
+            }).catch(() => store.tagTimelineSegment(id, result.prev.find((s: any) => s.id === id)?.tags?.[0]));
         },
         togglePlay: () => {},
         startFocus: () => {
@@ -110,7 +110,11 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onPageChange, user })
             if (e.key === 'd' || e.key === 'D') session.pauseSession();
             if (e.key === ' ') {
                 e.preventDefault();
-                setIsPlaying(prev => !prev);
+                if (session.sessionState === 'FOCUS') {
+                    session.pauseSession();
+                } else {
+                    session.resumeSession();
+                }
             }
         };
 
