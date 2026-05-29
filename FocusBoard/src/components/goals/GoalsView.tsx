@@ -7,6 +7,9 @@ import {
     CheckCircle2, Circle, StickyNote
 } from 'lucide-react';
 import { Task } from '../../types';
+import { DrillDownType } from '../dashboard/DrillDownView';
+import { goalApi } from '../../services/goalApi';
+import { useDashboardStore } from '../../store/useDashboardStore';
 
 // ── Types ────────────────────────────────────────────────────────────
 interface FocusGoal {
@@ -20,20 +23,12 @@ interface FocusGoal {
     achieved: boolean;
 }
 
-import { DrillDownType } from '../dashboard/DrillDownView';
-
 interface GoalsViewProps {
     onNavigate?: (type: DrillDownType, data: any) => void;
 }
 
-import { goalApi } from '../../services/goalApi';
-
-// ── GoalsVimport { DrillDownType } from '../dashboard/DrillDownView';
-import { useDashboardStore } from '../../store/useDashboardStore';
-
 const GoalsView: React.FC<GoalsViewProps> = ({ onNavigate }) => {
     const { tasks, isLoading, error: storeError } = useDashboardStore();
-    const state = { tasks };
     const [activeTab, setActiveTab] = useState<'WEEKLY' | 'MONTHLY' | 'QUARTERLY'>('WEEKLY');
     const [goals, setGoals] = useState<FocusGoal[]>([]);
     const [isFormOpen, setIsFormOpen] = useState(false);

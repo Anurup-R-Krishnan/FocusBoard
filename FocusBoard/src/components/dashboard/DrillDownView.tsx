@@ -565,6 +565,7 @@ const SessionDetailView: React.FC<{
 
     // --- Auto-Rule Suggestion State ---
     const [suggestRulePrompt, setSuggestRulePrompt] = useState<{ message: string, suggestedPattern: string, suggestedCategoryName?: string } | null>(null);
+    const [ruleFeedback, setRuleFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
     const handleCreateRule = async () => {
         if (!suggestRulePrompt) return;
@@ -582,10 +583,12 @@ const SessionDetailView: React.FC<{
             await trackingRuleApi.createRuleFromOverride(suggestRulePrompt.suggestedPattern, matched._id);
 
             setSuggestRulePrompt(null);
-            alert("Global rule created successfully!");
+            setRuleFeedback({ type: 'success', message: 'Global rule created successfully!' });
+            setTimeout(() => setRuleFeedback(null), 3000);
         } catch (e) {
             console.error(e);
-            alert("Failed to create rule.");
+            setRuleFeedback({ type: 'error', message: 'Failed to create rule.' });
+            setTimeout(() => setRuleFeedback(null), 3000);
         }
     };
 
@@ -740,7 +743,11 @@ const SessionDetailView: React.FC<{
             {/* Header */}
             <div className="mb-12 relative">
                 <div className="absolute top-0 right-0 w-48 h-48 sm:w-64 sm:h-64 bg-accent-blue/10 rounded-full blur-[80px] sm:blur-[100px] pointer-events-none" />
-
+                {ruleFeedback && (
+                    <div className={`px-4 py-2.5 rounded-xl border text-sm font-medium mb-6 ${ruleFeedback.type === 'success' ? 'bg-green-500/10 border-green-500/20 text-green-300' : 'bg-red-500/10 border-red-500/20 text-red-300'}`}>
+                        {ruleFeedback.message}
+                    </div>
+                )}
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-wrap items-center gap-4 mb-6">
                     <span className={`px-4 py-1.5 rounded-full text-xs font-bold border flex items-center gap-2 ${segment.type === 'FOCUS' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
                             segment.type === 'BREAK' ? 'bg-green-500/10 text-green-400 border-green-500/20' :

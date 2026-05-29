@@ -6,10 +6,11 @@ import {
     AlertCircle, RefreshCw, Key, Webhook, Plus, Trash2,
     ExternalLink, Settings, X, Search, Terminal, Zap, Shield,
     ChevronRight, Copy, Activity, Eye, EyeOff, Lock, Server,
-    ArrowUpRight, Clock, FileText
+    ArrowUpRight, Clock, FileText, Send
 } from 'lucide-react';
 import Skeleton from '../shared/Skeleton';
 import { integrationApi } from '../../services/integrationApi';
+import * as webhookApi from '../../services/webhookApi';
 
 // --- Types ---
 
@@ -159,6 +160,7 @@ const IntegrationDrawer = ({ integration, onClose, onUpdate }: { integration: In
     const [isConnecting, setIsConnecting] = useState(false);
     const [isDisconnecting, setIsDisconnecting] = useState(false);
     const [actionError, setActionError] = useState<string | null>(null);
+    const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
     const [config, setConfig] = useState({
         syncEvents: true,
         updateStatus: true,
@@ -186,17 +188,20 @@ const IntegrationDrawer = ({ integration, onClose, onUpdate }: { integration: In
     };
 
     const handleDisconnect = async () => {
-        if (confirm(`Disconnect ${integration.name}? This will stop all sync activities.`)) {
-            setIsDisconnecting(true);
-            setActionError(null);
-            try {
-                await onUpdate(integration.id, { connected: false, syncStatus: 'Pending' });
-                onClose();
-            } catch (error: any) {
-                setActionError(error?.message || 'Failed to disconnect integration.');
-            } finally {
-                setIsDisconnecting(false);
-            }
+        setShowDisconnectConfirm(true);
+    };
+
+    const confirmDisconnect = async () => {
+        setShowDisconnectConfirm(false);
+        setIsDisconnecting(true);
+        setActionError(null);
+        try {
+            await onUpdate(integration.id, { connected: false, syncStatus: 'Pending' });
+            onClose();
+        } catch (error: any) {
+            setActionError(error?.message || 'Failed to disconnect integration.');
+        } finally {
+            setIsDisconnecting(false);
         }
     };
 
@@ -390,6 +395,20 @@ const IntegrationDrawer = ({ integration, onClose, onUpdate }: { integration: In
                         </div>
                     )}
                 </div>
+
+                {/* Disconnect Confirmation */}
+                {showDisconnectConfirm && (
+                    <div className="absolute inset-0 z-[90] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm rounded-2xl">
+                        <div className="bg-titanium-surface border border-white/10 rounded-2xl p-6 max-w-xs w-full shadow-2xl">
+                            <h3 className="text-sm font-bold text-white mb-2">Disconnect {integration.name}?</h3>
+                            <p className="text-xs text-neutral-400 mb-6">This will stop all sync activities.</p>
+                            <div className="flex gap-3 justify-end">
+                                <button onClick={() => setShowDisconnectConfirm(false)} className="px-4 py-2 text-xs font-medium text-neutral-400 hover:text-white">Cancel</button>
+                                <button onClick={confirmDisconnect} className="px-4 py-2 text-xs font-bold text-white bg-red-600 hover:bg-red-500 rounded-lg">Disconnect</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </motion.div>
         </>
     );
@@ -397,6 +416,85 @@ const IntegrationDrawer = ({ integration, onClose, onUpdate }: { integration: In
 
 const DeveloperTools = ({ integrations, onOpenIntegration }: { integrations: Integration[]; onOpenIntegration: (integration: Integration) => void }) => {
     const [copiedId, setCopiedId] = useState<string | null>(null);
+    const [endpoints, setEndpoints] = useState<webhookApi.WebhookEndpoint[]>([]);
+    const [endpointsLoading, setEndpointsLoading] = useState(true);
+    const [showEndpointForm, setShowEndpointForm] = useState(false);
+    const [endpointForm, setEndpointForm] = useState({ name: '', url: '' });
+    const [endpointSending, setEndpointSending] = useState(false);
+    const [endpointError, setEndpointError] = useState('');
+    const [endpointFeedback, setEndpointFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+    const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
+    useEffect(() => {
+        webhookApi.getEndpoints()
+            .then(setEndpoints)
+            .catch(() => {})
+            .finally(() => setEndpointsLoading(false));
+    }, []);
+
+    const handleCreateEndpoint = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setEndpointError('');
+        if (!endpointForm.name.trim() || !endpointForm.url.trim()) {
+            setEndpointError('Name and URL are required.');
+            return;
+        }
+        setEndpointSending(true);
+        try {
+            const ep = await webhookApi.createEndpoint({
+                name: endpointForm.name.trim(),
+                url: endpointForm.url.trim(),
+            });
+            setEndpoints(prev => [...prev, ep]);
+            setEndpointForm({ name: '', url: '' });
+            setShowEndpointForm(false);
+        } catch (err: any) {
+            setEndpointError(err.message || 'Failed to create endpoint');
+        } finally {
+            setEndpointSending(false);
+        }
+    };
+
+    const handleDeleteEndpoint = async (id: string) => {
+        setDeleteConfirmId(id);
+    };
+
+    const confirmDeleteEndpoint = async () => {
+        const id = deleteConfirmId;
+        setDeleteConfirmId(null);
+        if (!id) return;
+        try {
+            await webhookApi.deleteEndpoint(id);
+            setEndpoints(prev => prev.filter(e => e._id !== id));
+            setEndpointFeedback({ type: 'success', message: 'Endpoint deleted.' });
+            setTimeout(() => setEndpointFeedback(null), 3000);
+        } catch (err: any) {
+            setEndpointFeedback({ type: 'error', message: err.message || 'Failed to delete endpoint' });
+            setTimeout(() => setEndpointFeedback(null), 4000);
+        }
+    };
+
+    const handleRotateSecret = async (id: string) => {
+        try {
+            const newSecret = await webhookApi.rotateSecret(id);
+            setEndpoints(prev => prev.map(e => e._id === id ? { ...e, secret: newSecret } : e));
+            setEndpointFeedback({ type: 'success', message: 'Secret rotated.' });
+            setTimeout(() => setEndpointFeedback(null), 3000);
+        } catch (err: any) {
+            setEndpointFeedback({ type: 'error', message: err.message || 'Failed to rotate secret' });
+            setTimeout(() => setEndpointFeedback(null), 4000);
+        }
+    };
+
+    const handleToggleActive = async (id: string, currentActive: boolean) => {
+        try {
+            const ep = await webhookApi.updateEndpoint(id, { active: !currentActive });
+            setEndpoints(prev => prev.map(e => e._id === id ? ep : e));
+        } catch (err: any) {
+            setEndpointFeedback({ type: 'error', message: err.message || 'Failed to update endpoint' });
+            setTimeout(() => setEndpointFeedback(null), 4000);
+        }
+    };
 
     const activeIntegrations = integrations.filter(integration => integration.connected);
 
@@ -506,6 +604,12 @@ const DeveloperTools = ({ integrations, onOpenIntegration }: { integrations: Int
                     </h3>
                     <p className="text-sm text-neutral-500 mb-6">Receive real-time event notifications to your server.</p>
 
+                    {endpointFeedback && (
+                        <div className={`px-3 py-2 rounded-lg border text-xs font-medium mb-3 ${endpointFeedback.type === 'success' ? 'bg-green-500/10 border-green-500/20 text-green-300' : 'bg-red-500/10 border-red-500/20 text-red-300'}`}>
+                            {endpointFeedback.message}
+                        </div>
+                    )}
+
                     <div className="space-y-3">
                         <button className="w-full p-4 rounded-xl bg-titanium-dark border border-accent-blue/30 shadow-[0_0_15px_rgba(47,88,205,0.1)] flex items-start gap-3 transition-all hover:bg-white/5">
                             <div className="mt-1 w-2 h-2 rounded-full bg-green-400 animate-pulse shadow-[0_0_8px_rgba(74,222,128,0.5)]" />
@@ -518,9 +622,60 @@ const DeveloperTools = ({ integrations, onOpenIntegration }: { integrations: Int
                                 </div>
                             </div>
                         </button>
-                        <button className="w-full p-3 rounded-xl border border-dashed border-white/10 text-neutral-500 hover:text-white hover:border-white/20 transition-colors text-sm font-bold flex items-center justify-center gap-2" disabled>
-                            <Plus size={16} /> Endpoint Management Coming Soon
-                        </button>
+
+                        {endpointsLoading ? (
+                            <div className="text-center py-3 text-xs text-neutral-500">Loading endpoints...</div>
+                        ) : endpoints.map(ep => (
+                            <div key={ep._id} className="p-3 rounded-xl bg-titanium-dark border border-white/5 space-y-2">
+                                <div className="flex items-center justify-between gap-2">
+                                    <div className="flex-1 min-w-0">
+                                        <div className="text-xs font-bold text-white truncate">{ep.name}</div>
+                                        <div className="text-[10px] text-neutral-500 font-mono truncate">{ep.url}</div>
+                                    </div>
+                                    <button
+                                        onClick={() => handleToggleActive(ep._id, ep.active)}
+                                        className={`w-8 h-4 rounded-full relative transition-colors shrink-0 ${ep.active ? 'bg-green-500' : 'bg-neutral-700'}`}
+                                    >
+                                        <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${ep.active ? 'left-4' : 'left-0.5'}`} />
+                                    </button>
+                                </div>
+                                <div className="flex gap-2">
+                                    <button onClick={() => handleRotateSecret(ep._id)} className="text-[9px] font-bold text-neutral-500 hover:text-white transition-colors">Rotate Secret</button>
+                                    <button onClick={() => handleDeleteEndpoint(ep._id)} className="text-[9px] font-bold text-red-500/70 hover:text-red-400 transition-colors">Delete</button>
+                                </div>
+                            </div>
+                        ))}
+
+                        {showEndpointForm ? (
+                            <form onSubmit={handleCreateEndpoint} className="p-3 rounded-xl border border-dashed border-white/10 space-y-2">
+                                {endpointError && <div className="text-[10px] text-red-400">{endpointError}</div>}
+                                <input
+                                    placeholder="Endpoint name"
+                                    value={endpointForm.name}
+                                    onChange={e => setEndpointForm({ ...endpointForm, name: e.target.value })}
+                                    className="w-full bg-neutral-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white placeholder:text-neutral-600 focus:outline-none focus:border-accent-blue"
+                                />
+                                <input
+                                    placeholder="https://your-server.com/webhook"
+                                    value={endpointForm.url}
+                                    onChange={e => setEndpointForm({ ...endpointForm, url: e.target.value })}
+                                    className="w-full bg-neutral-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white placeholder:text-neutral-600 focus:outline-none focus:border-accent-blue"
+                                />
+                                <div className="flex gap-2">
+                                    <button type="button" onClick={() => { setShowEndpointForm(false); setEndpointError(''); }} className="flex-1 py-1.5 text-[10px] font-bold text-neutral-500 hover:text-white transition-colors">Cancel</button>
+                                    <button type="submit" disabled={endpointSending} className="flex-1 py-1.5 bg-accent-blue text-white text-[10px] font-bold rounded-lg flex items-center justify-center gap-1 hover:bg-blue-600 transition-colors disabled:opacity-50">
+                                        {endpointSending ? <RefreshCw size={10} className="animate-spin" /> : <Send size={10} />} Add
+                                    </button>
+                                </div>
+                            </form>
+                        ) : (
+                            <button
+                                onClick={() => setShowEndpointForm(true)}
+                                className="w-full p-3 rounded-xl border border-dashed border-white/10 text-neutral-500 hover:text-white hover:border-white/20 transition-colors text-sm font-bold flex items-center justify-center gap-2"
+                            >
+                                <Plus size={16} /> Add Webhook Endpoint
+                            </button>
+                        )}
                     </div>
                 </div>
 
@@ -560,6 +715,21 @@ const DeveloperTools = ({ integrations, onOpenIntegration }: { integrations: Int
                     </div>
                 </div>
             </section>
+
+            {/* Delete Endpoint Confirmation */}
+            {deleteConfirmId && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setDeleteConfirmId(null)} />
+                    <div className="relative bg-titanium-surface border border-white/10 rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+                        <h3 className="text-lg font-bold text-white mb-2">Delete Webhook Endpoint?</h3>
+                        <p className="text-sm text-neutral-400 mb-6">Deliveries to this URL will stop immediately. This action cannot be undone.</p>
+                        <div className="flex gap-3 justify-end">
+                            <button onClick={() => setDeleteConfirmId(null)} className="px-4 py-2 text-sm font-medium text-neutral-400 hover:text-white">Cancel</button>
+                            <button onClick={confirmDeleteEndpoint} className="px-4 py-2 text-sm font-bold text-white bg-red-600 hover:bg-red-500 rounded-lg">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

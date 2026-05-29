@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Hexagon, Mail, Lock, ArrowRight, Github, Chrome, Check, AlertTriangle, Shield, Key, User } from 'lucide-react';
+import { Hexagon, Mail, Lock, ArrowRight, Check, AlertTriangle, Shield, Key, User } from 'lucide-react';
 import { Page } from '../layout/Navigation';
 
 import { AUTH_BASE_URL } from '../../services/apiBase';
@@ -161,44 +161,9 @@ export const LoginView: React.FC<{ onNavigate: (p: Page) => void, onLogin: (toke
         >
           {loading ? <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" /> : <>Sign In <ArrowRight size={18} /></>}
         </button>
-
-        {import.meta.env.DEV && (
-          <button
-            type="button"
-            disabled={loading}
-            onClick={async () => {
-              setLoading(true);
-              try {
-                const res = await fetch(`${API_BASE}/dev-login`, { method: 'POST' });
-                const data = await res.json();
-                if (data.success) onLogin(data.data.token);
-                else setError(data.message);
-              } catch (err) {
-                setError('Dev login failed.');
-              }
-              setLoading(false);
-            }}
-            className="w-full bg-accent-blue/20 text-accent-blue border border-accent-blue/30 font-bold py-3rounded-xl hover:bg-accent-blue/30 transition-colors flex items-center justify-center gap-2 mt-2 py-3.5 rounded-xl"
-          >
-            <Shield size={16} /> Login as Admin (Dev Only)
-          </button>
-        )}
       </form>
 
-      <div className="relative my-8">
-        <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/10"></div></div>
-        <div className="relative flex justify-center text-xs uppercase"><span className="bg-[#19191b] px-2 text-neutral-500 font-medium">Or continue with</span></div>
-      </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <button disabled className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-titanium-dark border border-white/10 opacity-50 text-white text-sm font-medium cursor-not-allowed">
-          <Github size={18} /> GitHub
-        </button>
-        <button disabled className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-titanium-dark border border-white/10 opacity-50 text-white text-sm font-medium cursor-not-allowed">
-          <Chrome size={18} /> Google
-        </button>
-      </div>
-      <p className="text-[10px] text-neutral-600 text-center mt-2">OAuth coming soon</p>
     </AuthLayout>
   );
 };
@@ -275,12 +240,6 @@ export const SignUpView: React.FC<{ onNavigate: (p: Page) => void }> = ({ onNavi
         </button>
       </form>
 
-      <div className="mt-6 flex justify-center">
-        <div className="flex gap-4 opacity-30">
-          <Github size={20} className="text-neutral-500" />
-          <Chrome size={20} className="text-neutral-500" />
-        </div>
-      </div>
     </AuthLayout>
   );
 };

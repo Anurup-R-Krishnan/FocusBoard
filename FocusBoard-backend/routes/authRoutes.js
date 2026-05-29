@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { register, login, getMe, updateProfile, deleteAccount, changePassword, devLogin, updateParentalControls } = require('../controllers/authController');
+const { register, login, getMe, updateProfile, deleteAccount, changePassword, updateParentalControls } = require('../controllers/authController');
 const authMiddleware = require('../middleware/authMiddleware');
 const { validateSchema, createUserSchema, loginUserSchema, parentalControlsSchema } = require('../middleware/validation');
 
@@ -11,8 +11,5 @@ router.put('/profile', authMiddleware, updateProfile);
 router.put('/change-password', authMiddleware, changePassword);
 router.delete('/account', authMiddleware, deleteAccount);
 router.put('/parental-controls', authMiddleware, validateSchema(parentalControlsSchema), updateParentalControls);
-
-// Dev-only endpoint for one-click admin login
-router.post('/dev-login', devLogin);
 
 module.exports = router;

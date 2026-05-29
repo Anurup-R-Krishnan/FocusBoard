@@ -80,6 +80,7 @@ const AccountSettings = ({ onNavigate }: { onNavigate?: (p: Page) => void }) => 
     const [userProfile, setUserProfile] = useState<{ name: string, email: string, age?: number, parentEmail?: string, nsfwAlertPreference?: string } | null>(null);
     const [isSavingParental, setIsSavingParental] = useState(false);
     const [profileError, setProfileError] = useState<string | null>(null);
+    const [actionFeedback, setActionFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
     const [twoFactorEnabled, setTwoFactorEnabled] = useState<boolean>(() => loadStoredBoolean('focusboard_two_factor_enabled', true));
 
     useEffect(() => {
@@ -124,10 +125,10 @@ const AccountSettings = ({ onNavigate }: { onNavigate?: (p: Page) => void }) => 
                 localStorage.removeItem('focusboard_token');
                 window.location.reload();
             } else {
-                alert(data.message || 'Failed to delete account.');
+                setActionFeedback({ type: 'error', message: data.message || 'Failed to delete account.' });
             }
         } catch (e) {
-            alert('Failed to delete account.');
+            setActionFeedback({ type: 'error', message: 'Failed to delete account.' });
             console.error(e);
         }
         setShowDeleteConfirm(false);
@@ -144,10 +145,14 @@ const AccountSettings = ({ onNavigate }: { onNavigate?: (p: Page) => void }) => 
             });
             const data = await res.json();
             if (!data.success) {
-                alert(data.message || 'Error updating profile.');
+                setActionFeedback({ type: 'error', message: data.message || 'Error updating profile.' });
+            } else {
+                setActionFeedback({ type: 'success', message: 'Profile updated.' });
+                setTimeout(() => setActionFeedback(null), 2500);
+                return;
             }
         } catch (e) {
-            alert('Failed to update profile.');
+            setActionFeedback({ type: 'error', message: 'Failed to update profile.' });
             console.error(e);
         }
     };
@@ -199,11 +204,15 @@ const AccountSettings = ({ onNavigate }: { onNavigate?: (p: Page) => void }) => 
             });
             const data = await res.json();
             if (!data.success) {
-                alert(data.message || 'Error updating controls');
+                setActionFeedback({ type: 'error', message: data.message || 'Error updating controls' });
+            } else {
+                setActionFeedback({ type: 'success', message: 'Parental controls updated.' });
+                setTimeout(() => setActionFeedback(null), 2500);
+                return;
             }
         } catch (e) {
             console.error(e);
-            alert('Failed to update parental controls.');
+            setActionFeedback({ type: 'error', message: 'Failed to update parental controls.' });
         } finally {
             setIsSavingParental(false);
         }
@@ -211,6 +220,11 @@ const AccountSettings = ({ onNavigate }: { onNavigate?: (p: Page) => void }) => 
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
+            {actionFeedback && (
+                <div className={`px-4 py-3 rounded-xl border text-sm font-medium ${actionFeedback.type === 'success' ? 'bg-green-500/10 border-green-500/20 text-green-300' : 'bg-red-500/10 border-red-500/20 text-red-300'}`}>
+                    {actionFeedback.message}
+                </div>
+            )}
             {/* Profile Card */}
             <div className="bg-titanium-dark border border-white/10 rounded-2xl p-6 flex flex-col sm:flex-row items-center gap-6">
                 <div className="relative">

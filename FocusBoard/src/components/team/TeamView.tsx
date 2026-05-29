@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Users, Briefcase, Shield, BarChart3, ChevronDown, Check, Plus,
     MoreHorizontal, Mail, Search, Lock, Globe, Clock, ArrowUpRight,
-    Zap, AlertCircle, LayoutGrid, List, PanelLeft, X
+    Zap, AlertCircle, LayoutGrid, List, PanelLeft, X, Send, RefreshCw
 } from 'lucide-react';
 import StatCard from '../analytics/shared/StatCard';
 import Skeleton from '../shared/Skeleton';
@@ -39,6 +39,10 @@ const WorkspaceSwitcher = () => {
     const [current, setCurrent] = useState('FocusBoard');
     const [workspaces, setWorkspaces] = useState<string[]>(['FocusBoard']);
     const [loading, setLoading] = useState(true);
+    const [showCreate, setShowCreate] = useState(false);
+    const [newName, setNewName] = useState('');
+    const [createError, setCreateError] = useState('');
+    const [creating, setCreating] = useState(false);
 
     useEffect(() => {
         import('../../services/workspaceApi').then(api => {
@@ -54,15 +58,23 @@ const WorkspaceSwitcher = () => {
     }, []);
 
     const handleCreate = async () => {
-        const name = prompt('Workspace name:');
-        if (!name) return;
+        if (!newName.trim()) {
+            setCreateError('Workspace name is required.');
+            return;
+        }
+        setCreating(true);
+        setCreateError('');
         try {
             const api = await import('../../services/workspaceApi');
-            await api.createWorkspace(name.trim());
-            setWorkspaces(prev => [...prev, name.trim()]);
-            setCurrent(name.trim());
+            await api.createWorkspace(newName.trim());
+            setWorkspaces(prev => [...prev, newName.trim()]);
+            setCurrent(newName.trim());
+            setNewName('');
+            setShowCreate(false);
         } catch (e: any) {
-            alert(e.message || 'Failed to create workspace');
+            setCreateError(e.message || 'Failed to create workspace');
+        } finally {
+            setCreating(false);
         }
     };
 
@@ -103,14 +115,128 @@ const WorkspaceSwitcher = () => {
                                 </button>
                             ))}
                             <div className="h-px bg-white/5 my-1" />
-                            <button onClick={handleCreate} className="w-full flex items-center gap-2 px-4 py-3 text-xs font-bold text-neutral-400 hover:bg-white/5 hover:text-white transition-colors">
-                                <Plus size={14} /> Create Workspace
-                            </button>
+                            {showCreate ? (
+                                <div className="p-2 space-y-2">
+                                    {createError && <div className="text-[10px] text-red-400 px-2">{createError}</div>}
+                                    <input
+                                        autoFocus
+                                        placeholder="Workspace name..."
+                                        value={newName}
+                                        onChange={e => setNewName(e.target.value)}
+                                        onKeyDown={e => e.key === 'Enter' && handleCreate()}
+                                        className="w-full bg-neutral-800 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white placeholder:text-neutral-600 focus:outline-none focus:border-accent-blue"
+                                    />
+                                    <div className="flex gap-2">
+                                        <button onClick={() => { setShowCreate(false); setCreateError(''); setNewName(''); }} className="flex-1 py-1 text-[10px] font-bold text-neutral-500 hover:text-white transition-colors">Cancel</button>
+                                        <button onClick={handleCreate} disabled={creating} className="flex-1 py-1 bg-accent-blue text-white text-[10px] font-bold rounded-lg flex items-center justify-center gap-1 hover:bg-blue-600 transition-colors disabled:opacity-50">
+                                            {creating ? <RefreshCw size={10} className="animate-spin" /> : null} Create
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <button onClick={() => setShowCreate(true)} className="w-full flex items-center gap-2 px-4 py-3 text-xs font-bold text-neutral-400 hover:bg-white/5 hover:text-white transition-colors">
+                                    <Plus size={14} /> Create Workspace
+                                </button>
+                            )}
                         </motion.div>
                     </>
                 )}
             </AnimatePresence>
         </div>
+    );
+};
+
+const InviteModal = ({ isOpen, onClose, workspaceId, onInviteSent }: { isOpen: boolean; onClose: () => void; workspaceId?: string; onInviteSent?: () => void }) => {
+    const [email, setEmail] = useState('');
+    const [role, setRole] = useState('Member');
+    const [sending, setSending] = useState(false);
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
+
+    const handleSend = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError('');
+        setSuccess('');
+        if (!email.trim()) { setError('Email is required.'); return; }
+        setSending(true);
+        try {
+            const api = await import('../../services/inviteApi');
+            await api.createInvite(workspaceId || 'default', email.trim(), role);
+            setSuccess(`Invite sent to ${email.trim()}`);
+            setTimeout(() => {
+                onInviteSent?.();
+                onClose();
+                setEmail('');
+                setSuccess('');
+            }, 1500);
+        } catch (err: any) {
+            setError(err.message || 'Failed to send invite');
+        } finally {
+            setSending(false);
+        }
+    };
+
+    if (!isOpen) return null;
+
+    return (
+        <>
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[80]" onClick={onClose} />
+            <div className="fixed inset-0 flex items-center justify-center z-[90] p-4">
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="bg-[#121212] border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl"
+                >
+                    <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <Mail size={18} className="text-accent-blue" /> Invite Member
+                    </h2>
+                    <form onSubmit={handleSend} className="space-y-4">
+                        {error && (
+                            <div className="p-3 rounded-xl border border-red-500/20 bg-red-500/10 text-xs text-red-300">{error}</div>
+                        )}
+                        {success && (
+                            <div className="p-3 rounded-xl border border-green-500/20 bg-green-500/10 text-xs text-green-300">{success}</div>
+                        )}
+                        <div>
+                            <label className="text-xs text-neutral-400 mb-1.5 block font-medium">Email Address</label>
+                            <input
+                                type="email"
+                                placeholder="colleague@company.com"
+                                value={email}
+                                onChange={e => setEmail(e.target.value)}
+                                className="w-full bg-neutral-900 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-neutral-600 focus:outline-none focus:border-accent-blue transition-colors"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-xs text-neutral-400 mb-1.5 block font-medium">Workspace Role</label>
+                            <select
+                                value={role}
+                                onChange={e => setRole(e.target.value)}
+                                className="w-full bg-neutral-900 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-accent-blue transition-colors appearance-none"
+                            >
+                                <option value="Member">Member</option>
+                                <option value="Admin">Admin</option>
+                                <option value="Guest">Guest</option>
+                            </select>
+                        </div>
+                        <div className="flex gap-3 pt-2">
+                            <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-white/10 text-sm font-bold text-neutral-400 hover:text-white hover:bg-white/5 transition-colors">
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={sending}
+                                className="flex-1 py-2.5 rounded-xl bg-accent-blue text-white text-sm font-bold flex items-center justify-center gap-2 hover:bg-blue-600 transition-colors disabled:opacity-50"
+                            >
+                                {sending ? <RefreshCw size={14} className="animate-spin" /> : <Send size={14} />}
+                                Send Invite
+                            </button>
+                        </div>
+                    </form>
+                </motion.div>
+            </div>
+        </>
     );
 };
 
@@ -187,6 +313,7 @@ const TeamOverview = ({ members, tasks }: { members: Member[], tasks: any[] }) =
 
 const MemberList = ({ members }: { members: Member[] }) => {
     const [searchQuery, setSearchQuery] = useState('');
+    const [showInviteModal, setShowInviteModal] = useState(false);
     const filtered = members.filter(m =>
         m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         m.email.toLowerCase().includes(searchQuery.toLowerCase())
@@ -204,10 +331,12 @@ const MemberList = ({ members }: { members: Member[] }) => {
                     className="w-full bg-titanium-dark border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-sm text-white focus:outline-none focus:border-accent-blue transition-colors"
                 />
             </div>
-            <button onClick={() => alert('Invite feature coming soon.')} className="flex items-center gap-2 px-4 py-2.5 bg-accent-blue text-white rounded-xl text-sm font-bold hover:bg-blue-600 transition-colors shadow-lg shadow-blue-900/20">
+            <button onClick={() => setShowInviteModal(true)} className="flex items-center gap-2 px-4 py-2.5 bg-accent-blue text-white rounded-xl text-sm font-bold hover:bg-blue-600 transition-colors shadow-lg shadow-blue-900/20">
                 <Mail size={16} /> Invite Member
             </button>
         </div>
+
+        <InviteModal isOpen={showInviteModal} onClose={() => setShowInviteModal(false)} />
 
         <div className="bg-titanium-dark border border-titanium-border rounded-[22px] overflow-hidden">
             <div className="overflow-x-auto">
