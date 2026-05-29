@@ -237,6 +237,20 @@ const TicketsTab: React.FC = () => {
     const [statusFilter, setStatusFilter] = useState('');
     const [confirmAction, setConfirmAction] = useState<{ message: string; action: () => void } | null>(null);
     const [form, setForm] = useState<TicketPayload>({ userId: '', issueTypeId: '', subject: '', description: '', screenshotUrl: '', deviceInfo: '', priority: 'Medium', consentToShareLogs: false });
+    const [userIdPlaceholder, setUserIdPlaceholder] = useState('');
+
+    useEffect(() => {
+        const token = localStorage.getItem('focusboard_token');
+        if (token) {
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                if (payload.id) {
+                    setUserIdPlaceholder(payload.id);
+                    setForm(prev => prev.userId ? prev : { ...prev, userId: payload.id });
+                }
+            } catch {}
+        }
+    }, []);
 
     const fetchData = useCallback(async () => {
         try {

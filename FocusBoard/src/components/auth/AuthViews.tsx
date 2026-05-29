@@ -235,8 +235,9 @@ export const SignUpView: React.FC<{ onNavigate: (p: Page) => void }> = ({ onNavi
       }
 
       setSuccess('Account created successfully! Redirecting to login...');
+      localStorage.setItem('focusboard_signup_email', email);
       setLoading(false);
-      setTimeout(() => onNavigate('login'), 1500);
+      setTimeout(() => onNavigate('verify-email'), 1500);
     } catch (err) {
       setError('Unable to connect to server. Please try again.');
       setLoading(false);
@@ -287,7 +288,7 @@ export const SignUpView: React.FC<{ onNavigate: (p: Page) => void }> = ({ onNavi
 // --- 3. Verify Email Page ---
 
 export const VerifyEmailView: React.FC<{ onNavigate: (p: Page) => void }> = ({ onNavigate }) => {
-  const [email, setEmail] = useState('you@example.com');
+  const email = localStorage.getItem('focusboard_signup_email') || 'you@example.com';
   return (
     <AuthLayout
       title="Check your Inbox"
