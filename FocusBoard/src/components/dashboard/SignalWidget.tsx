@@ -14,7 +14,7 @@ const SignalWidget: React.FC<SignalWidgetProps> = ({ squad }) => {
   const isTeamFocused = focusedCount > squad.length / 2;
   const isTeamDistracted = distractedCount > 0;
   
-  // Calculate a mock "Signal Strength" based on focus
+  // Calculate signal strength based on team focus
   const signalStrength = Math.round((focusedCount / squad.length) * 100);
 
   return (
