@@ -79,7 +79,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onPageChange, user })
             }).catch(() => store.updateTimelineSegment(id, result.prev.find((s: any) => s.id === id)));
         },
         tagSegment: (id: string, tag: string) => {
-            const result = store.tagTimelineSegment(id, tag) as { prev: any[]; next: any[] };
+            const result = store.tagTimelineSegment(id, tag) as unknown as { prev: any[]; next: any[] };
             const target = result.next.find((seg: any) => seg.id === id);
             const activityId = target?._id || target?.id;
             if (!activityId) return;

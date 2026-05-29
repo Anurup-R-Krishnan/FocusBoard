@@ -1,20 +1,21 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import Dashboard from './components/dashboard/Dashboard';
 import AnalyticsView from './components/analytics/AnalyticsView';
 import SquadView from './components/squad/SquadView';
 import SettingsView from './components/settings/SettingsView';
 import TasksView from './components/tasks/TasksView';
 import CalendarView from './components/calendar/CalendarView';
-import GoalsView from './components/goals/GoalsView';
-import CategoriesView from './components/categories/CategoriesView';
-import SupportTicketsView from './components/support/SupportTicketsView';
-import TeamView from './components/team/TeamView';
-import IntegrationsView from './components/integrations/IntegrationsView';
+const GoalsView = lazy(() => import('./components/goals/GoalsView'));
+const CategoriesView = lazy(() => import('./components/categories/CategoriesView'));
+const SupportTicketsView = lazy(() => import('./components/support/SupportTicketsView'));
+const TeamView = lazy(() => import('./components/team/TeamView'));
+const IntegrationsView = lazy(() => import('./components/integrations/IntegrationsView'));
 import DrillDownView, { DrillDownType } from './components/dashboard/DrillDownView';
 import { HelpCenter, ShortcutsPage, PrivacyPolicy, TermsOfService, SystemStatus } from './components/support/SupportViews';
 import ChangelogModal from './components/overlays/ChangelogModal';
 import Toast from './components/shared/Toast';
+import PageLoader from './components/shared/PageLoader';
 import Navigation, { Page } from './components/layout/Navigation';
 import OnboardingFlow from './components/onboarding/OnboardingFlow';
 import { LoginView, SignUpView, ForgotPasswordView, ResetPasswordView, VerifyEmailView, AccountLockView } from './components/auth/AuthViews';
@@ -448,19 +449,19 @@ const App: React.FC = () => {
                     <TasksView onNavigate={handleNavigateDetail} />
                 )}
                 {currentPage === 'categories' && (
-                    <CategoriesView />
+                    <Suspense fallback={<PageLoader />}><CategoriesView /></Suspense>
                 )}
-                {currentPage === 'team' && <TeamView />}
+                {currentPage === 'team' && <Suspense fallback={<PageLoader />}><TeamView /></Suspense>}
                 {currentPage === 'goals' && (
-                    <GoalsView />
+                    <Suspense fallback={<PageLoader />}><GoalsView /></Suspense>
                 )}
-                {currentPage === 'integrations' && <IntegrationsView />}
+                {currentPage === 'integrations' && <Suspense fallback={<PageLoader />}><IntegrationsView /></Suspense>}
                 {currentPage === 'calendar' && <CalendarView actualTimeline={useDashboardStore.getState().timeline} />}
                 {currentPage === 'squad' && (
                     <SquadView onNavigate={handleNavigateDetail} />
                 )}
                 {currentPage === 'settings' && <SettingsView onLogout={handleLogout} onNavigate={setCurrentPage} />}
-                {currentPage === 'support-tickets' && <SupportTicketsView />}
+                {currentPage === 'support-tickets' && <Suspense fallback={<PageLoader />}><SupportTicketsView /></Suspense>}
 
                 {/* Support Pages */}
                 {currentPage === 'help' && <HelpCenter onNavigate={setCurrentPage} />}
