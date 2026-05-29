@@ -71,6 +71,7 @@ const clientRoutes = require('./routes/clientRoutes');
 const integrationRoutes = require('./routes/integrationRoutes');
 const taskRoutes = require('./routes/taskRoutes');
 const teamRoutes = require('./routes/teamRoutes');
+const workspaceRoutes = require('./routes/workspaceRoutes');
 const metricsRoutes = require('./routes/metricsRoutes');
 
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -184,6 +185,7 @@ app.use('/api/clients', clientRoutes);
 app.use('/api/integrations', integrationRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/teams', teamRoutes);
+app.use('/api/workspaces', workspaceRoutes);
 app.use('/api/metrics', metricsRoutes);
 
 // Root route

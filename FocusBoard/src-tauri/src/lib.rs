@@ -47,6 +47,7 @@ pub fn run() {
             set_tracking_enabled,
             set_idle_threshold,
             systemd::setup_systemd_service,
+            systemd::write_monitor_token,
         ]);
 
     match builder.run(tauri::generate_context!()) {

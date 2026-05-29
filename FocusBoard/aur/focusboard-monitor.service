@@ -6,6 +6,7 @@ After=network.target
 Type=simple
 ExecStart=/usr/bin/focusboard-monitor
 Environment=FOCUSBOARD_BACKEND_URL=http://localhost:5000
+Environment=FOCUSBOARD_TOKEN_FILE=%h/.config/focusboard/monitor-token
 Environment=DISPLAY=
 PassEnvironment=HYPRLAND_INSTANCE_SIGNATURE XDG_RUNTIME_DIR WAYLAND_DISPLAY XDG_SESSION_DESKTOP XDG_SESSION_TYPE
 Restart=on-failure

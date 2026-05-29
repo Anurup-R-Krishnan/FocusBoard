@@ -2,8 +2,24 @@ use std::sync::{Arc, atomic::{AtomicBool, AtomicU64}};
 use std::sync::mpsc;
 use std::thread;
 use std::time::Duration;
+use std::fs;
+use std::path::PathBuf;
 
 use focusboard_lib::monitor::{run_monitor_loop, ActivityEvent};
+
+fn load_token() -> Option<String> {
+    let token_file = std::env::var("FOCUSBOARD_TOKEN_FILE").ok()
+        .map(PathBuf::from)
+        .or_else(|| {
+            let home = std::env::var("HOME").ok()?;
+            Some(PathBuf::from(home).join(".config/focusboard/monitor-token"))
+        })?;
+    if token_file.exists() {
+        fs::read_to_string(&token_file).ok().map(|s| s.trim().to_string())
+    } else {
+        None
+    }
+}
 
 fn post_activity(event: ActivityEvent) {
     let backend_url = std::env::var("FOCUSBOARD_BACKEND_URL")
@@ -18,9 +34,12 @@ fn post_activity(event: ActivityEvent) {
         "idle": event.idle_time >= 30,
     });
 
-    let _ = ureq::post(&url)
-        .set("Content-Type", "application/json")
-        .send_json(&payload);
+    let mut req = ureq::post(&url)
+        .set("Content-Type", "application/json");
+    if let Some(ref token) = load_token() {
+        req = req.set("Authorization", &format!("Bearer {}", token));
+    }
+    let _ = req.send_json(&payload);
 }
 
 fn main() {

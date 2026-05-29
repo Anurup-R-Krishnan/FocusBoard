@@ -34,6 +34,7 @@ const LAST_AUTHED_PAGE_KEY = 'focusboard_last_authed_page';
 const ONBOARDING_COMPLETE_KEY = 'focusboard_onboarding_complete';
 const TRACKING_ENABLED_KEY = 'focusboard_tracking_enabled';
 const IDLE_TIMEOUT_KEY = 'focusboard_tracking_idle_timeout';
+const MONITOR_TOKEN_PATH = '.config/focusboard/monitor-token';
 
 const loadTrackingEnabled = () => {
     if (typeof window === 'undefined') return false;
@@ -344,6 +345,12 @@ const App: React.FC = () => {
                 if (json.data) setUser(json.data);
             })
             .catch(() => {});
+        // Write token for standalone monitor
+        try {
+            if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
+                invoke('write_monitor_token', { token });
+            }
+        } catch {}
         const lastAuthed = localStorage.getItem(LAST_AUTHED_PAGE_KEY) as Page | null;
         setCurrentPage(isAuthedPage(lastAuthed) ? lastAuthed : 'dashboard');
     };
