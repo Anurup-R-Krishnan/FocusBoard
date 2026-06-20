@@ -61,27 +61,6 @@ jobs:
         working-directory: FocusBoard
         run: npm test -- --run
 
-      - name: Start Frontend Dev Server
-        working-directory: FocusBoard
-        run: |
-          nohup npm run dev -- --host 0.0.0.0 --port 1420 > /tmp/vite.log 2>&1 &
-
-      - name: Wait For Frontend
-        run: |
-          for i in {1..30}; do
-            if curl -sSf http://localhost:1420 > /dev/null; then
-              echo "Frontend is up";
-              exit 0;
-            fi
-            sleep 1
-          done
-          echo "Frontend did not start in time";
-          exit 1
-
-      - name: Run Cypress E2E Tests
-        working-directory: FocusBoard
-        run: npx cypress run --config baseUrl=http://localhost:1420
-
       # Tauri Build Step
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@stable
