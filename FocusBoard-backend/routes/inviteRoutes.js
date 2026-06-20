@@ -1,14 +1,14 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const {
+import {
   createInvite,
   getWorkspaceInvites,
   getPendingInvites,
   acceptInvite,
   declineInvite,
   deleteInvite,
-} = require('../controllers/inviteController');
-const requireAuth = require('../middleware/requireAuth');
+} from '../controllers/inviteController.js';
+import requireAuth from '../middleware/requireAuth.js';
 
 router.use(requireAuth);
 
@@ -19,4 +19,4 @@ router.put('/:id/accept', acceptInvite);
 router.put('/:id/decline', declineInvite);
 router.delete('/:id', deleteInvite);
 
-module.exports = router;
+export default router;

@@ -1,0 +1,12 @@
+[Unit]
+Description=FocusBoard Standalone Monitor Daemon
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/focusboard-monitor
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

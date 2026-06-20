@@ -1,4 +1,4 @@
-const { z } = require('zod');
+import { z } from 'zod';
 
 const TASK_STATUSES = ['TODO', 'IN_PROGRESS', 'DONE'];
 const TASK_PRIORITIES = ['HIGH', 'MEDIUM', 'LOW'];
@@ -108,7 +108,7 @@ const parentalControlsSchema = z.object({
     message: 'Parent email is required for users under 16 with NSFW alerts enabled.',
 });
 
-module.exports = {
+export {
     validateSchema,
     createUserSchema,
     loginUserSchema,

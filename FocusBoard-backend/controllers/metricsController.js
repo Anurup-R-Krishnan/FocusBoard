@@ -1,5 +1,5 @@
-const Activity = require('../models/Activity');
-const Category = require('../models/Category');
+import Activity from '../models/Activity.js';
+import Category from '../models/Category.js';
 
 const METRICS_CACHE_TTL_MS = 30000;
 const metricsCache = new Map();
@@ -61,7 +61,7 @@ const getActivityDuration = (activity) => {
     return DEFAULT_DURATION_MS;
 };
 
-exports.getDashboardMetrics = async (req, res) => {
+export const getDashboardMetrics = async (req, res) => {
     try {
         const userId = req.user.id;
         if (!userId) {
@@ -122,7 +122,7 @@ exports.getDashboardMetrics = async (req, res) => {
     }
 };
 
-exports.getTimeline = async (req, res) => {
+export const getTimeline = async (req, res) => {
     try {
         const userId = req.user.id;
         if (!userId) {
@@ -178,7 +178,7 @@ exports.getTimeline = async (req, res) => {
     }
 };
 
-exports.getActivitySummary = async (req, res) => {
+export const getActivitySummary = async (req, res) => {
     try {
         const userId = req.user.id;
         if (!userId) {
@@ -262,7 +262,7 @@ exports.getActivitySummary = async (req, res) => {
     }
 };
 
-exports.getTrends = async (req, res) => {
+export const getTrends = async (req, res) => {
     try {
         const userId = req.user.id;
         if (!userId) {
@@ -322,7 +322,7 @@ exports.getTrends = async (req, res) => {
     }
 };
 
-exports.getCategoryBreakdown = async (req, res) => {
+export const getCategoryBreakdown = async (req, res) => {
     try {
         const userId = req.user.id;
         if (!userId) {

@@ -1,5 +1,5 @@
-const Category = require('../models/Category');
-const IssueType = require('../models/IssueType');
+import Category from '../models/Category.js';
+import IssueType from '../models/IssueType.js';
 
 const DEFAULT_CATEGORIES = [
     { name: 'Productivity', description: 'Work-related tools and documents', color: 'bg-blue-500', icon: 'Briefcase', productivityScore: 5, isDefault: true },
@@ -50,4 +50,4 @@ const seedData = async (req, res) => {
     }
 };
 
-module.exports = { seedData };
+export { seedData };

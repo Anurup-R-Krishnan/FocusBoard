@@ -1,11 +1,11 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const { getWorkspaces, createWorkspace, updateWorkspace, deleteWorkspace } = require('../controllers/workspaceController');
-const authMiddleware = require('../middleware/authMiddleware');
+import { getWorkspaces, createWorkspace, updateWorkspace, deleteWorkspace } from '../controllers/workspaceController.js';
+import authMiddleware from '../middleware/authMiddleware.js';
 
 router.get('/', authMiddleware, getWorkspaces);
 router.post('/', authMiddleware, createWorkspace);
 router.put('/:id', authMiddleware, updateWorkspace);
 router.delete('/:id', authMiddleware, deleteWorkspace);
 
-module.exports = router;
+export default router;

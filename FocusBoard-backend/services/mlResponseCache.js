@@ -14,8 +14,8 @@
  *
  * TTL is configurable via ML_CACHE_TTL_MS (default 10 minutes).
  */
-const crypto = require('crypto');
-const logger = require('../utils/logger');
+import crypto from 'crypto';
+import logger from '../utils/logger.js';
 
 const TTL_MS = parseInt(process.env.ML_CACHE_TTL_MS || String(10 * 60 * 1000), 10);
 const MAX_ENTRIES = parseInt(process.env.ML_CACHE_MAX_ENTRIES || '500', 10);
@@ -97,4 +97,4 @@ const checkNsfwCached = async (url, windowTitle, fetcher) => {
 
 const getStats = () => ({ hits, misses, size: cache.size, maxEntries: MAX_ENTRIES, ttlMs: TTL_MS });
 
-module.exports = { findSimilarCached, checkNsfwCached, getStats };
+export { findSimilarCached, checkNsfwCached, getStats };

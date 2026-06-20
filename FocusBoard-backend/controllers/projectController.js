@@ -1,9 +1,17 @@
-const Project = require('../models/Project');
-const Task = require('../models/Task');
+import Project from '../models/Project.js';
+import Task from '../models/Task.js';
+import * as mlClient from '../services/mlClient.js';
 
-exports.createProject = async (req, res) => {
+export const createProject = async (req, res) => {
     try {
-        const project = await Project.create({ ...req.body, user_id: req.user.id });
+        const projectData = { ...req.body, user_id: req.user.id };
+        const textToEmbed = `${projectData.title} ${projectData.description || ''}`.trim();
+        const embedding = await mlClient.getEmbedding(textToEmbed);
+        if (embedding) {
+            projectData.embedding = Array.from(embedding);
+        }
+
+        const project = await Project.create(projectData);
 
         const io = req.app.get('io');
         if (io) {
@@ -17,7 +25,7 @@ exports.createProject = async (req, res) => {
     }
 };
 
-exports.getProjects = async (req, res) => {
+export const getProjects = async (req, res) => {
     try {
         const { includeProgress } = req.query;
         const projects = await Project.find({ user_id: req.user.id });
@@ -44,7 +52,7 @@ exports.getProjects = async (req, res) => {
     }
 };
 
-exports.calculateProgress = async (req, res) => {
+export const calculateProgress = async (req, res) => {
     try {
         const projects = await Project.find({ user_id: req.user.id });
         const results = [];
@@ -74,11 +82,25 @@ exports.calculateProgress = async (req, res) => {
     }
 };
 
-exports.updateProject = async (req, res) => {
+export const updateProject = async (req, res) => {
     try {
+        const updates = { ...req.body };
+        if (updates.title || updates.description !== undefined) {
+            const projectToUpdate = await Project.findOne({ _id: req.params.id, user_id: req.user.id });
+            if (projectToUpdate) {
+                const newTitle = updates.title || projectToUpdate.title;
+                const newDesc = updates.description !== undefined ? updates.description : projectToUpdate.description;
+                const textToEmbed = `${newTitle} ${newDesc || ''}`.trim();
+                const embedding = await mlClient.getEmbedding(textToEmbed);
+                if (embedding) {
+                    updates.embedding = Array.from(embedding);
+                }
+            }
+        }
+
         const project = await Project.findOneAndUpdate(
             { _id: req.params.id, user_id: req.user.id },
-            req.body,
+            updates,
             { new: true, runValidators: true }
         );
         if (!project) return res.status(404).json({ success: false, message: 'Project not found' });
@@ -95,7 +117,7 @@ exports.updateProject = async (req, res) => {
     }
 };
 
-exports.deleteProject = async (req, res) => {
+export const deleteProject = async (req, res) => {
     try {
         const project = await Project.findOneAndDelete({ _id: req.params.id, user_id: req.user.id });
         if (!project) return res.status(404).json({ success: false, message: 'Project not found' });

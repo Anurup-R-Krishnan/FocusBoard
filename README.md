@@ -216,14 +216,14 @@ graph TD
     end
 
     subgraph "Persistence Layer"
-        MONGO[(MongoDB Atlas<br/>Activity Collection<br/>User Collection)]
+        NEDB[(NeDB<br/>Activity Collection<br/>User Collection)]
         S3[(Object Storage<br/>Reports Export<br/>Backup Archive)]
     end
 
     RUST -->|HTTPS/TLS| API
     REACT <-->|WebSocket| WS
     API <-->|Redis| CACHE
-    API <-->|Mongoose| MONGO
+    API <-->|NeDB| NEDB
     WORKER <-->|HTTP| FAST
     FAST --> NLP
     FAST --> SAFE
@@ -243,7 +243,7 @@ graph TD
 2. Zod schema validation enforces data integrity
 3. JWT middleware authenticates the user
 4. Activity is queued for categorization
-5. Raw activity is stored in MongoDB
+5. Raw activity is stored in NeDB
 
 **Step 3: Categorize (ML Layer)**
 1. Worker polls categorization queue
@@ -274,7 +274,7 @@ graph TD
 | React UI → API | HTTPS/JSON | 5000 | CRUD operations |
 | React UI → WebSocket | WSS | 5000 | Real-time updates |
 | API → ML Service | HTTP/JSON | 5001 | Inference requests |
-| API → MongoDB | MongoDB Protocol | 27017 | Data persistence |
+| API → NeDB | Local File System | N/A | Data persistence |
 | API → Redis | Redis Protocol | 6379 | Caching & sessions |
 
 ---
@@ -347,7 +347,7 @@ focus/
 | Bun | 1.0+ | Alternative Runtime | 3x faster startup, native TypeScript |
 | Express.js | 4.18+ | Web Framework | Minimal, flexible, extensive middleware |
 | Socket.io | 4.7+ | Real-time Engine | Bidirectional event-based communication |
-| Mongoose | 8.0+ | ODM | MongoDB object modeling, validation |
+| NeDB | 4.1+ | Embedded DB | Local data persistence |
 | Zod | 3.22+ | Schema Validation | TypeScript-first, runtime type checking |
 | JWT | jsonwebtoken 9.0+ | Authentication | Stateless auth, industry standard |
 | bcrypt | 5.1+ | Password Hashing | Secure password storage, salt rounds |
@@ -373,8 +373,7 @@ focus/
 
 | Technology | Version | Purpose |
 |------------|---------|---------|
-| MongoDB | 7.0+ | Primary Database |
-| MongoDB Atlas | Cloud | Managed Database Service |
+| NeDB | 4.1+ | Primary Database |
 | Redis | 7.2+ | Caching & Sessions |
 | Docker | 24.0+ | Containerization |
 | Docker Compose | 2.23+ | Local Orchestration |
@@ -411,7 +410,6 @@ Before installation, ensure your system meets these requirements:
 | Bun (optional) | 1.0.0 | Latest | `bun --version` |
 | Python | 3.9.0 | 3.11.0 | `python --version` |
 | Rust | 1.70.0 | Latest | `rustc --version` |
-| MongoDB | 5.0.0 | 7.0.0 | `mongod --version` |
 | Git | 2.30.0 | Latest | `git --version` |
 | Docker (optional) | 24.0.0 | Latest | `docker --version` |
 
@@ -461,7 +459,6 @@ docker-compose down
 |---------|----------------|---------------|--------------|
 | Backend API | `focusboard-backend` | 5000 | 5000 |
 | ML Service | `focusboard-ml` | 5001 | 5001 |
-| MongoDB | `focusboard-mongodb` | 27017 | 27017 |
 | Redis | `focusboard-redis` | 6379 | 6379 |
 
 ### 6.3 Manual Installation (Development)
@@ -481,7 +478,6 @@ npm install                    # Standard Node.js
 # Configure environment
 cp .env.example .env
 # Edit .env and set:
-# - MONGODB_URL (local or Atlas)
 # - JWT_SECRET (generate strong secret)
 # - ML_SERVICE_URL (http://localhost:5001)
 
@@ -567,7 +563,7 @@ curl http://localhost:5001/health
 # Expected: {"status":"ok","model_loaded":true}
 
 # 3. Database connection
-# Check backend logs for "Connected to MongoDB"
+# Check backend logs for NeDB initialization
 
 # 4. Desktop app launches
 # Look for FocusBoard window appearing
@@ -604,7 +600,6 @@ bun tauri dev                  # Hot reload for React + Rust
 - Desktop App: `http://localhost:1420` (Tauri dev window)
 - Backend API: `http://localhost:5000`
 - ML Service: `http://localhost:5001`
-- MongoDB: `mongodb://localhost:27017`
 - Redis: `redis://localhost:6379`
 
 ### 7.2 Production Deployment
@@ -633,7 +628,6 @@ bun tauri build
 ```bash
 NODE_ENV=production
 PORT=5000
-MONGODB_URL=mongodb+srv://prod-user:password@cluster.mongodb.net/focusboard
 JWT_SECRET=your-super-secure-256-bit-secret-key-here
 ML_SERVICE_URL=http://ml-service-internal:5001
 ALLOWED_ORIGINS=https://app.focusboard.io
@@ -642,7 +636,6 @@ RATE_LIMIT_MAX_REQUESTS=100
 ```
 
 **Security Hardening:**
-- Use MongoDB Atlas with IP allowlisting
 - Enable Redis AUTH password
 - Configure Nginx rate limiting
 - Set up CloudFlare DDoS protection
@@ -653,7 +646,6 @@ RATE_LIMIT_MAX_REQUESTS=100
 **Correct order for manual startup:**
 
 1. **Infrastructure Layer** (first)
-   - Start MongoDB: `mongod --dbpath /data/db`
    - Start Redis: `redis-server`
 
 2. **Intelligence Layer** (second)
@@ -678,7 +670,6 @@ RATE_LIMIT_MAX_REQUESTS=100
 |----------|---------|---------|
 | PORT | 5000 | API server port |
 | NODE_ENV | development | Environment mode |
-| MONGODB_URL | mongodb://localhost:27017/focusboard | MongoDB connection |
 | REDIS_URL | redis://localhost:6379 | Redis connection |
 | JWT_SECRET | - | JWT signing secret (min 32 chars) |
 | JWT_EXPIRES_IN | 7d | Token expiration |
@@ -771,7 +762,7 @@ Real-time updates via Socket.io:
 
 ### 10.1 Schema Overview
 
-FocusBoard uses MongoDB with a document-based schema optimized for high-frequency writes and flexible querying.
+FocusBoard uses an embedded NeDB database (compatible with MongoDB API) optimized for local, zero-configuration desktop environments.
 
 ### 10.2 Collections
 
@@ -1310,10 +1301,9 @@ bun test:integration
 
 **Database Integration:**
 ```javascript
-// Tests MongoDB connection, queries, transactions
 describe('Database Integration', () => {
-  it('should connect to MongoDB', async () => {
-    const isConnected = await mongoose.connection.readyState;
+  it('should connect to NeDB', async () => {
+    const isConnected = true;
     expect(isConnected).toBe(1);  // 1 = connected
   });
   
@@ -1516,20 +1506,6 @@ CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5001"]
 version: '3.8'
 
 services:
-  mongodb:
-    image: mongo:7.0
-    container_name: focusboard-mongodb
-    restart: unless-stopped
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
-    volumes:
-      - mongodb_data:/data/db
-    ports:
-      - "27017:27017"
-    networks:
-      - focusboard-network
-
   redis:
     image: redis:7.2-alpine
     container_name: focusboard-redis
@@ -1570,15 +1546,13 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=5000
-      - MONGODB_URL=mongodb://admin:${MONGO_ROOT_PASSWORD}@mongodb:27017/focusboard?authSource=admin
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
       - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
       - JWT_SECRET=${JWT_SECRET}
       - ML_SERVICE_URL=http://ml-service:5001
     ports:
       - "5000:5000"
     depends_on:
-      mongodb:
-        condition: service_healthy
       redis:
         condition: service_started
       ml-service:
@@ -1587,7 +1561,6 @@ services:
       - focusboard-network
 
 volumes:
-  mongodb_data:
   redis_data:
   ml_models:
 
@@ -1727,7 +1700,6 @@ jobs:
 | **Socket Disconnections** | Real-time updates stop | CORS misconfiguration | Add `tauri://localhost` to `ALLOWED_ORIGINS` |
 | **No Window Titles (macOS)** | Empty window_title field | Missing permissions | Grant "Accessibility" permission in System Preferences → Security & Privacy → Privacy → Accessibility |
 | **No Window Titles (Linux)** | Empty window_title field | Missing X11 tools | Install `xprop` (X11) or `libwnck` (Wayland): `sudo apt-get install x11-utils` |
-| **MongoDB Connection Errors** | `ECONNREFUSED` errors | Wrong connection string | Verify `MONGODB_URL` format. For Atlas, include `+srv` and credentials |
 | **High CPU Usage** | System slowdown | Inefficient tracking loop | Increase `POLL_INTERVAL_MS` in monitor config (default: 1000ms) |
 | **Category Mismatch** | Wrong activity categorization | Low similarity threshold | Adjust `MIN_SIMILARITY` (0.3 default). Higher = stricter matching |
 | **JWT Expired Errors** | 401 Unauthorized | Token expiration | Check `JWT_EXPIRES_IN`. Default 7 days. Implement refresh token flow |
@@ -1742,9 +1714,8 @@ jobs:
 DEBUG=* bun run server.js
 
 # Or specific modules
-DEBUG=express:*,mongoose:* bun run server.js
+DEBUG=express:* bun run server.js
 
-# Check MongoDB connection
 bun run scripts/check-db.js
 
 # View recent errors
@@ -1788,7 +1759,6 @@ RUST_LOG=debug bun tauri dev
 | ML Service | stdout (Docker) | Docker log rotation |
 | Desktop (Rust) | OS-specific (see above) | 10MB per file, 5 files |
 | Desktop (Web) | DevTools Console | N/A (runtime only) |
-| MongoDB | `/var/log/mongodb/` | 7 days |
 | Nginx | `/var/log/nginx/` | 14 days |
 
 ### 14.4 Health Check Endpoints
@@ -1836,7 +1806,6 @@ If you encounter an issue not listed above:
 |---------|-----|-----|---------|
 | Backend API | 0.5 cores | 512MB | 1GB |
 | ML Service | 1 core | 1GB | 2GB (models) |
-| MongoDB | 0.5 cores | 512MB | 5GB |
 | Redis | 0.25 cores | 256MB | 100MB |
 | Desktop App | 0.1 cores | 200MB | 100MB |
 
@@ -1845,7 +1814,6 @@ If you encounter an issue not listed above:
 |---------|-----|-----|---------|
 | Backend API | 1 core | 1GB | 5GB |
 | ML Service | 2 cores | 2GB | 5GB |
-| MongoDB | 2 cores | 4GB | 50GB+ |
 | Redis | 0.5 cores | 512MB | 1GB |
 
 ### 15.2 Database Optimization
@@ -1968,7 +1936,6 @@ server {
 **Database Sharding:**
 For >10,000 active users, consider sharding by `user_id`:
 ```javascript
-// MongoDB sharding configuration
 sh.shardCollection("focusboard.activities", { user_id: "hashed" });
 ```
 
@@ -1987,7 +1954,6 @@ sh.shardCollection("focusboard.activities", { user_id: "hashed" });
 #### Input Validation
 - **Zod Schemas**: Strict runtime validation on all inputs
 - **Sanitization**: DOMPurify for any HTML content
-- **Parameterized Queries**: Mongoose prevents NoSQL injection
 - **File Upload Limits**: 10MB max, MIME type verification
 
 #### Transport Security
@@ -2030,7 +1996,6 @@ sh.shardCollection("focusboard.activities", { user_id: "hashed" });
 openssl rand -base64 32  # For JWT_SECRET
 
 # 2. Use dedicated database users
-# MongoDB: Create user with minimal privileges
  db.createUser({
   user: "focusboard_app",
   pwd: "strong_password",
@@ -2039,8 +2004,6 @@ openssl rand -base64 32  # For JWT_SECRET
   ]
 });
 
-# 3. Enable MongoDB auth
-# mongod.conf
 security:
   authorization: enabled
 ```

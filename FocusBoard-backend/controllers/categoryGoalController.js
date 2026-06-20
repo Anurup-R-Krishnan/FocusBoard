@@ -1,7 +1,7 @@
-const { z } = require('zod');
-const CategoryGoal = require('../models/CategoryGoal');
-require('../models/User');
-require('../models/Category');
+import { z } from 'zod';
+import CategoryGoal from '../models/CategoryGoal.js';
+import '../models/User.js';
+import '../models/Category.js';
 
 const goalSchema = z.object({
     userId: z.string({ required_error: 'userId is required.' }).min(1),
@@ -105,7 +105,7 @@ const deleteGoal = async (req, res) => {
     }
 };
 
-module.exports = {
+export {
     createGoal,
     getAllGoals,
     getGoalById,

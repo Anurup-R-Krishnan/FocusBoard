@@ -1,4 +1,4 @@
-const client = require('prom-client');
+import client from 'prom-client';
 
 const register = new client.Registry();
 client.collectDefaultMetrics({ register });
@@ -16,4 +16,4 @@ function increment(name, labels = {}) {
   counter(name, name).inc(labels);
 }
 
-module.exports = { register, counter, increment, client };
+export { register, counter, increment, client };

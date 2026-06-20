@@ -1,7 +1,8 @@
-const { createModel } = require('../db/nedb');
+import crypto from 'crypto';
+import { createModel } from '../db/nedb.js';
 
-module.exports = createModel('activitymappings', {
-  _id: { type: String, default: () => require('crypto').randomUUID() },
+export default createModel('activitymappings', {
+  _id: { type: String, default: () => crypto.randomUUID() },
   activityId: { type: String, ref: 'Activity', required: true },
   categoryId: { type: String, ref: 'Category', required: true },
   isManualOverride: { type: Boolean, default: false },

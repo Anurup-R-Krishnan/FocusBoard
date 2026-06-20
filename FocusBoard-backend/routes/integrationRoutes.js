@@ -1,12 +1,12 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const {
+import {
     createIntegration,
     getIntegrations,
     updateIntegration,
     deleteIntegration
-} = require('../controllers/integrationController');
-const requireAuth = require('../middleware/requireAuth');
+} from '../controllers/integrationController.js';
+import requireAuth from '../middleware/requireAuth.js';
 
 router.use(requireAuth);
 
@@ -15,4 +15,4 @@ router.get('/', getIntegrations);
 router.put('/:id', updateIntegration);
 router.delete('/:id', deleteIntegration);
 
-module.exports = router;
+export default router;

@@ -1,14 +1,14 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const {
+import {
     createProject,
     getProjects,
     updateProject,
     deleteProject,
     calculateProgress
-} = require('../controllers/projectController');
-const requireAuth = require('../middleware/requireAuth');
-const { validateSchema, createProjectSchema, updateProjectSchema } = require('../middleware/validation');
+} from '../controllers/projectController.js';
+import requireAuth from '../middleware/requireAuth.js';
+import { validateSchema, createProjectSchema, updateProjectSchema } from '../middleware/validation.js';
 
 router.use(requireAuth);
 
@@ -18,4 +18,4 @@ router.get('/calculate-progress', calculateProgress);
 router.put('/:id', validateSchema(updateProjectSchema), updateProject);
 router.delete('/:id', deleteProject);
 
-module.exports = router;
+export default router;

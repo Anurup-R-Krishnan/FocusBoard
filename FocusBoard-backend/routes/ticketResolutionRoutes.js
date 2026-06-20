@@ -1,12 +1,12 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const {
+import {
     createResolution,
     getAllResolutions,
     getResolutionById,
     updateResolution,
     deleteResolution,
-} = require('../controllers/ticketResolutionController');
+} from '../controllers/ticketResolutionController.js';
 
 router.post('/', createResolution);
 router.get('/', getAllResolutions);
@@ -14,4 +14,4 @@ router.get('/:id', getResolutionById);
 router.put('/:id', updateResolution);
 router.delete('/:id', deleteResolution);
 
-module.exports = router;
+export default router;

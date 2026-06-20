@@ -1,4 +1,4 @@
-const logger = require('../utils/logger');
+import logger from '../utils/logger.js';
 
 const notFound = (req, res, next) => {
     const error = new Error(`Not Found - ${req.originalUrl}`);
@@ -18,4 +18,4 @@ const errorHandler = (err, req, res, next) => {
     });
 };
 
-module.exports = { notFound, errorHandler };
+export { notFound, errorHandler };

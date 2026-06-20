@@ -1,4 +1,4 @@
-const { loginUserSchema, createTaskSchema } = require('../middleware/validation');
+import { loginUserSchema, createTaskSchema } from '../middleware/validation.js';
 
 describe('validation schemas', () => {
   test('loginUserSchema accepts valid payload', () => {

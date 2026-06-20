@@ -1,7 +1,7 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const trackingRuleController = require('../controllers/trackingRuleController');
-const authMiddleware = require('../middleware/authMiddleware');
+import * as trackingRuleController from '../controllers/trackingRuleController.js';
+import authMiddleware from '../middleware/authMiddleware.js';
 
 router.post('/', authMiddleware, trackingRuleController.createRule);
 router.get('/', authMiddleware, trackingRuleController.getRules);
@@ -10,4 +10,4 @@ router.put('/:id', authMiddleware, trackingRuleController.updateRule);
 router.delete('/:id', authMiddleware, trackingRuleController.deleteRule);
 router.post('/from-override', authMiddleware, trackingRuleController.createRuleFromOverride);
 
-module.exports = router;
+export default router;

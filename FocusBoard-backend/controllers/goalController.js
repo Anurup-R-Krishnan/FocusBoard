@@ -1,7 +1,7 @@
-const { z } = require('zod');
-const Goal = require('../models/Goal');
-const jwt = require('jsonwebtoken');
-const config = require('../config');
+import { z } from 'zod';
+import Goal from '../models/Goal.js';
+import jwt from 'jsonwebtoken';
+import config from '../config/index.js';
 
 const getUserIdFromRequest = (req) => {
     if (req.user && req.user.id) {
@@ -162,8 +162,8 @@ const checkGoalProgress = async (req, res) => {
             return res.status(401).json({ success: false, message: 'Authentication required.' });
         }
 
-        const Activity = require('../models/Activity');
-        const Category = require('../models/Category');
+        const { default: Activity } = await import('../models/Activity.js');
+        const { default: Category } = await import('../models/Category.js');
         
         const goals = await Goal.find({ user_id: userId, achieved: false });
         
@@ -233,7 +233,7 @@ const checkGoalProgress = async (req, res) => {
     }
 };
 
-module.exports = {
+export {
     createGoal,
     getAllGoals,
     getGoalById,

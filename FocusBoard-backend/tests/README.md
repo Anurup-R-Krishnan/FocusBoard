@@ -11,7 +11,7 @@ Backend default is `5000`, so run backend on `3000` for these scripts, or update
 
 1. Backend server running on `http://localhost:3000`
 2. ML service running on `http://localhost:5001`
-3. MongoDB configured and reachable from backend
+3. Embedded NeDB configured for data storage
 
 ## Run Individual Scripts
 

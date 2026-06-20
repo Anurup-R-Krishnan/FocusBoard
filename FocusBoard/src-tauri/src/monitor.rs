@@ -6,26 +6,73 @@ use std::thread;
 use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use tauri::{AppHandle, Emitter, Listener, Manager};
 use user_idle::UserIdle;
 use regex::Regex;
+use std::os::unix::net::UnixStream;
+use std::io::{BufRead, BufReader};
+use sysinfo::System;
+use notify_rust::Notification;
+use std::sync::OnceLock;
+
+static EMAIL_RE: OnceLock<Regex> = OnceLock::new();
+static IP_RE: OnceLock<Regex> = OnceLock::new();
+static PATH_RE: OnceLock<Regex> = OnceLock::new();
 
 fn sanitize_title(input: &str) -> String {
     let mut s = input.to_string();
-    if let Ok(email_re) = Regex::new(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}") {
-        s = email_re.replace_all(&s, "[REDACTED_EMAIL]").to_string();
-    }
-    if let Ok(ip_re) = Regex::new(r"\b(?:\d{1,3}\.){3}\d{1,3}\b") {
-        s = ip_re.replace_all(&s, "[REDACTED_IP]").to_string();
-    }
-    if let Ok(path_re) = Regex::new(r"(/[^ \n]+|[A-Za-z]:\\\\S+)") {
-        s = path_re.replace_all(&s, "[REDACTED_PATH]").to_string();
-    }
+    
+    let email_re = EMAIL_RE.get_or_init(|| Regex::new(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}").unwrap());
+    s = email_re.replace_all(&s, "[REDACTED_EMAIL]").to_string();
+
+    let ip_re = IP_RE.get_or_init(|| Regex::new(r"\b(?:\d{1,3}\.){3}\d{1,3}\b").unwrap());
+    s = ip_re.replace_all(&s, "[REDACTED_IP]").to_string();
+
+    let path_re = PATH_RE.get_or_init(|| Regex::new(r"(/[^ \n]+|[A-Za-z]:\\\\S+)").unwrap());
+    s = path_re.replace_all(&s, "[REDACTED_PATH]").to_string();
+
     if s.len() > 200 {
         s.truncate(200);
     }
     s
+}
+
+fn check_zen_mode_and_kill(app_name: &str) {
+    if app_name == "Unknown" || app_name == "Idle" {
+        return;
+    }
+    
+    let config_path = match std::env::var("HOME") {
+        Ok(home) => format!("{}/.config/focusboard/zen_mode.json", home),
+        Err(_) => return,
+    };
+
+    if let Ok(config_str) = std::fs::read_to_string(&config_path) {
+        if let Ok(config) = serde_json::from_str::<Value>(&config_str) {
+            if config["active"].as_bool().unwrap_or(false) {
+                if let Some(blocked_apps) = config["blockedApps"].as_array() {
+                    for blocked in blocked_apps {
+                        if let Some(blocked_str) = blocked.as_str() {
+                            if app_name.to_lowercase().contains(&blocked_str.to_lowercase()) {
+                                println!("Zen Mode: Killing distracted app '{}'", app_name);
+                                let _ = Command::new("killall")
+                                    .arg("-9")
+                                    .arg(app_name)
+                                    .spawn();
+                                let _ = Notification::new()
+                                    .summary("Zen Mode Enforced")
+                                    .body(&format!("Blocked distracting app: {}", app_name))
+                                    .icon("dialog-warning")
+                                    .show();
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 fn log_json(level: &str, message: &str, fields: Value) {
@@ -44,9 +91,11 @@ pub struct ActivityEvent {
     pub window_title: String,
     pub idle_time: u64,
     pub timestamp: DateTime<Local>,
+    pub cpu_usage: Option<f32>,
+    pub ram_usage_mb: Option<u64>,
 }
 
-fn try_hyprctl_active_window() -> Option<(String, String)> {
+fn try_hyprctl_active_window() -> Option<(String, String, u32)> {
     let output = Command::new("hyprctl")
         .arg("activewindow")
         .arg("-j")
@@ -64,10 +113,11 @@ fn try_hyprctl_active_window() -> Option<(String, String)> {
         .or_else(|| parsed.get("initialClass").and_then(|v| v.as_str()))
         .unwrap_or("Unknown")
         .to_string();
+    let pid = parsed.get("pid").and_then(|v| v.as_u64()).unwrap_or(0) as u32;
     if title.is_empty() && class == "Unknown" {
         None
     } else {
-        Some((class, title))
+        Some((class, title, pid))
     }
 }
 
@@ -102,6 +152,7 @@ pub fn run_monitor_loop<F, B>(
     let mut last_app = String::new();
     let mut last_title = String::new();
     let mut was_idle = false;
+    let mut last_emit_time = Instant::now();
     let hyprland_active = is_hyprland_session();
     let env_idle_threshold: u64 = std::env::var("FOCUSBOARD_IDLE_THRESHOLD")
         .ok()
@@ -126,6 +177,39 @@ pub fn run_monitor_loop<F, B>(
         .unwrap_or(10);
     let mut poll_secs = base_poll_secs;
 
+    let (wake_tx, wake_rx) = mpsc::channel::<()>();
+
+    if hyprland_active {
+        let wake_tx_clone = wake_tx.clone();
+        thread::spawn(move || {
+            let signature = match std::env::var("HYPRLAND_INSTANCE_SIGNATURE") {
+                Ok(s) => s,
+                Err(_) => return,
+            };
+            let runtime_dir = match std::env::var("XDG_RUNTIME_DIR") {
+                Ok(s) => s,
+                Err(_) => return,
+            };
+            let socket_path = format!("{}/hypr/{}/.socket2.sock", runtime_dir, signature);
+            loop {
+                if let Ok(stream) = UnixStream::connect(&socket_path) {
+                    let reader = BufReader::new(stream);
+                    for line in reader.lines() {
+                        let line = match line {
+                            Ok(l) => l,
+                            Err(_) => break,
+                        };
+                        if line.starts_with("activewindow>>") {
+                            let _ = wake_tx_clone.send(());
+                        }
+                    }
+                }
+                thread::sleep(Duration::from_secs(2));
+            }
+        });
+    }
+
+    let mut sys = System::new_all();
     loop {
         if shutdown_rx.try_recv().is_ok() {
             break;
@@ -153,11 +237,14 @@ pub fn run_monitor_loop<F, B>(
             continue;
         }
 
+        let mut active_pid: Option<u32> = None;
+
         // Prefer Hyprland (Wayland) when available to avoid X11/Xlib instability.
         if hyprland_active {
-            if let Some((app, title)) = try_hyprctl_active_window() {
+            if let Some((app, title, pid)) = try_hyprctl_active_window() {
                 current_app = app;
                 current_title = title;
+                active_pid = Some(pid);
             }
         }
 
@@ -167,6 +254,20 @@ pub fn run_monitor_loop<F, B>(
                 current_title = window.title;
             }
         }
+        
+        let mut cpu_usage = None;
+        let mut ram_usage_mb = None;
+
+        if let Some(pid) = active_pid {
+            sys.refresh_all();
+            if let Some(process) = sys.process(sysinfo::Pid::from_u32(pid)) {
+                cpu_usage = Some(process.cpu_usage());
+                ram_usage_mb = Some(process.memory() / 1024 / 1024);
+            }
+        }
+
+        // Active enforcement of Zen Mode blocklist
+        check_zen_mode_and_kill(&current_app);
 
         let is_idle = current_idle_secs >= active_idle_threshold;
 
@@ -174,9 +275,20 @@ pub fn run_monitor_loop<F, B>(
         let idle_status_changed = is_idle != was_idle;
 
         if window_changed || idle_status_changed {
+            let now = Instant::now();
+            let time_since_last_emit = now.duration_since(last_emit_time).as_millis();
+            
+            // Debounce rapid title changes within the same app (1000ms threshold)
+            if window_changed && !idle_status_changed && current_app == last_app && time_since_last_emit < 1000 {
+                // Wait for next poll or immediate wake from IPC
+                let _ = wake_rx.recv_timeout(Duration::from_millis(100));
+                continue;
+            }
+
             last_app = current_app.clone();
             last_title = current_title.clone();
             was_idle = is_idle;
+            last_emit_time = now;
 
             let sanitized_app = if is_idle {
                 "Idle".to_string()
@@ -194,6 +306,8 @@ pub fn run_monitor_loop<F, B>(
                 window_title: sanitized_title,
                 idle_time: current_idle_secs,
                 timestamp: Local::now(),
+                cpu_usage,
+                ram_usage_mb,
             };
 
             on_activity(event.clone());
@@ -213,7 +327,8 @@ pub fn run_monitor_loop<F, B>(
             poll_secs = background_poll_secs;
         }
 
-        thread::sleep(Duration::from_secs(poll_secs));
+        // Wait for next poll or immediate wake from IPC
+        let _ = wake_rx.recv_timeout(Duration::from_secs(poll_secs));
     }
 }
 

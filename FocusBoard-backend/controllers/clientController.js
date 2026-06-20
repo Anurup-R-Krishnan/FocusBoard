@@ -1,7 +1,7 @@
-const Client = require('../models/Client');
-const Task = require('../models/Task');
+import Client from '../models/Client.js';
+import Task from '../models/Task.js';
 
-exports.createClient = async (req, res) => {
+export const createClient = async (req, res) => {
     try {
         const client = await Client.create({ ...req.body, user_id: req.user.id });
         res.status(201).json({ success: true, data: client });
@@ -10,7 +10,7 @@ exports.createClient = async (req, res) => {
     }
 };
 
-exports.getClients = async (req, res) => {
+export const getClients = async (req, res) => {
     try {
         const { includeHours, search, sortBy, sortOrder, minHours, maxHours } = req.query;
         const query = { user_id: req.user.id };
@@ -77,7 +77,7 @@ exports.getClients = async (req, res) => {
     }
 };
 
-exports.getClientHours = async (req, res) => {
+export const getClientHours = async (req, res) => {
     try {
         const client = await Client.findOne({ _id: req.params.id, user_id: req.user.id });
         if (!client) return res.status(404).json({ success: false, message: 'Client not found' });
@@ -114,7 +114,7 @@ exports.getClientHours = async (req, res) => {
     }
 };
 
-exports.updateClient = async (req, res) => {
+export const updateClient = async (req, res) => {
     try {
         const client = await Client.findOneAndUpdate(
             { _id: req.params.id, user_id: req.user.id },
@@ -128,7 +128,7 @@ exports.updateClient = async (req, res) => {
     }
 };
 
-exports.deleteClient = async (req, res) => {
+export const deleteClient = async (req, res) => {
     try {
         const client = await Client.findOneAndDelete({ _id: req.params.id, user_id: req.user.id });
         if (!client) return res.status(404).json({ success: false, message: 'Client not found' });
@@ -138,7 +138,7 @@ exports.deleteClient = async (req, res) => {
     }
 };
 
-exports.exportClients = async (req, res) => {
+export const exportClients = async (req, res) => {
     try {
         const { format = 'json' } = req.query;
         const clients = await Client.find({ user_id: req.user.id });
@@ -173,7 +173,7 @@ exports.exportClients = async (req, res) => {
     }
 };
 
-exports.bulkDeleteClients = async (req, res) => {
+export const bulkDeleteClients = async (req, res) => {
     try {
         const { ids } = req.body;
         if (!ids || !Array.isArray(ids) || ids.length === 0) {
@@ -194,7 +194,7 @@ exports.bulkDeleteClients = async (req, res) => {
     }
 };
 
-exports.bulkUpdateClients = async (req, res) => {
+export const bulkUpdateClients = async (req, res) => {
     try {
         const { ids, updates } = req.body;
         if (!ids || !Array.isArray(ids) || ids.length === 0) {

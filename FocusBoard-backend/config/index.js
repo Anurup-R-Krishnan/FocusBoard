@@ -1,4 +1,4 @@
-module.exports = {
+export default {
     JWT_SECRET: process.env.JWT_SECRET || 'focusboard_dev_secret_change_me',
     JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '7d',
     PORT: process.env.PORT || 5000,

@@ -1,4 +1,7 @@
-const TrackingRule = require('../models/TrackingRule');
+import TrackingRule from '../models/TrackingRule.js';
+import ProjectRule from '../models/ProjectRule.js';
+import Project from '../models/Project.js';
+import * as mlClient from './mlClient.js';
 
 const MAX_PATTERN_LENGTH = 100;
 const MAX_RECURSION = 10;
@@ -90,4 +93,50 @@ const clearRulesCache = () => {
     rulesCache = { data: null, timestamp: 0 };
 };
 
-module.exports = { matchByRules, clearRulesCache };
+const matchProjectByRules = async (activity, userId) => {
+    try {
+        const rules = await ProjectRule.find({ userId }).sort({ priority: -1 });
+
+        for (const rule of rules) {
+            if (!isValidRegex(rule.pattern)) continue;
+
+            let textToMatch = '';
+            switch (rule.matchType) {
+                case 'app_name': textToMatch = activity.app_name || ''; break;
+                case 'url': textToMatch = activity.url || ''; break;
+                case 'window_title': textToMatch = activity.window_title || ''; break;
+                default: continue;
+            }
+
+            try {
+                const regexPattern = wildcardToRegex(rule.pattern);
+                const regex = new RegExp(regexPattern, 'i');
+                if (regex.test(textToMatch)) {
+                    return rule.projectId;
+                }
+            } catch (e) { continue; }
+        }
+
+        // --- ML Fallback ---
+        const textToMatch = `${activity.window_title || ''} ${activity.app_name || ''}`.trim();
+        if (textToMatch) {
+            const projects = await Project.find({ user_id: userId });
+            const candidates = projects.filter(p => p.embedding && p.embedding.length > 0).map(p => ({
+                id: p._id.toString(),
+                embedding: p.embedding
+            }));
+
+            if (candidates.length > 0) {
+                const matchId = await mlClient.findSimilar(textToMatch, candidates, 0.7);
+                if (matchId) return matchId;
+            }
+        }
+
+        return null;
+    } catch (error) {
+        console.error('Error in matchProjectByRules:', error);
+        return null;
+    }
+};
+
+export { matchByRules, matchProjectByRules, clearRulesCache };

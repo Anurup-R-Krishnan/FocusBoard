@@ -1,8 +1,8 @@
-const Invite = require('../models/Invite');
-const Workspace = require('../models/Workspace');
-const User = require('../models/User');
+import Invite from '../models/Invite.js';
+import Workspace from '../models/Workspace.js';
+import User from '../models/User.js';
 
-exports.createInvite = async (req, res) => {
+export const createInvite = async (req, res) => {
   try {
     const { workspace_id, invitee_email, role } = req.body;
 
@@ -44,7 +44,7 @@ exports.createInvite = async (req, res) => {
   }
 };
 
-exports.getWorkspaceInvites = async (req, res) => {
+export const getWorkspaceInvites = async (req, res) => {
   try {
     const invites = await Invite.find({ workspace_id: req.params.workspaceId });
     return res.status(200).json({ success: true, data: invites });
@@ -53,7 +53,7 @@ exports.getWorkspaceInvites = async (req, res) => {
   }
 };
 
-exports.getPendingInvites = async (req, res) => {
+export const getPendingInvites = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ success: false, message: 'User not found.' });
@@ -79,7 +79,7 @@ exports.getPendingInvites = async (req, res) => {
   }
 };
 
-exports.acceptInvite = async (req, res) => {
+export const acceptInvite = async (req, res) => {
   try {
     const invite = await Invite.findOne({ _id: req.params.id, status: 'pending' });
     if (!invite) {
@@ -117,7 +117,7 @@ exports.acceptInvite = async (req, res) => {
   }
 };
 
-exports.declineInvite = async (req, res) => {
+export const declineInvite = async (req, res) => {
   try {
     const invite = await Invite.findOne({ _id: req.params.id, status: 'pending' });
     if (!invite) {
@@ -135,7 +135,7 @@ exports.declineInvite = async (req, res) => {
   }
 };
 
-exports.deleteInvite = async (req, res) => {
+export const deleteInvite = async (req, res) => {
   try {
     const invite = await Invite.findOne({ _id: req.params.id });
     if (!invite) {

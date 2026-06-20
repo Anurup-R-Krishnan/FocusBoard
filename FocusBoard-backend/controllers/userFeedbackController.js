@@ -1,6 +1,6 @@
-const { z } = require('zod');
-const UserFeedback = require('../models/UserFeedback');
-require('../models/SupportTicket');
+import { z } from 'zod';
+import UserFeedback from '../models/UserFeedback.js';
+import '../models/SupportTicket.js';
 
 const feedbackSchema = z.object({
     ticketId: z.string({ required_error: 'ticketId is required.' }).min(1),
@@ -98,7 +98,7 @@ const deleteFeedback = async (req, res) => {
     }
 };
 
-module.exports = {
+export {
     createFeedback,
     getAllFeedback,
     getFeedbackById,

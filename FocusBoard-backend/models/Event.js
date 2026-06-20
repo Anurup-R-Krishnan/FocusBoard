@@ -1,4 +1,4 @@
-const { createModel } = require('../db/nedb');
+import { createModel } from '../db/nedb.js';
 
 function validateEvent(doc) {
   if (doc.end_time && doc.start_time && new Date(doc.end_time) < new Date(doc.start_time)) {
@@ -6,7 +6,7 @@ function validateEvent(doc) {
   }
 }
 
-module.exports = Object.assign(createModel('events', {
+export default Object.assign(createModel('events', {
   event_id: { type: String },
   title: { type: String, required: true },
   category_id: { type: String, ref: 'Category' },

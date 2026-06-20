@@ -1,12 +1,12 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const {
+import {
     createMapping,
     getAllMappings,
     getMappingById,
     updateMapping,
     deleteMapping,
-} = require('../controllers/activityMappingController');
+} from '../controllers/activityMappingController.js';
 
 router.post('/', createMapping);
 router.get('/', getAllMappings);
@@ -14,4 +14,4 @@ router.get('/:id', getMappingById);
 router.put('/:id', updateMapping);
 router.delete('/:id', deleteMapping);
 
-module.exports = router;
+export default router;

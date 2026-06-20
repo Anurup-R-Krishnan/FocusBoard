@@ -1,9 +1,13 @@
 'use strict';
 
-const path = require('path');
-const Datastore = require('@seald-io/nedb');
-const { randomUUID } = require('crypto');
-const fs = require('fs');
+import path from 'path';
+import Datastore from '@seald-io/nedb';
+import { randomUUID } from 'crypto';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const DB_DIR = process.env.FOCUSBOARD_DATA_DIR
   ? path.resolve(process.env.FOCUSBOARD_DATA_DIR)
@@ -295,7 +299,7 @@ class MutationResult {
   finally(fn) { return this.exec().finally(fn); }
 }
 
-module.exports = {
+export {
   createModel,
   closeAll,
   getModelByName,

@@ -1,5 +1,5 @@
-const { z } = require('zod');
-const Lead = require('../models/Lead');
+import { z } from 'zod';
+import Lead from '../models/Lead.js';
 
 const leadSchema = z.object({
   name: z.string({ required_error: 'name is required.' }).trim().min(1, 'name cannot be empty.'),
@@ -97,4 +97,4 @@ const deleteLead = async (req, res) => {
   }
 };
 
-module.exports = { createLead, getAllLeads, getLeadById, updateLead, deleteLead };
+export { createLead, getAllLeads, getLeadById, updateLead, deleteLead };

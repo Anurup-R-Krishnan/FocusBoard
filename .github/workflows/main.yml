@@ -57,6 +57,10 @@ jobs:
         working-directory: FocusBoard-backend
         run: npm test
 
+      - name: Run Frontend Tests
+        working-directory: FocusBoard
+        run: npm test -- --run
+
       - name: Start Frontend Dev Server
         working-directory: FocusBoard
         run: |

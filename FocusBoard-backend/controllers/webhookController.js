@@ -1,6 +1,6 @@
-const WebhookEndpoint = require('../models/WebhookEndpoint');
+import WebhookEndpoint from '../models/WebhookEndpoint.js';
 
-exports.createEndpoint = async (req, res) => {
+export const createEndpoint = async (req, res) => {
     try {
         const { name, url, events } = req.body;
         if (!name || !url) {
@@ -18,7 +18,7 @@ exports.createEndpoint = async (req, res) => {
     }
 };
 
-exports.getEndpoints = async (req, res) => {
+export const getEndpoints = async (req, res) => {
     try {
         const endpoints = await WebhookEndpoint.find({ user_id: req.user.id });
         return res.status(200).json({ success: true, data: endpoints });
@@ -27,7 +27,7 @@ exports.getEndpoints = async (req, res) => {
     }
 };
 
-exports.updateEndpoint = async (req, res) => {
+export const updateEndpoint = async (req, res) => {
     try {
         const { name, url, events, active } = req.body;
         const updates = {};
@@ -47,7 +47,7 @@ exports.updateEndpoint = async (req, res) => {
     }
 };
 
-exports.deleteEndpoint = async (req, res) => {
+export const deleteEndpoint = async (req, res) => {
     try {
         const endpoint = await WebhookEndpoint.findOneAndDelete({
             _id: req.params.id,
@@ -60,9 +60,9 @@ exports.deleteEndpoint = async (req, res) => {
     }
 };
 
-exports.regenerateSecret = async (req, res) => {
+export const regenerateSecret = async (req, res) => {
     try {
-        const crypto = require('crypto');
+        const { default: crypto } = await import('crypto');
         const secret = crypto.randomBytes(32).toString('hex');
         const endpoint = await WebhookEndpoint.findOneAndUpdate(
             { _id: req.params.id, user_id: req.user.id },

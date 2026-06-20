@@ -1,7 +1,7 @@
-const { z } = require('zod');
-const ActivityMapping = require('../models/ActivityMapping');
-require('../models/Activity');
-require('../models/Category');
+import { z } from 'zod';
+import ActivityMapping from '../models/ActivityMapping.js';
+import '../models/Activity.js';
+import '../models/Category.js';
 
 const mappingSchema = z.object({
     activityId: z.string({ required_error: 'activityId is required.' }).min(1),
@@ -116,7 +116,7 @@ const deleteMapping = async (req, res) => {
     }
 };
 
-module.exports = {
+export {
     createMapping,
     getAllMappings,
     getMappingById,

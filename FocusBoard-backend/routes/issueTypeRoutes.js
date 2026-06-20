@@ -1,12 +1,12 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const {
+import {
     createIssueType,
     getAllIssueTypes,
     getIssueTypeById,
     updateIssueType,
     deleteIssueType,
-} = require('../controllers/issueTypeController');
+} from '../controllers/issueTypeController.js';
 
 router.post('/', createIssueType);
 router.get('/', getAllIssueTypes);
@@ -14,4 +14,4 @@ router.get('/:id', getIssueTypeById);
 router.put('/:id', updateIssueType);
 router.delete('/:id', deleteIssueType);
 
-module.exports = router;
+export default router;

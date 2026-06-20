@@ -1,6 +1,6 @@
-const Task = require('../models/Task');
+import Task from '../models/Task.js';
 
-exports.createTask = async (req, res) => {
+export const createTask = async (req, res) => {
     try {
         const task = await Task.create({ ...req.body, user_id: req.user.id });
 
@@ -16,7 +16,7 @@ exports.createTask = async (req, res) => {
     }
 };
 
-exports.getTasks = async (req, res) => {
+export const getTasks = async (req, res) => {
     try {
         const { status, archived, page = 1, limit = 50 } = req.query;
         const filter = { user_id: req.user.id };
@@ -40,7 +40,7 @@ exports.getTasks = async (req, res) => {
     }
 };
 
-exports.updateTask = async (req, res) => {
+export const updateTask = async (req, res) => {
     try {
         const { timeToAdd, ...updateData } = req.body;
         
@@ -67,7 +67,7 @@ exports.updateTask = async (req, res) => {
     }
 };
 
-exports.logTime = async (req, res) => {
+export const logTime = async (req, res) => {
     try {
         const { minutes } = req.body;
         
@@ -94,7 +94,7 @@ exports.logTime = async (req, res) => {
     }
 };
 
-exports.deleteTask = async (req, res) => {
+export const deleteTask = async (req, res) => {
     try {
         const task = await Task.findOneAndDelete({ _id: req.params.id, user_id: req.user.id });
         if (!task) return res.status(404).json({ success: false, message: 'Task not found' });

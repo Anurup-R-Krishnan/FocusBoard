@@ -1,8 +1,9 @@
-const { createModel } = require('../db/nedb');
-const bcrypt = require('bcryptjs');
+import crypto from 'crypto';
+import { createModel } from '../db/nedb.js';
+import bcrypt from 'bcryptjs';
 
 const UserModel = createModel('users', {
-  _id: { type: String, default: () => require('crypto').randomUUID() },
+  _id: { type: String, default: () => crypto.randomUUID() },
   name: { type: String, required: true },
   email_id: { type: String, required: true },
   password: { type: String, required: true },
@@ -25,4 +26,4 @@ async function comparePassword(candidatePassword, hashedPassword) {
   return bcrypt.compare(candidatePassword, hashedPassword);
 }
 
-module.exports = Object.assign(UserModel, { hashPassword, comparePassword });
+export default Object.assign(UserModel, { hashPassword, comparePassword });

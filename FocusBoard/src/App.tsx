@@ -1,11 +1,11 @@
 
 import React, { useState, useEffect, lazy, Suspense } from 'react';
-import Dashboard from './components/dashboard/Dashboard';
-import AnalyticsView from './components/analytics/AnalyticsView';
-import SquadView from './components/squad/SquadView';
-import SettingsView from './components/settings/SettingsView';
-import TasksView from './components/tasks/TasksView';
-import CalendarView from './components/calendar/CalendarView';
+const Dashboard = lazy(() => import('./components/dashboard/Dashboard'));
+const AnalyticsView = lazy(() => import('./components/analytics/AnalyticsView'));
+const SquadView = lazy(() => import('./components/squad/SquadView'));
+const SettingsView = lazy(() => import('./components/settings/SettingsView'));
+const TasksView = lazy(() => import('./components/tasks/TasksView'));
+const CalendarView = lazy(() => import('./components/calendar/CalendarView'));
 const GoalsView = lazy(() => import('./components/goals/GoalsView'));
 const CategoriesView = lazy(() => import('./components/categories/CategoriesView'));
 const SupportTicketsView = lazy(() => import('./components/support/SupportTicketsView'));

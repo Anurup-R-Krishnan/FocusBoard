@@ -1,8 +1,8 @@
-const { z } = require('zod');
-const Event = require('../models/Event');
-const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
-const config = require('../config');
+import { z } from 'zod';
+import Event from '../models/Event.js';
+import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
+import config from '../config/index.js';
 
 const getUserIdFromRequest = (req) => {
     if (req.user && req.user.id) {
@@ -318,7 +318,7 @@ const deleteEvent = async (req, res) => {
   }
 };
 
-module.exports = {
+export {
   createEvent,
   upsertEvent,
   getAllEvents,

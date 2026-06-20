@@ -1,12 +1,12 @@
-const schedule = require('node-schedule');
-const Activity = require('../models/Activity');
-const ActivityMapping = require('../models/ActivityMapping');
-const Category = require('../models/Category');
-const User = require('../models/User');
-const TrackingRule = require('../models/TrackingRule');
-const mlClient = require('./mlClient');
-const { findSimilarCached, checkNsfwCached } = require('./mlResponseCache');
-const logger = require('../utils/logger');
+import schedule from 'node-schedule';
+import Activity from '../models/Activity.js';
+import ActivityMapping from '../models/ActivityMapping.js';
+import Category from '../models/Category.js';
+import User from '../models/User.js';
+import TrackingRule from '../models/TrackingRule.js';
+import mlClient from './mlClient.js';
+import { findSimilarCached, checkNsfwCached } from './mlResponseCache.js';
+import logger from '../utils/logger.js';
 const CATEGORIZATION_DELAY_MS = parseInt(process.env.CATEGORIZATION_DELAY_MS || '10000', 10);
 const MAX_ACTIVITIES_PER_JOB = parseInt(process.env.MAX_ACTIVITIES_PER_JOB || '100', 10);
 const SIMILARITY_THRESHOLD = parseFloat(process.env.ML_SIMILARITY_THRESHOLD || '0.3');
@@ -93,7 +93,7 @@ const processActivity = async (activity, categories) => {
                 if (shouldAlert) {
                     await Activity.updateOne({ _id: activity._id }, { $set: { nsfw_flagged: true } });
 
-                    const alertService = require('./alertService');
+                    const { default: alertService } = await import('./alertService.js');
                     await alertService.sendNsfwAlert(user._id, activity, nsfwData);
                 }
             }
@@ -157,4 +157,4 @@ const startBackgroundJobs = () => {
     logger.info(`[Background Job] Scheduled to run every minute (delay: ${CATEGORIZATION_DELAY_MS}ms, max: ${MAX_ACTIVITIES_PER_JOB}, batch: ${CATEGORIZATION_BATCH_SIZE})`);
 };
 
-module.exports = { startBackgroundJobs, runCategorizationJob };
+export { startBackgroundJobs, runCategorizationJob };

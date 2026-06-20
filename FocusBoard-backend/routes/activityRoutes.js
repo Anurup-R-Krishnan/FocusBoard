@@ -1,7 +1,7 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
 
-const {
+import {
     createActivity,
     createActivitiesBatch,
     getAllActivities,
@@ -12,7 +12,7 @@ const {
     getRecentActivities,
     exportActivities,
     importActivities,
-} = require('../controllers/activityController');
+} from '../controllers/activityController.js';
 
 // --------------------------------------------------
 // Activity Routes  →  mounted at /api/activities
@@ -48,4 +48,4 @@ router.put('/:id', updateActivity);
 // Delete a single activity by ID
 router.delete('/:id', deleteActivity);
 
-module.exports = router;
+export default router;

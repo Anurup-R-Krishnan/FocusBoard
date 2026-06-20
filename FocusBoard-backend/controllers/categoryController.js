@@ -1,5 +1,5 @@
-const { z } = require('zod');
-const Category = require('../models/Category');
+import { z } from 'zod';
+import Category from '../models/Category.js';
 
 const categorySchema = z.object({
   name: z.string({ required_error: 'name is required.' }).min(1, 'name cannot be empty.'),
@@ -92,8 +92,8 @@ const deleteCategory = async (req, res) => {
     const deleted = await Category.findByIdAndDelete(categoryId);
     if (!deleted) return res.status(404).json({ success: false, message: 'Category not found.' });
 
-    const Activity = require('../models/Activity');
-    const ActivityMapping = require('../models/ActivityMapping');
+    const { default: Activity } = await import('../models/Activity.js');
+    const { default: ActivityMapping } = await import('../models/ActivityMapping.js');
 
     await Activity.updateMany(
       { category_id: categoryId },
@@ -121,7 +121,7 @@ const deleteCategory = async (req, res) => {
   }
 };
 
-module.exports = {
+export {
   createCategory,
   getAllCategories,
   getCategoryById,

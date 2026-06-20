@@ -56,3 +56,4 @@ __pycache__/
 mongo_data/
 
 docs/
+FocusBoard-backend/data/

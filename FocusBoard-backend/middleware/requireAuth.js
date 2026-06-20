@@ -1,3 +1,3 @@
-const authMiddleware = require('./authMiddleware');
+import authMiddleware from './authMiddleware.js';
 
-module.exports = authMiddleware;
+export default authMiddleware;

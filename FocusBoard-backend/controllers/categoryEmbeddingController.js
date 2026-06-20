@@ -1,9 +1,9 @@
-const Category = require('../models/Category');
-const Activity = require('../models/Activity');
-const ActivityMapping = require('../models/ActivityMapping');
-const mlClient = require('../services/mlClient');
+import Category from '../models/Category.js';
+import Activity from '../models/Activity.js';
+import ActivityMapping from '../models/ActivityMapping.js';
+import mlClient from '../services/mlClient.js';
 
-exports.generateEmbeddings = async (req, res) => {
+export const generateEmbeddings = async (req, res) => {
     try {
         const categories = await Category.find({});
         
@@ -50,7 +50,7 @@ exports.generateEmbeddings = async (req, res) => {
     }
 };
 
-exports.regenerateEmbedding = async (req, res) => {
+export const regenerateEmbedding = async (req, res) => {
     try {
         const { id } = req.params;
         
@@ -87,7 +87,7 @@ exports.regenerateEmbedding = async (req, res) => {
     }
 };
 
-exports.recategorizeAllActivities = async (req, res) => {
+export const recategorizeAllActivities = async (req, res) => {
     try {
         const categories = await Category.find({ embedding: { $exists: true, $ne: [] } });
         

@@ -1,11 +1,11 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const { getSquad, nudgeMember } = require('../controllers/teamController');
-const requireAuth = require('../middleware/requireAuth');
+import { getSquad, nudgeMember } from '../controllers/teamController.js';
+import requireAuth from '../middleware/requireAuth.js';
 
 router.use(requireAuth);
 
 router.get('/squad', getSquad);
 router.post('/squad/:id/nudge', nudgeMember);
 
-module.exports = router;
+export default router;

@@ -5,7 +5,7 @@ Express + Socket.IO API service for FocusBoard.
 ## Prerequisites
 
 - Node.js 18+
-- MongoDB (URI in `MONGODB_URL`)
+- NeDB (embedded database)
 - ML service running at `ML_SERVICE_URL` (default `http://localhost:5001`)
 
 ## Install
@@ -29,7 +29,7 @@ cp .env.example .env
 ```
 
 Minimum required:
-- `MONGODB_URL`
+
 - `JWT_SECRET`
 
 Common optional:

@@ -1,17 +1,17 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const {
+import {
   createCategory,
   getAllCategories,
   getCategoryById,
   updateCategory,
   deleteCategory,
-} = require('../controllers/categoryController');
-const {
+} from '../controllers/categoryController.js';
+import {
   generateEmbeddings,
   regenerateEmbedding,
   recategorizeAllActivities,
-} = require('../controllers/categoryEmbeddingController');
+} from '../controllers/categoryEmbeddingController.js';
 
 router.post('/', createCategory);
 router.get('/', getAllCategories);
@@ -22,4 +22,4 @@ router.get('/:id', getCategoryById);
 router.put('/:id', updateCategory);
 router.delete('/:id', deleteCategory);
 
-module.exports = router;
+export default router;

@@ -1,6 +1,6 @@
-const { createModel } = require('../db/nedb');
+import { createModel } from '../db/nedb.js';
 
-module.exports = createModel('leads', {
+export default createModel('leads', {
   name: { type: String, required: true },
   email: { type: String, required: true },
   message: { type: String, default: '' },

@@ -1,6 +1,6 @@
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
-const config = require('../config');
+import jwt from 'jsonwebtoken';
+import User from '../models/User.js';
+import config from '../config/index.js';
 
 const generateToken = (user) => {
     return jwt.sign({ id: user._id, email: user.email_id }, config.JWT_SECRET, {
@@ -184,4 +184,4 @@ const updateParentalControls = async (req, res) => {
     }
 };
 
-module.exports = { register, login, getMe, updateProfile, deleteAccount, changePassword, updateParentalControls };
+export { register, login, getMe, updateProfile, deleteAccount, changePassword, updateParentalControls };

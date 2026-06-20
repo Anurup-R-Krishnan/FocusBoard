@@ -1,6 +1,6 @@
-const { z } = require('zod');
-const TicketResolution = require('../models/TicketResolution');
-require('../models/SupportTicket');
+import { z } from 'zod';
+import TicketResolution from '../models/TicketResolution.js';
+import '../models/SupportTicket.js';
 
 const resolutionSchema = z.object({
     ticketId: z.string({ required_error: 'ticketId is required.' }).min(1),
@@ -102,7 +102,7 @@ const deleteResolution = async (req, res) => {
     }
 };
 
-module.exports = {
+export {
     createResolution,
     getAllResolutions,
     getResolutionById,

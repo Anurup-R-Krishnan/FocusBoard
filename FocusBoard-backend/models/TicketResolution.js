@@ -1,7 +1,8 @@
-const { createModel } = require('../db/nedb');
+import crypto from 'crypto';
+import { createModel } from '../db/nedb.js';
 
-module.exports = createModel('ticketresolutions', {
-  _id: { type: String, default: () => require('crypto').randomUUID() },
+export default createModel('ticketresolutions', {
+  _id: { type: String, default: () => crypto.randomUUID() },
   ticketId: { type: String, ref: 'SupportTicket', required: true },
   agentName: { type: String, required: true },
   resolutionNotes: { type: String, default: '' },

@@ -1,39 +1,25 @@
-const path = require('path');
-const cluster = require('cluster');
-const os = require('os');
-const { randomUUID } = require('crypto');
-const express = require('express');
-const http = require('http');
-const { Server } = require('socket.io');
-const cors = require('cors');
-const helmet = require('helmet');
-const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
-const morgan = require('morgan');
-const jwt = require('jsonwebtoken');
-const logger = require('./utils/logger');
-const config = require('./config');
-const { notFound, errorHandler } = require('./middleware/errorMiddleware');
-require('dotenv').config({ path: path.resolve(__dirname, '.env') });
+import path from 'path';
+import { randomUUID } from 'crypto';
+import express from 'express';
+import http from 'http';
+import { Server } from 'socket.io';
+import cors from 'cors';
+import helmet from 'helmet';
+import { rateLimit, ipKeyGenerator } from 'express-rate-limit';
+import morgan from 'morgan';
+import jwt from 'jsonwebtoken';
+import logger from './utils/logger.js';
+import config from './config/index.js';
+import { notFound, errorHandler } from './middleware/errorMiddleware.js';
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
 
-const WORKERS = Math.max(1, Number.parseInt(process.env.WORKERS || '1', 10) || 1);
-
-if (cluster.isPrimary) {
-  const cpuCount = os.cpus().length;
-  const workerCount = Math.min(WORKERS, cpuCount);
-  logger.info(`Primary ${process.pid} running. Spawning ${workerCount} workers (requested ${WORKERS}, CPUs ${cpuCount}).`);
-
-  for (let i = 0; i < workerCount; i += 1) {
-    cluster.fork();
-  }
-
-  cluster.on('exit', (worker, code, signal) => {
-    logger.warn(`Worker ${worker.process.pid} exited (code ${code}, signal ${signal}). Restarting...`);
-    cluster.fork();
-  });
-} else {
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.resolve(__dirname, '.env') });
 
 const app = express();
-const isPrimaryWorker = cluster.worker && cluster.worker.id === 1;
+const isPrimaryWorker = true;
 
 if (config.TRUST_PROXY) {
   app.set('trust proxy', 1);
@@ -53,28 +39,33 @@ const corsOptionsDelegate = (origin, callback) => {
   }
 };
 // Routes
-const activityRoutes = require('./routes/activityRoutes');
-const goalRoutes = require('./routes/goalRoutes');
-const eventRoutes = require('./routes/eventRoutes');
-const categoryRoutes = require('./routes/categoryRoutes');
-const leadRoutes = require('./routes/leadRoutes');
-const authRoutes = require('./routes/authRoutes');
-const activityMappingRoutes = require('./routes/activityMappingRoutes');
-const categoryGoalRoutes = require('./routes/categoryGoalRoutes');
-const issueTypeRoutes = require('./routes/issueTypeRoutes');
-const supportTicketRoutes = require('./routes/supportTicketRoutes');
-const ticketResolutionRoutes = require('./routes/ticketResolutionRoutes');
-const userFeedbackRoutes = require('./routes/userFeedbackRoutes');
-const trackingRuleRoutes = require('./routes/trackingRuleRoutes');
-const projectRoutes = require('./routes/projectRoutes');
-const clientRoutes = require('./routes/clientRoutes');
-const integrationRoutes = require('./routes/integrationRoutes');
-const taskRoutes = require('./routes/taskRoutes');
-const teamRoutes = require('./routes/teamRoutes');
-const inviteRoutes = require('./routes/inviteRoutes');
-const workspaceRoutes = require('./routes/workspaceRoutes');
-const webhookRoutes = require('./routes/webhookRoutes');
-const metricsRoutes = require('./routes/metricsRoutes');
+import activityRoutes from './routes/activityRoutes.js';
+import goalRoutes from './routes/goalRoutes.js';
+import eventRoutes from './routes/eventRoutes.js';
+import categoryRoutes from './routes/categoryRoutes.js';
+import leadRoutes from './routes/leadRoutes.js';
+import authRoutes from './routes/authRoutes.js';
+import activityMappingRoutes from './routes/activityMappingRoutes.js';
+import categoryGoalRoutes from './routes/categoryGoalRoutes.js';
+import issueTypeRoutes from './routes/issueTypeRoutes.js';
+import supportTicketRoutes from './routes/supportTicketRoutes.js';
+import ticketResolutionRoutes from './routes/ticketResolutionRoutes.js';
+import userFeedbackRoutes from './routes/userFeedbackRoutes.js';
+import trackingRuleRoutes from './routes/trackingRuleRoutes.js';
+import projectRoutes from './routes/projectRoutes.js';
+import clientRoutes from './routes/clientRoutes.js';
+import integrationRoutes from './routes/integrationRoutes.js';
+import taskRoutes from './routes/taskRoutes.js';
+import teamRoutes from './routes/teamRoutes.js';
+import inviteRoutes from './routes/inviteRoutes.js';
+import workspaceRoutes from './routes/workspaceRoutes.js';
+import webhookRoutes from './routes/webhookRoutes.js';
+import metricsRoutes from './routes/metricsRoutes.js';
+
+// Power User Features
+import projectRuleRoutes from './routes/projectRuleRoutes.js';
+import zenModeRoutes from './routes/zenModeRoutes.js';
+import advancedAnalyticsRoutes from './routes/advancedAnalyticsRoutes.js';
 
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
@@ -129,9 +120,11 @@ io.on('connection', (socket) => {
 app.use(express.json({ limit: '10mb' }));
 
 // ── Database (NeDB embedded) ─────────────────────────────────────────────────
-const { startBackgroundJobs } = require('./services/backgroundCategorization');
+import { startBackgroundJobs } from './services/backgroundCategorization.js';
+import { startCronService } from './services/cronService.js';
 if (isPrimaryWorker) {
   startBackgroundJobs();
+  startCronService();
 }
 
 // Rate limiting for API routes
@@ -192,6 +185,11 @@ app.use('/api/workspaces', workspaceRoutes);
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/metrics', metricsRoutes);
 
+// Power User Routes
+app.use('/api/project-rules', projectRuleRoutes);
+app.use('/api/zen-mode', zenModeRoutes);
+app.use('/api/advanced-analytics', advancedAnalyticsRoutes);
+
 // Root route
 app.get('/', (_req, res) =>
   res.json({ message: 'FocusBoard API' })
@@ -207,7 +205,7 @@ app.get('/health', (_req, res) =>
 );
 
 // Expose Prometheus metrics
-const { register } = require('./utils/metrics');
+import { register } from './utils/metrics.js';
 app.get('/metrics', async (_req, res) => {
   try {
     res.set('Content-Type', register.contentType);
@@ -242,5 +240,3 @@ const gracefulShutdown = (signal) => {
 
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
-
-}

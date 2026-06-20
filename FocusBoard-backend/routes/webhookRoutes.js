@@ -1,13 +1,13 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const {
+import {
     createEndpoint,
     getEndpoints,
     updateEndpoint,
     deleteEndpoint,
     regenerateSecret,
-} = require('../controllers/webhookController');
-const requireAuth = require('../middleware/requireAuth');
+} from '../controllers/webhookController.js';
+import requireAuth from '../middleware/requireAuth.js';
 
 router.use(requireAuth);
 
@@ -17,4 +17,4 @@ router.put('/:id', updateEndpoint);
 router.delete('/:id', deleteEndpoint);
 router.put('/:id/rotate-secret', regenerateSecret);
 
-module.exports = router;
+export default router;

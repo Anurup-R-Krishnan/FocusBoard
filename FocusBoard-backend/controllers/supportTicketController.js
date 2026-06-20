@@ -1,7 +1,7 @@
-const { z } = require('zod');
-const SupportTicket = require('../models/SupportTicket');
-require('../models/User');
-require('../models/IssueType');
+import { z } from 'zod';
+import SupportTicket from '../models/SupportTicket.js';
+import '../models/User.js';
+import '../models/IssueType.js';
 
 const ticketSchema = z.object({
     userId: z.string({ required_error: 'userId is required.' }).min(1),
@@ -109,7 +109,7 @@ const deleteTicket = async (req, res) => {
     }
 };
 
-module.exports = {
+export {
     createTicket,
     getAllTickets,
     getTicketById,

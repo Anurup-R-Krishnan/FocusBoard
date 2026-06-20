@@ -1,13 +1,13 @@
 'use strict';
 
-const ml = require('../mlService');
+import * as ml from '../mlService.js';
 
 const client = {
   post: async (path, data) => {
     switch (path) {
       case '/find-similar': {
         const { text, categories, threshold } = data;
-        const result = ml.findSimilar(text, categories, threshold);
+        const result = await ml.findSimilar(text, categories, threshold);
         return { data: { ...result, ...ml.modelMetadata() } };
       }
       case '/check-nsfw': {
@@ -16,11 +16,12 @@ const client = {
       }
       case '/embed': {
         const { text } = data;
-        return { data: { embedding: ml.embedText(text), ...ml.modelMetadata() } };
+        return { data: { embedding: await ml.embedText(text), ...ml.modelMetadata() } };
       }
       case '/embed/batch': {
         const { texts } = data;
-        return { data: { embeddings: texts.map(t => ml.embedText(t)), ...ml.modelMetadata() } };
+        const embeddings = await Promise.all(texts.map(t => ml.embedText(t)));
+        return { data: { embeddings, ...ml.modelMetadata() } };
       }
       default:
         throw new Error(`Unknown ML endpoint: ${path}`);
@@ -40,4 +41,4 @@ const client = {
   },
 };
 
-module.exports = client;
+export default client;

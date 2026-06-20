@@ -37,6 +37,7 @@ const clearTimer = () => {
     }
 };
 
+// Start a timer that only tracks the session bounds without constantly triggering Zustand set()
 const startTimer = (tick: () => void) => {
     clearTimer();
     timer = setInterval(tick, 1000);
@@ -91,12 +92,14 @@ export const useSessionStore = create<SessionStateStore>((set, get) => ({
                 clearTimer();
                 return;
             }
-            const nextElapsed = state.elapsedSeconds + 1;
+            // Check for timeout but avoid spamming set() on every tick
+            const now = new Date();
+            const startedAtTime = new Date(state.startedAt!).getTime();
+            const actualElapsedSeconds = Math.floor((now.getTime() - startedAtTime) / 1000) + state.elapsedSeconds;
+
             const totalSeconds = Math.max(1, Math.floor(state.plannedMinutes * 60));
-            if (nextElapsed >= totalSeconds) {
-                get().stopSession().catch((error) => {
-                    console.error('Failed to stop session at timer end:', error);
-                });
+            if (actualElapsedSeconds >= totalSeconds) {
+                get().stopSession().catch(console.error);
                 return;
             }
             set({ elapsedSeconds: nextElapsed });

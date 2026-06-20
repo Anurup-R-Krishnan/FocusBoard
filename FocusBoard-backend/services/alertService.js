@@ -1,6 +1,6 @@
-const User = require('../models/User');
-const nodemailer = require('nodemailer');
-const logger = require('../utils/logger');
+import User from '../models/User.js';
+import nodemailer from 'nodemailer';
+import logger from '../utils/logger.js';
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'smtp.gmail.com',
@@ -77,4 +77,4 @@ Time: ${new Date().toISOString()}
   }
 };
 
-module.exports = { sendNsfwAlert };
+export { sendNsfwAlert };

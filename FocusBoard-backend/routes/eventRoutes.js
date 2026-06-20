@@ -1,13 +1,13 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const {
+import {
   createEvent,
   upsertEvent,
   getAllEvents,
   getEventById,
   updateEvent,
   deleteEvent,
-} = require('../controllers/eventController');
+} from '../controllers/eventController.js';
 
 router.post('/', createEvent);
 router.post('/upsert', upsertEvent);
@@ -16,4 +16,4 @@ router.get('/:id', getEventById);
 router.put('/:id', updateEvent);
 router.delete('/:id', deleteEvent);
 
-module.exports = router;
+export default router;

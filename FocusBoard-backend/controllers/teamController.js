@@ -1,9 +1,9 @@
-const User = require('../models/User');
-const Task = require('../models/Task');
-const Event = require('../models/Event');
+import User from '../models/User.js';
+import Task from '../models/Task.js';
+import Event from '../models/Event.js';
 
 // Fetch all squad members (users with roles and status)
-exports.getSquad = async (req, res) => {
+export const getSquad = async (req, res) => {
     try {
         const squad = await User.find({}, 'name email_id role status avatar last_active_at');
         const memberIds = squad.map(member => member._id);
@@ -46,7 +46,7 @@ exports.getSquad = async (req, res) => {
 };
 
 // Nudge a team member
-exports.nudgeMember = async (req, res) => {
+export const nudgeMember = async (req, res) => {
     try {
         const targetUserId = req.params.id;
         const actorUserId = req.user?.id;

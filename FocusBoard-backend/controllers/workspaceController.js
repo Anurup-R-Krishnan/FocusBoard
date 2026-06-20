@@ -1,4 +1,4 @@
-const Workspace = require('../models/Workspace');
+import Workspace from '../models/Workspace.js';
 
 const getWorkspaces = async (req, res) => {
     try {
@@ -58,4 +58,4 @@ const deleteWorkspace = async (req, res) => {
     }
 };
 
-module.exports = { getWorkspaces, createWorkspace, updateWorkspace, deleteWorkspace };
+export { getWorkspaces, createWorkspace, updateWorkspace, deleteWorkspace };

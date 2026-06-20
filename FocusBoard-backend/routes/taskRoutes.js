@@ -1,14 +1,14 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const {
+import {
     createTask,
     getTasks,
     updateTask,
     deleteTask,
     logTime
-} = require('../controllers/taskController');
-const requireAuth = require('../middleware/requireAuth');
-const { validateSchema, createTaskSchema, updateTaskSchema } = require('../middleware/validation');
+} from '../controllers/taskController.js';
+import requireAuth from '../middleware/requireAuth.js';
+import { validateSchema, createTaskSchema, updateTaskSchema } from '../middleware/validation.js';
 
 router.use(requireAuth);
 
@@ -18,4 +18,4 @@ router.put('/:id/time', logTime);
 router.put('/:id', validateSchema(updateTaskSchema), updateTask);
 router.delete('/:id', deleteTask);
 
-module.exports = router;
+export default router;

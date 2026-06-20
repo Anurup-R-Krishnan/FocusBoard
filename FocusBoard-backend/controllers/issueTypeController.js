@@ -1,5 +1,5 @@
-const { z } = require('zod');
-const IssueType = require('../models/IssueType');
+import { z } from 'zod';
+import IssueType from '../models/IssueType.js';
 
 const issueTypeSchema = z.object({
     name: z.string({ required_error: 'name is required.' }).min(1),
@@ -90,7 +90,7 @@ const deleteIssueType = async (req, res) => {
     }
 };
 
-module.exports = {
+export {
     createIssueType,
     getAllIssueTypes,
     getIssueTypeById,

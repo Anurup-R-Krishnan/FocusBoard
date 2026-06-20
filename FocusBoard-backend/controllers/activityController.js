@@ -1,14 +1,14 @@
-const { z } = require('zod');
-const Activity = require('../models/Activity');
-const ActivityMapping = require('../models/ActivityMapping');
-const User = require('../models/User');
-const { matchByRules } = require('../services/categorizationService');
-const mlClient = require('../services/mlClient');
-const { checkNsfwCached } = require('../services/mlResponseCache');
-const jwt = require('jsonwebtoken');
-const logger = require('../utils/logger');
-const config = require('../config');
-require('../models/Category');
+import { z } from 'zod';
+import Activity from '../models/Activity.js';
+import ActivityMapping from '../models/ActivityMapping.js';
+import User from '../models/User.js';
+import { matchByRules, matchProjectByRules } from '../services/categorizationService.js';
+import mlClient from '../services/mlClient.js';
+import { checkNsfwCached } from '../services/mlResponseCache.js';
+import jwt from 'jsonwebtoken';
+import logger from '../utils/logger.js';
+import config from '../config/index.js';
+import '../models/Category.js';
 
 const ML_SERVICE_URL = config.ML_SERVICE_URL;
 const JWT_SECRET = config.JWT_SECRET;
@@ -27,6 +27,8 @@ const activitySchema = z.object({
   category_id: z.string().optional(),
   color: z.string().default(DEFAULT_ACTIVITY_COLOR),
   idle: z.union([z.number().int().nonnegative(), z.boolean()]).default(0),
+  cpu_usage: z.number().optional(),
+  ram_usage_mb: z.number().optional(),
 });
 
 const getUserIdFromRequest = (req) => {
@@ -66,7 +68,7 @@ const createActivity = async (req, res) => {
   }
 
   try {
-    const { app_name, window_title, url, start_time, end_time, category_id, color, idle, user_id } = result.data;
+    const { app_name, window_title, url, start_time, end_time, category_id, color, idle, user_id, cpu_usage, ram_usage_mb } = result.data;
     const resolvedUserId = getUserIdFromRequest(req) || user_id || null;
     const normalizedIdle = typeof idle === 'boolean' ? (idle ? 1 : 0) : idle;
 
@@ -98,8 +100,10 @@ const createActivity = async (req, res) => {
       end_time: end_time || null,
       user_id: resolvedUserId,
       category_id: category_id || null,
-      color,
+      color: color,
       idle: normalizedIdle,
+      cpu_usage: cpu_usage,
+      ram_usage_mb: ram_usage_mb,
     });
 
     const matchedCategoryId = await matchByRules(saved);
@@ -115,6 +119,12 @@ const createActivity = async (req, res) => {
         await Activity.updateOne({ _id: saved._id }, { $set: { category_id: matchedCategoryId } });
         saved.category_id = matchedCategoryId;
       }
+    }
+
+    const matchedProjectId = await matchProjectByRules(saved, resolvedUserId);
+    if (matchedProjectId) {
+      await Activity.updateOne({ _id: saved._id }, { $set: { project_id: matchedProjectId } });
+      saved.project_id = matchedProjectId;
     }
 
     if (url) {
@@ -556,7 +566,7 @@ const importActivities = async (req, res) => {
   }
 };
 
-module.exports = {
+export {
   createActivity,
   createActivitiesBatch,
   getAllActivities,

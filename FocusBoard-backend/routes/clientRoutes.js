@@ -1,6 +1,6 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const {
+import {
     createClient,
     getClients,
     getClientHours,
@@ -9,9 +9,9 @@ const {
     exportClients,
     bulkDeleteClients,
     bulkUpdateClients
-} = require('../controllers/clientController');
-const requireAuth = require('../middleware/requireAuth');
-const { validateSchema, createClientSchema, updateClientSchema } = require('../middleware/validation');
+} from '../controllers/clientController.js';
+import requireAuth from '../middleware/requireAuth.js';
+import { validateSchema, createClientSchema, updateClientSchema } from '../middleware/validation.js';
 
 router.use(requireAuth);
 
@@ -24,4 +24,4 @@ router.delete('/:id', deleteClient);
 router.post('/bulk-delete', bulkDeleteClients);
 router.post('/bulk-update', bulkUpdateClients);
 
-module.exports = router;
+export default router;

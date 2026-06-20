@@ -1,7 +1,7 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const { getDashboardMetrics, getTimeline, getActivitySummary, getTrends, getCategoryBreakdown } = require('../controllers/metricsController');
-const requireAuth = require('../middleware/requireAuth');
+import { getDashboardMetrics, getTimeline, getActivitySummary, getTrends, getCategoryBreakdown } from '../controllers/metricsController.js';
+import requireAuth from '../middleware/requireAuth.js';
 
 router.use(requireAuth);
 
@@ -11,4 +11,4 @@ router.get('/summary', getActivitySummary);
 router.get('/trends', getTrends);
 router.get('/categories', getCategoryBreakdown);
 
-module.exports = router;
+export default router;

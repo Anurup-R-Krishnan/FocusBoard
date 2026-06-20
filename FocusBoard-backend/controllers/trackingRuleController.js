@@ -1,7 +1,7 @@
-const TrackingRule = require('../models/TrackingRule');
-const Category = require('../models/Category');
+import TrackingRule from '../models/TrackingRule.js';
+import Category from '../models/Category.js';
 
-exports.createRule = async (req, res) => {
+export const createRule = async (req, res) => {
   try {
     const { categoryId, pattern, matchType, priority, isAutoLearned } = req.body;
     
@@ -21,7 +21,7 @@ exports.createRule = async (req, res) => {
   }
 };
 
-exports.getRules = async (req, res) => {
+export const getRules = async (req, res) => {
   try {
     const { categoryId } = req.query;
     const filter = categoryId ? { categoryId } : {};
@@ -32,7 +32,7 @@ exports.getRules = async (req, res) => {
   }
 };
 
-exports.getRule = async (req, res) => {
+export const getRule = async (req, res) => {
   try {
     const rule = await TrackingRule.findById(req.params.id).populate('categoryId');
     if (!rule) {
@@ -44,7 +44,7 @@ exports.getRule = async (req, res) => {
   }
 };
 
-exports.updateRule = async (req, res) => {
+export const updateRule = async (req, res) => {
   try {
     const { pattern, priority, matchType } = req.body;
     const rule = await TrackingRule.findByIdAndUpdate(
@@ -61,7 +61,7 @@ exports.updateRule = async (req, res) => {
   }
 };
 
-exports.deleteRule = async (req, res) => {
+export const deleteRule = async (req, res) => {
   try {
     const rule = await TrackingRule.findByIdAndDelete(req.params.id);
     if (!rule) {
@@ -73,10 +73,10 @@ exports.deleteRule = async (req, res) => {
   }
 };
 
-exports.createRuleFromOverride = async (req, res) => {
+export const createRuleFromOverride = async (req, res) => {
   try {
     const { activityId, categoryId } = req.body;
-    const Activity = require('../models/Activity');
+    const { default: Activity } = await import('../models/Activity.js');
     
     const activity = await Activity.findById(activityId);
     if (!activity) {

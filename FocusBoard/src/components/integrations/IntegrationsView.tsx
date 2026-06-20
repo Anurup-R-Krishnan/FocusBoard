@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-    Blocks, Calendar, MessageSquare, Github, CheckCircle2,
+    Blocks, Calendar, MessageSquare, GitBranch, CheckCircle2,
     AlertCircle, RefreshCw, Key, Webhook, Plus, Trash2,
     ExternalLink, Settings, X, Search, Terminal, Zap, Shield,
     ChevronRight, Copy, Activity, Eye, EyeOff, Lock, Server,
@@ -88,7 +88,7 @@ const INTEGRATIONS: Integration[] = [
         id: 'github',
         name: 'GitHub',
         category: 'Developer',
-        icon: Github,
+        icon: GitBranch,
         color: 'bg-neutral-700',
         description: 'Automatically link Pull Requests to tasks.',
         connected: false

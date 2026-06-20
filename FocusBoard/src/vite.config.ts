@@ -18,14 +18,7 @@ export default defineConfig(async () => ({
 
   build: {
     rollupOptions: {
-      output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          motion: ['framer-motion'],
-          socket: ['socket.io-client'],
-          zustand: ['zustand'],
-        }
-      }
+      output: {}
     }
   },
 

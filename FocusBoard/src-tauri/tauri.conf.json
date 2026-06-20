@@ -23,7 +23,7 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["deb", "appimage"],
+    "targets": ["deb"],
     "publisher": "FocusBoard",
     "category": "Productivity",
     "shortDescription": "Automatic activity tracking and focus analytics.",

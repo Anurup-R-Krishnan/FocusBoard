@@ -1,6 +1,6 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const { createLead, getAllLeads, getLeadById, updateLead, deleteLead } = require('../controllers/leadController');
+import { createLead, getAllLeads, getLeadById, updateLead, deleteLead } from '../controllers/leadController.js';
 
 router.post('/', createLead);
 router.get('/', getAllLeads);
@@ -8,4 +8,4 @@ router.get('/:id', getLeadById);
 router.put('/:id', updateLead);
 router.delete('/:id', deleteLead);
 
-module.exports = router;
+export default router;
