@@ -12,6 +12,7 @@ depends=(
   'gtk3'
   'libx11'
   'libxcb'
+  'libxss'
   'nodejs'
 )
 makedepends=(
@@ -36,8 +37,9 @@ prepare() {
 
 build() {
   cd "${srcdir}/${pkgname}-${pkgver}/FocusBoard"
+  export MAKEFLAGS="-j12"
   npm run build
-  export RUSTFLAGS="${RUSTFLAGS} -C link-arg=-fuse-ld=bfd -C debuginfo=0 -C strip=symbols --remap-path-prefix ${srcdir}=/usr/src"
+  export RUSTFLAGS="${RUSTFLAGS} -C link-arg=-fuse-ld=bfd -C debuginfo=0 -C strip=symbols -C target-cpu=native --remap-path-prefix ${srcdir}=/usr/src"
   export CARGO_PROFILE_RELEASE_DEBUG=0
   export CARGO_PROFILE_RELEASE_STRIP=symbols
   npm run tauri build -- --ci --no-bundle
